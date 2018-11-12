@@ -4,11 +4,11 @@ Build a password from readable words using the [Diceware](http://world.std.com/~
 
 ## Installation
 
-`mix escript install git https://github.com/silbermm/genex`
+`mix escript install github silbermm/genex`
 
 This will install genex into your ~/.mix/escripts directory.
 
->> You should add ~/.mix/escripts to your PATH
+> You should add ~/.mix/escripts to your PATH
 
 ## Usage
 
