@@ -1,21 +1,15 @@
 # Genex
 
-**TODO: Add description**
+Build a password from readable words using the [Diceware](http://world.std.com/~reinhold/diceware.html) word list.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `genex` to your list of dependencies in `mix.exs`:
+`mix escript install git https://github.com/silbermm/genex`
 
-```elixir
-def deps do
-  [
-    {:genex, "~> 0.1.0"}
-  ]
-end
-```
+This will install genex into your ~/.mix/escripts directory.
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/genex](https://hexdocs.pm/genex).
+>> You should add ~/.mix/escripts to your PATH
 
+## Usage
+
+`genex` will display a generated password on the screen. Continue to run it until you get one you can remember.
