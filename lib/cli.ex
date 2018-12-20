@@ -30,7 +30,7 @@ defmodule Genex.CLI do
     cond do
       count == 0 -> IO.puts "Unable to find a password with that account name"
       count == 1 -> IO.puts "Found the account"
-      count > 1 -> IO.puts "Multiple accounts with that name..."
+      count > 1 -> prompt_for_specific_account(acc, res)
     end
   end
 
@@ -64,6 +64,18 @@ defmodule Genex.CLI do
     Enum.join(password_list) |> String.trim()
   end
 
+  defp prompt_for_specific_account(acc, credentials) do
+    IO.puts "There are multiple entries saved for #{acc}, which username are you searching for?"
+    Enum.each(credentials, fn x ->
+      IO.puts "#{x.username}"
+    end)
+    case IO.read(:stdio, :line) do
+      :eof -> IO.puts("EOF encountered")
+      {:error, reason} -> IO.puts("Error encountered")
+      username -> handle_find_password_with_username(acc, credentials, username)
+    end
+  end
+
   def prompt_to_save(password) do
     IO.write(ANSI.default_color() <> "Save this password (Y/n)?")
 
@@ -72,6 +84,16 @@ defmodule Genex.CLI do
       {:error, reason} -> IO.puts("Error encountered")
       answer -> handle_save(password, answer)
     end
+  end
+
+  defp handle_find_password_with_username(acc, credentials, username) do
+    credentials
+    |> Enum.find(fn x -> x.username == username end)
+    |> case do
+      nil -> prompt_for_specific_account(acc, credentials)
+      res -> IO.puts "Password = #{res.password}"
+    end
+
   end
 
   defp handle_save(password, answer) do
