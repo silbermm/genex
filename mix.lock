@@ -1,7 +1,9 @@
 %{
   "dialyxir": {:hex, :dialyxir, "1.0.0-rc.4", "71b42f5ee1b7628f3e3a6565f4617dfb02d127a0499ab3e72750455e986df001", [:mix], [{:erlex, "~> 0.1", [hex: :erlex, repo: "hexpm", optional: false]}], "hexpm"},
   "erlex": {:hex, :erlex, "0.1.6", "c01c889363168d3fdd23f4211647d8a34c0f9a21ec726762312e08e083f3d47e", [:mix], [], "hexpm"},
+  "ex_crypto": {:hex, :ex_crypto, "0.9.0", "e04a831034c4d0a43fb2858f696d6b5ae0f87f07dedca3452912fd3cb5ee3ca2", [:mix], [{:poison, ">= 2.0.0", [hex: :poison, repo: "hexpm", optional: false]}], "hexpm"},
   "exgpg": {:hex, :exgpg, "0.0.3", "feec58da946c1ab46f8bb46d6b34c362a50f5bd04d159ec8694fface2ab879c0", [:mix], [{:porcelain, "~> 2.0.0", [hex: :porcelain, repo: "hexpm", optional: false]}, {:uuid, "~> 0.1.5", [hex: :uuid, repo: "hexpm", optional: false]}], "hexpm"},
+  "poison": {:hex, :poison, "4.0.1", "bcb755a16fac91cad79bfe9fc3585bb07b9331e50cfe3420a24bcc2d735709ae", [:mix], [], "hexpm"},
   "porcelain": {:hex, :porcelain, "2.0.3", "2d77b17d1f21fed875b8c5ecba72a01533db2013bd2e5e62c6d286c029150fdc", [:mix], [], "hexpm"},
   "uuid": {:hex, :uuid, "0.1.5", "b6ace36a422cb8a1c3b02901aa5627595f115fe185ac8b0fdd0a8ee48c235068", [:mix], [], "hexpm"},
 }

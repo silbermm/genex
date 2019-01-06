@@ -1,4 +1,4 @@
-defmodule Genex.Password do
+defmodule Genex do
   @moduledoc """
   Build a password from readable words using the [Diceware](http://world.std.com/~reinhold/diceware.html) word list.
   """
@@ -13,7 +13,7 @@ defmodule Genex.Password do
   Generate a password by first creating 6 random numbers and 
   pulling the appropriate word from the dicware word list
   """
-  def generate do
+  def generate_password do
     wordlist = wordlist()
 
     1..6
@@ -24,24 +24,25 @@ defmodule Genex.Password do
   @doc """
   Saves the provided credentials to the designated encyrpted file
   """
-  def save_credentials(account, username, password) do
-    line = "#{account},#{username},#{password}"
-
-    case Genex.GPG.load() do
-      {:ok, current_passwords} ->
-        new_passwords = current_passwords <> line
-        Genex.GPG.save(new_passwords)
-        :ok
-
-      {:error, :noexists} ->
+  def save_credentials(credentials) do
+    line = "#{credentials.account},#{credentials.username},#{credentials.password}"
+    with {:ok, current_passwords} <- Genex.GPG.load(),
+         :ok <- validate_unique(credentials.account, credentials.username, current_passwords) do
+     new_passwords = current_passwords <> line
+     Genex.GPG.save(new_passwords)
+     :ok
+    else
+      {:error, :noexists} -> 
         Genex.GPG.save(line)
         :ok
-
-      _ ->
-        :error
+      {:error, :not_unique} -> {:error, :not_unique}
+      _ -> :error
     end
   end
 
+  @doc """
+  Find credenials for a specific account
+  """
   def find_credentials(account) do
     case Genex.GPG.load() do
       {:ok, current_passwords} ->
@@ -56,9 +57,19 @@ defmodule Genex.Password do
     end
   end
 
+  defp validate_unique(account, username, current) do
+    account
+    |> find_credentials
+    |> Enum.find(fn x -> x.username == username end)
+    |> case do
+      nil -> :ok
+      _ -> {:error, :not_unique}
+    end
+  end
+
   defp into_password_struct(str) do
     [account, username, password] = String.split(str, ",")
-    %Genex.Password{account: account, username: username, password: password}
+    Genex.Credentials.new(account, username, password)
   end
 
   defp random_number do
