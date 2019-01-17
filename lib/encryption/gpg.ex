@@ -3,7 +3,7 @@ defmodule Genex.Encryption.GPG do
   Deals with all aspects of GnuPG
   """
   alias Genex.Encryption
- 
+
   @behavior @Encryption
 
   @doc """

@@ -4,4 +4,5 @@ defmodule Genex.Encryption do
   """
   @callback load :: {:ok, term} | {:error, String.t}
   @callback save(String.t) :: term
+  @callback generate_keys(String.t) :: Boolean
 end
