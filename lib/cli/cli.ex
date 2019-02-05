@@ -12,12 +12,12 @@ defmodule Genex.CLI do
 
   def main(opts) do
     opts
-    |> parse_args 
+    |> parse_args
     |> process
   end
 
   defp process(:help) do
-    IO.puts @moduledoc
+    IO.puts(@moduledoc)
     System.halt(0)
   end
 
@@ -30,10 +30,16 @@ defmodule Genex.CLI do
   defp process({:find, acc}) do
     res = Genex.find_credentials(acc)
     count = Enum.count(res)
+
     cond do
-      count == 0 -> IO.puts "Unable to find a password with that account name"
-      count == 1 -> IO.puts "#{List.first(res).password}"
-      count > 1 -> Prompt.prompt_for_specific_account(acc, res, &handle_find_password_with_username/3)
+      count == 0 ->
+        IO.puts("Unable to find a password with that account name")
+
+      count == 1 ->
+        IO.puts("#{List.first(res).password}")
+
+      count > 1 ->
+        Prompt.prompt_for_specific_account(acc, res, &handle_find_password_with_username/3)
     end
   end
 
@@ -71,29 +77,36 @@ defmodule Genex.CLI do
     credentials
     |> Enum.find(fn x -> x.username == username end)
     |> case do
-      nil -> 
-        IO.puts "Input didn't match any kmown username, try again"
-        Prompt.prompt_for_specific_account(acc, credentials, &handle_find_password_with_username/3)
-      res -> IO.puts "Password = #{res.password}"
+      nil ->
+        IO.puts("Input didn't match any kmown username, try again")
+
+        Prompt.prompt_for_specific_account(
+          acc,
+          credentials,
+          &handle_find_password_with_username/3
+        )
+
+      res ->
+        IO.puts("Password = #{res.password}")
     end
   end
 
   defp handle_save(password, answer) do
     answer
-    |> String.trim
-    |> String.downcase
-    |> case  do
+    |> String.trim()
+    |> String.downcase()
+    |> case do
       "n" ->
         Prompt.prompt_for_next()
 
       "y" ->
         password
-        |> Prompt.prompt_for_account
+        |> Prompt.prompt_for_account()
         |> save_creds
 
       "" ->
         password
-        |> Prompt.prompt_for_account
+        |> Prompt.prompt_for_account()
         |> save_creds
 
       _ ->
@@ -104,14 +117,16 @@ defmodule Genex.CLI do
 
   defp save_creds(credentials) do
     case Genex.save_credentials(credentials) do
-      :ok -> 
-        IO.puts "Account saved"
+      :ok ->
+        IO.puts("Account saved")
         System.halt(0)
-      {:error, :not_unique} -> 
-        IO.puts "That account and username combination already exists in the system"
+
+      {:error, :not_unique} ->
+        IO.puts("That account and username combination already exists in the system")
         System.halt(1)
-      :error -> 
-        IO.puts "Something went wrong trying to save your password, please try again"
+
+      :error ->
+        IO.puts("Something went wrong trying to save your password, please try again")
         System.halt(2)
     end
   end

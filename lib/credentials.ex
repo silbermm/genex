@@ -11,5 +11,4 @@ defmodule Genex.Credentials do
   def new(account, username, password) do
     %Credentials{account: account, username: username, password: password}
   end
-
 end

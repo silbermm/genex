@@ -10,7 +10,7 @@ use Mix.Config
 
 # You can configure your application as:
 #
-#     config :genex, key: :value
+config :genex, encryption: Genex.Encryption.RSA
 #
 # and access this configuration in your application as:
 #

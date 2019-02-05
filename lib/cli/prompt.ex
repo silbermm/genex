@@ -6,10 +6,12 @@ defmodule Genex.CLI.Prompt do
   alias IO.ANSI
 
   def prompt_for_specific_account(acc, credentials, password_handler) do
-    IO.puts "There are multiple entries saved for #{acc}, which username are you searching for?"
+    IO.puts("There are multiple entries saved for #{acc}, which username are you searching for?")
+
     Enum.each(credentials, fn x ->
-      IO.puts "#{x.username}"
+      IO.puts("#{x.username}")
     end)
+
     case IO.read(:stdio, :line) do
       :eof -> IO.puts("EOF encountered")
       {:error, reason} -> IO.puts("Error encountered")
@@ -39,5 +41,4 @@ defmodule Genex.CLI.Prompt do
     username = IO.read(:stdio, :line) |> String.trim()
     Genex.Credentials.new(account, username, password)
   end
-
 end

@@ -13,7 +13,8 @@ defmodule Genex.Encryption.GPG do
   def load do
     file = System.get_env("HOME") <> "/" <> ".genex_passwords.gpg"
 
-    with {result, 0} <- System.cmd("gpg", ["--decrypt", "--quiet", "--no-tty", "--batch", file, " 2>&1"]) do
+    with {result, 0} <-
+           System.cmd("gpg", ["--decrypt", "--quiet", "--no-tty", "--batch", file, " 2>&1"]) do
       {:ok, result}
     else
       {error, code} ->
@@ -42,6 +43,5 @@ defmodule Genex.Encryption.GPG do
   Generate a GPG public/private key combination to use when encyrpting/decrypting the genex passwords file.
   """
   def generate_keys do
-
   end
 end

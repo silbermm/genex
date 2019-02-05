@@ -4,6 +4,7 @@ defmodule Genex do
   """
 
   alias IO.ANSI
+  @encryption Application.get_env(:genex, :encryption)
 
   @wordlist_contents File.read!("priv/diceware.wordlist.asc")
 
@@ -26,17 +27,21 @@ defmodule Genex do
   """
   def save_credentials(credentials) do
     line = "#{credentials.account},#{credentials.username},#{credentials.password}"
-    with {:ok, current_passwords} <- Genex.GPG.load(),
+
+    with {:ok, current_passwords} <- @encryption.load(),
          :ok <- validate_unique(credentials.account, credentials.username, current_passwords) do
-     new_passwords = current_passwords <> line
-     Genex.GPG.save(new_passwords)
-     :ok
+      new_passwords = current_passwords <> line
+      @encryption.save(new_passwords)
+      :ok
     else
-      {:error, :noexists} -> 
-        Genex.GPG.save(line)
-        :ok
-      {:error, :not_unique} -> {:error, :not_unique}
-      _ -> :error
+      {:error, :noexists} ->
+        @encryption.save(line)
+
+      {:error, :not_unique} ->
+        {:error, :not_unique}
+
+      w ->
+        :error
     end
   end
 
@@ -44,7 +49,7 @@ defmodule Genex do
   Find credenials for a specific account
   """
   def find_credentials(account) do
-    case Genex.GPG.load() do
+    case @encryption.load() do
       {:ok, current_passwords} ->
         current_passwords
         |> String.trim()
