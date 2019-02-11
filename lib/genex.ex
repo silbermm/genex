@@ -4,7 +4,9 @@ defmodule Genex do
   """
 
   alias IO.ANSI
-  @encryption Application.get_env(:genex, :encryption)
+  alias Jason
+
+  @encryption Application.get_env(:genex, :encryption_module)
 
   @wordlist_contents File.read!("priv/diceware.wordlist.asc")
 
@@ -26,21 +28,24 @@ defmodule Genex do
   Saves the provided credentials to the designated encyrpted file
   """
   def save_credentials(credentials) do
-    line = "#{credentials.account},#{credentials.username},#{credentials.password}"
 
     with {:ok, current_passwords} <- @encryption.load(),
-         :ok <- validate_unique(credentials.account, credentials.username, current_passwords) do
-      new_passwords = current_passwords <> line
-      @encryption.save(new_passwords)
+         {:ok, current_json} <- Jason.decode(current_passwords),
+         :ok <- validate_unique(credentials, current_json) do
+      n = current_json ++ [credentials]
+      encoded = Jason.encode!(n)
+      @encryption.save(encoded)
       :ok
     else
       {:error, :noexists} ->
+        line = Jason.encode!([credentials])
         @encryption.save(line)
 
       {:error, :not_unique} ->
         {:error, :not_unique}
 
       w ->
+        IO.puts("JKDF #{inspect w}")
         :error
     end
   end
@@ -52,9 +57,8 @@ defmodule Genex do
     case @encryption.load() do
       {:ok, current_passwords} ->
         current_passwords
-        |> String.trim()
-        |> String.split("\n")
-        |> Enum.map(&into_password_struct/1)
+        |> Jason.decode!
+        |> into_credentials_struct
         |> Enum.filter(fn x -> x.account == account end)
 
       _ ->
@@ -62,19 +66,19 @@ defmodule Genex do
     end
   end
 
-  defp validate_unique(account, username, current) do
-    account
-    |> find_credentials
-    |> Enum.find(fn x -> x.username == username end)
+  defp validate_unique(%Genex.Credentials{account: account, username: username, password: _}, current) do
+    current
+    |> Enum.find(fn x ->
+      Map.get(x, "username") == username && Map.get(x, "account") == account
+    end)
     |> case do
       nil -> :ok
       _ -> {:error, :not_unique}
     end
   end
 
-  defp into_password_struct(str) do
-    [account, username, password] = String.split(str, ",")
-    Genex.Credentials.new(account, username, password)
+  defp into_credentials_struct(lst) do
+    Enum.map(lst, &Genex.Credentials.new/1)
   end
 
   defp random_number do

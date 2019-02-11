@@ -10,7 +10,12 @@ use Mix.Config
 
 # You can configure your application as:
 #
-config :genex, encryption: Genex.Encryption.RSA
+config :genex,
+encryption_module: Genex.Encryption.RSA,
+password_file: System.get_env("HOME") <> "/" <> ".genex/genex_passwords",
+public_key: System.get_env("HOME") <> "/" <> ".genex/genex_public.pem",
+private_key: System.get_env("HOME") <> "/" <> ".genex/genex_private.pem"
+
 #
 # and access this configuration in your application as:
 #

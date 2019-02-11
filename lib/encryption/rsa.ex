@@ -9,6 +9,13 @@ defmodule Genex.Encryption.RSA do
 
   @doc """
   Load the genex RSA encrypted file into memory. If the file doesn't exist, returns an error
+
+  TODO: encrypted private key
+
+  [enc_private_key] = :public_key.pem_decode(raw_private_key)
+  der = :pubkey_pem.decipher(res1, passphrase)
+  private_key = :public_key.pem_entry_decode(:RSAPrivateKey, der)
+
   """
   @impl Encryption
   def load do
@@ -20,7 +27,7 @@ defmodule Genex.Encryption.RSA do
          [enc_private_key] <- :public_key.pem_decode(raw_private_key),
          private_key <- :public_key.pem_entry_decode(enc_private_key) do
       try do
-        :public_key.decrypt_private(file_contents, private_key)
+        {:ok, :public_key.decrypt_private(file_contents, private_key)}
       rescue
         e in ErlangError -> {:error, "Unable to decrypt"}
       end
@@ -45,5 +52,9 @@ defmodule Genex.Encryption.RSA do
         IO.inspect error
         {:error, "Unable to save to encrypted file"}
     end
+  end
+
+  def generate_keys do
+
   end
 end
