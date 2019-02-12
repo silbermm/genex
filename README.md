@@ -17,7 +17,7 @@ If you installed elixir with [asdf](https://github.com/asdf-vm/asdf), make sure 
 Create a new rsa public/private keypair (requires openssl is installed on your system)
 
 ```
-openssl genrsa -out genex_private.pem 4096
+openssl genrsa -des3 -out genex_private.pem 4096
 openssl rsa -in genex_private.pem -out genex_public.pem -outform PEM -pubout
 ```
 

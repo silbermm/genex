@@ -28,18 +28,26 @@ defmodule Genex.CLI do
   end
 
   defp process({:find, acc}) do
-    res = Genex.find_credentials(acc)
-    count = Enum.count(res)
+    search_for(acc, nil)
+  end
 
-    cond do
-      count == 0 ->
-        IO.puts("Unable to find a password with that account name")
+  defp search_for(acc, password) do
+    case Genex.find_credentials(acc, password) do
+      {:error, password} -> Prompt.prompt_for_encryption_key_password(acc, &search_for/2)
+      :error -> IO.puts("error encountered when searching for account")
+      res ->
+        count = Enum.count(res)
 
-      count == 1 ->
-        IO.puts("#{List.first(res).password}")
+        cond do
+          count == 0 ->
+            IO.puts("Unable to find a password with that account name")
 
-      count > 1 ->
-        Prompt.prompt_for_specific_account(acc, res, &handle_find_password_with_username/3)
+          count == 1 ->
+            IO.puts("#{List.first(res).password}")
+
+          count > 1 ->
+            Prompt.prompt_for_specific_account(acc, res, &handle_find_password_with_username/3)
+        end
     end
   end
 

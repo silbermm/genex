@@ -53,16 +53,16 @@ defmodule Genex do
   @doc """
   Find credenials for a specific account
   """
-  def find_credentials(account) do
-    case @encryption.load() do
+  def find_credentials(account, password) do
+    case @encryption.load(password) do
       {:ok, current_passwords} ->
         current_passwords
         |> Jason.decode!
         |> into_credentials_struct
         |> Enum.filter(fn x -> x.account == account end)
 
-      _ ->
-        :error
+      {:error, nokeydecrypt} -> {:error, :password}
+      _ -> :error
     end
   end
 

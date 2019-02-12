@@ -9,29 +9,22 @@ defmodule Genex.Encryption.RSA do
 
   @doc """
   Load the genex RSA encrypted file into memory. If the file doesn't exist, returns an error
-
-  TODO: encrypted private key
-
-  [enc_private_key] = :public_key.pem_decode(raw_private_key)
-  der = :pubkey_pem.decipher(res1, passphrase)
-  private_key = :public_key.pem_entry_decode(:RSAPrivateKey, der)
-
   """
   @impl Encryption
-  def load do
+  def load(password \\ nil) do
     filename = System.get_env("HOME") <> "/" <> ".genex_passwords.rsa"
     keyfile = System.get_env("HOME") <> "/" <> ".genex/genex_private.pem"
 
     with {:ok, file_contents} <- File.read(filename),
-         {:ok, raw_private_key} <- File.read(keyfile),
-         [enc_private_key] <- :public_key.pem_decode(raw_private_key),
-         private_key <- :public_key.pem_entry_decode(enc_private_key) do
+         {:ok, private_key} <- get_key(keyfile, password) do
       try do
         {:ok, :public_key.decrypt_private(file_contents, private_key)}
       rescue
         e in ErlangError -> {:error, "Unable to decrypt"}
       end
     else
+      {:error, :nokeydecrypt} = e -> e
+      {:error, :noloadkey} = e -> e
       error -> {:error, :noexists}
     end
   end
@@ -49,12 +42,27 @@ defmodule Genex.Encryption.RSA do
       :ok
     else
       error ->
-        IO.inspect error
         {:error, "Unable to save to encrypted file"}
     end
   end
 
-  def generate_keys do
-
+  defp get_key(key_file, password) do
+    with {:ok, raw_key} <- File.read(key_file),
+         [enc_key] = :public_key.pem_decode(raw_key) do
+      key = case enc_key do
+        {_, _, :not_encrypted} = res -> {:ok, :public_key.pem_entry_decode(res)}
+        {keytype, _, _} = res ->
+          try do
+            der = :pubkey_pem.decipher(res, password)
+            {:ok, :public_key.der_decode(keytype, der)}
+          rescue
+            e in _ -> {:error, :nokeydecrypt}
+          end
+        _ ->
+          {:error, :noloadkey}
+      end
+    else
+      error -> error
+    end
   end
 end

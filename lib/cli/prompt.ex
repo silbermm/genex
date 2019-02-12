@@ -33,6 +33,13 @@ defmodule Genex.CLI.Prompt do
     IO.puts("Generate a different password (y/N)?")
   end
 
+  # TODO: need to hide user input
+  def prompt_for_encryption_key_password(acc, password_handler) do
+    IO.write("Enter private key password:")
+    password = IO.read(:stdio, :line) |> String.trim()
+    password_handler.(acc, password)
+  end
+
   def prompt_for_account(password) do
     # TODO: error handling input
     IO.write("Enter an account that this password belongs to: ")
