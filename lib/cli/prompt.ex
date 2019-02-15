@@ -35,8 +35,9 @@ defmodule Genex.CLI.Prompt do
 
   # TODO: need to hide user input
   def prompt_for_encryption_key_password(acc, password_handler) do
-    IO.write("Enter private key password:")
+    IO.write("Enter private key password: \x1B[8m")
     password = IO.read(:stdio, :line) |> String.trim()
+    IO.write("\x1B[0m")
     password_handler.(acc, password)
   end
 
