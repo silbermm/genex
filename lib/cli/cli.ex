@@ -33,11 +33,12 @@ defmodule Genex.CLI do
 
   defp search_for(acc, password) do
     case Genex.find_credentials(acc, password) do
-      {:error, password} -> Prompt.prompt_for_encryption_key_password(acc, &search_for/2)
+      {:error, :password} -> Prompt.prompt_for_encryption_key_password(acc, &search_for/2)
       :error -> IO.puts("error encountered when searching for account")
       res ->
         count = Enum.count(res)
 
+        # TODO: Put all of this in the Prompt module
         cond do
           count == 0 ->
             IO.puts("Unable to find a password with that account name")
@@ -73,7 +74,7 @@ defmodule Genex.CLI do
     end
   end
 
-  def display(password_list) do
+  defp display(password_list) do
     password_list
     |> with_colors
     |> IO.puts()

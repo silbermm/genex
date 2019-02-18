@@ -44,9 +44,7 @@ defmodule Genex do
       {:error, :not_unique} ->
         {:error, :not_unique}
 
-      w ->
-        IO.puts("JKDF #{inspect w}")
-        :error
+      _ -> :error
     end
   end
 
