@@ -4,23 +4,25 @@ defmodule Genex.Encryption.RSA do
   """
 
   alias Genex.Encryption
+  alias Genex.Environment
 
   @behavior @Encryption
+
+  @private_key_file Application.get_env(:genex, :private_key)
+  @public_key_file Application.get_env(:genex, :public_key)
 
   @doc """
   Load the genex RSA encrypted file into memory. If the file doesn't exist, returns an error
   """
   @impl Encryption
   def load(password \\ nil) do
-    filename = System.get_env("HOME") <> "/" <> ".genex_passwords.rsa"
-    keyfile = System.get_env("HOME") <> "/" <> ".genex/genex_private.pem"
-
+    filename = Environment.load_variable("GENEX_PASSWORDS", :passwords_file)
     with {:ok, file_contents} <- File.read(filename),
-         {:ok, private_key} <- get_key(keyfile, password) do
+         {:ok, private_key} <- get_key(@private_key_file, password) do
       try do
         {:ok, :public_key.decrypt_private(file_contents, private_key)}
       rescue
-        e in ErlangError -> {:error, "Unable to decrypt"}
+        e in _ -> {:error, "Unable to decrypt"}
       end
     else
       {:error, :nokeydecrypt} = e -> e
@@ -29,11 +31,13 @@ defmodule Genex.Encryption.RSA do
     end
   end
 
+  @doc """
+  Save the supplied data to the genex password file, overwritting whats already there
+  """
+  @impl Encryption
   def save(data) do
-    filename = System.get_env("HOME") <> "/" <> ".genex_passwords.rsa"
-    keyfile = System.get_env("HOME") <> "/" <> ".genex/genex_public.pem"
-
-    with {:ok, raw_public_key} <- File.read(keyfile),
+    filename = Environment.load_variable("GENEX_PASSWORDS", :passwords_file)
+    with {:ok, raw_public_key} <- File.read(@public_key_file),
          [enc_public_key] <- :public_key.pem_decode(raw_public_key),
          public_key <- :public_key.pem_entry_decode(enc_public_key) do
 

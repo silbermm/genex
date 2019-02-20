@@ -27,9 +27,9 @@ defmodule Genex do
   @doc """
   Saves the provided credentials to the designated encyrpted file
   """
-  def save_credentials(credentials) do
+  def save_credentials(credentials, password) do
 
-    with {:ok, current_passwords} <- @encryption.load(),
+    with {:ok, current_passwords} <- @encryption.load(password),
          {:ok, current_json} <- Jason.decode(current_passwords),
          :ok <- validate_unique(credentials, current_json) do
       n = current_json ++ [credentials]
@@ -43,6 +43,9 @@ defmodule Genex do
 
       {:error, :not_unique} ->
         {:error, :not_unique}
+
+      {:error, :nokeydecrypt} ->
+        {:error, :password}
 
       _ -> :error
     end
@@ -59,7 +62,7 @@ defmodule Genex do
         |> into_credentials_struct
         |> Enum.filter(fn x -> x.account == account end)
 
-      {:error, nokeydecrypt} -> {:error, :password}
+      {:error, :nokeydecrypt} -> {:error, :password}
       _ -> :error
     end
   end

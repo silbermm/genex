@@ -120,15 +120,18 @@ defmodule Genex.CLI do
 
       _ ->
         IO.puts("Sorry, I didn't understand your answer...")
-        Prompt.prompt_to_save(password)
+        Prompt.prompt_to_save(password, &handle_save/2)
     end
   end
 
-  defp save_creds(credentials) do
-    case Genex.save_credentials(credentials) do
+  defp save_creds(credentials, password \\ nil) do
+    case Genex.save_credentials(credentials, password) do
       :ok ->
         IO.puts("Account saved")
         System.halt(0)
+
+      {:error, :password} ->
+        Prompt.prompt_for_encryption_key_password(credentials, &save_creds/2)
 
       {:error, :not_unique} ->
         IO.puts("That account and username combination already exists in the system")
