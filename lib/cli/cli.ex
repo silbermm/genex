@@ -33,8 +33,12 @@ defmodule Genex.CLI do
 
   defp search_for(acc, password) do
     case Genex.find_credentials(acc, password) do
-      {:error, :password} -> Prompt.prompt_for_encryption_key_password(acc, &search_for/2)
-      :error -> IO.puts("error encountered when searching for account")
+      {:error, :password} ->
+        Prompt.prompt_for_encryption_key_password(acc, &search_for/2)
+
+      :error ->
+        IO.puts("error encountered when searching for account")
+
       res ->
         count = Enum.count(res)
 

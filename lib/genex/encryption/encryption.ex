@@ -2,7 +2,7 @@ defmodule Genex.Encryption do
   @moduledoc """
     Defines how to load and encrypted file and save plain text to encrypted file
   """
-  @type password :: String.t()
+  @type password :: String.t() | nil
 
   @callback load(password) :: {:ok, term} | {:error, String.t()}
   @callback save(String.t()) :: term

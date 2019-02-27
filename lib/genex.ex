@@ -1,32 +1,36 @@
 defmodule Genex do
   @moduledoc """
-  Build a password from readable words using the [Diceware](http://world.std.com/~reinhold/diceware.html) word list.
+  Build a password from readable words using 
+  the [Diceware](http://world.std.com/~reinhold/diceware.html) word list
+  and save it to an encyrpted file.
   """
 
   alias IO.ANSI
   alias Jason
+  alias Genex.Credentials
+  alias Genex.Diceware
 
   @encryption Application.get_env(:genex, :encryption_module)
-
-  @wordlist_contents File.read!("priv/diceware.wordlist.asc")
-
-  defstruct [:account, :username, :password]
+  @random Application.get_env(:genex, :random_number_module)
 
   @doc """
-  Generate a password by first creating 6 random numbers and 
+  Generate a password by first creating 6 random numbers and
   pulling the appropriate word from the dicware word list
   """
-  def generate_password do
-    wordlist = wordlist()
+  @spec generate_password(number()) :: [String.t]
+  def generate_password(num \\ 6) do
+    wordlist = Diceware.wordlist()
 
-    1..6
-    |> Enum.map(fn _ -> random_number end)
-    |> Enum.map(&find_word(wordlist, &1))
+    1..num
+    |> Enum.map(fn _ -> @random.random_number() end)
+    |> Enum.map(&Diceware.find_word(wordlist, &1))
   end
 
   @doc """
   Saves the provided credentials to the designated encyrpted file
   """
+  @type save_creds_return :: :ok | {:error, :not_unique | :nokeydecrypt | :password} | :error
+  @spec save_credentials(Credentials.t(), binary() | nil) :: save_creds_return
   def save_credentials(credentials, password) do
 
     with {:ok, current_passwords} <- @encryption.load(password),
@@ -54,12 +58,13 @@ defmodule Genex do
   @doc """
   Find credenials for a specific account
   """
+  @spec find_credentials(String.t, String.t | nil) :: [Credentials.t()] | {:error, :password} | :error
   def find_credentials(account, password) do
     case @encryption.load(password) do
       {:ok, current_passwords} ->
         current_passwords
         |> Jason.decode!
-        |> into_credentials_struct
+        |> Enum.map(&Credentials.new/1)
         |> Enum.filter(fn x -> x.account == account end)
 
       {:error, :nokeydecrypt} -> {:error, :password}
@@ -77,42 +82,4 @@ defmodule Genex do
       _ -> {:error, :not_unique}
     end
   end
-
-  defp into_credentials_struct(lst) do
-    Enum.map(lst, &Genex.Credentials.new/1)
-  end
-
-  defp random_number do
-    1..5
-    |> Enum.map(fn _ -> Task.async(&single_random/0) end)
-    |> Task.yield_many()
-    |> Enum.map(fn {_task, {:ok, num}} -> num end)
-    |> Enum.join()
-  end
-
-  @doc """
-  Takes the contents of the wordlist and builds a keyword list of
-  tuples that contain the id / word combo
-  """
-  defp wordlist do
-    @wordlist_contents
-    |> String.trim()
-    |> String.split("\n")
-    |> Enum.map(&tab_split/1)
-  end
-
-  @doc """
-  Find one word in the wordlist coorelating to the number given.
-  """
-  defp find_word(wordlist, id) do
-    {id, word} = Enum.find(wordlist, fn {k, v} -> k == id end)
-    word
-  end
-
-  defp tab_split(word) do
-    [k, v] = String.split(word, "\t")
-    {k, v}
-  end
-
-  defp single_random, do: Enum.random(1..6)
 end

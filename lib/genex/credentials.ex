@@ -6,6 +6,8 @@ defmodule Genex.Credentials do
 
   alias __MODULE__
 
+  @type t :: %Credentials{account: String.t(), username: String.t(), password: String.t()}
+
   @derive Jason.Encoder
   defstruct [:account, :username, :password]
 
