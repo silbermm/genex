@@ -5,7 +5,6 @@ defmodule Genex do
   and save it to an encyrpted file.
   """
 
-  alias IO.ANSI
   alias Jason
   alias Genex.Credentials
   alias Genex.Diceware

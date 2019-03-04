@@ -6,7 +6,7 @@ defmodule Genex.Environment do
 
   @doc """
   First looks for the environment variable and returns the value.
-  If the environment variable is not found, look for the supplied genex 
+  If the environment variable is not found, look for the supplied genex
   config value. If that is not defined, return the default.
   """
   @spec load_variable(String.t(), atom(), binary() | nil) :: binary()

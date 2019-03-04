@@ -1,6 +1,6 @@
 defmodule Genex.Credentials do
   @moduledoc """
-  Defines a struct that holds the account, username and password and 
+  Defines a struct that holds the account, username and password and
   some helper methods for dealing with the data
   """
 

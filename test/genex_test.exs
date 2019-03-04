@@ -25,11 +25,11 @@ defmodule GenexTest do
     assert Genex.find_credentials("gmail", :correct) === [gmail]
   end
 
-  test "find credentials unable to decrypt private key", %{used_creds: gmail} do
+  test "find credentials unable to decrypt private key" do
     assert Genex.find_credentials("gmail", :incorrect) === {:error, :password}
   end
 
-  test "find credentials, no file exists", %{new_creds: facebook} do
+  test "find credentials, no file exists" do
     assert Genex.find_credentials("gmail", :noexists) === :error
   end
 

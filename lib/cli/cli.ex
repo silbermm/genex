@@ -1,6 +1,6 @@
 defmodule Genex.CLI do
   @moduledoc """
-  Password Manager that uses GPG to encrypt.
+  Password Manager that uses RSA to encrypt.
 
     --help          Prints help message
     --generate      Generate a password and save it
@@ -10,6 +10,8 @@ defmodule Genex.CLI do
   alias IO.ANSI
   alias Genex.CLI.Prompt
 
+  @system Application.get_env(:genex, :system_module)
+
   def main(opts) do
     opts
     |> parse_args
@@ -17,8 +19,8 @@ defmodule Genex.CLI do
   end
 
   defp process(:help) do
-    IO.puts(@moduledoc)
-    System.halt(0)
+    IO.write(@moduledoc)
+    @system.halt(0)
   end
 
   defp process(:generate) do
