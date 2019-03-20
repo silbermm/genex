@@ -28,7 +28,7 @@ Place both files in a new folder in your home directory named `.genex/` (notice 
 
 `genex` will display a generated password on the screen. Continue to run it until you get one you can remember.
 
-Once you agree that you want to save the password, it will add it to an encrypted file in the `~/.genex` folder. You can alway view the encrypted file using openssl with the following command:
+Once you agree that you want to save the password, it will add it to an encrypted file in the `~/.genex/passwords` folder. You can alway view the encrypted file using openssl with the following command:
 
 ```
 openssl rsautl -decrypt -inkey ~/.genex/genex_private.pem -in ~/.genex_passwords.rsa
