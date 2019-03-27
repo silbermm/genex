@@ -42,6 +42,7 @@ defmodule GenexInterfaceWeb do
       import GenexInterfaceWeb.ErrorHelpers
       import GenexInterfaceWeb.Gettext
       alias GenexInterfaceWeb.Router.Helpers, as: Routes
+      import Phoenix.LiveView, only: [live_render: 2, live_render: 3]
     end
   end
 
@@ -50,6 +51,7 @@ defmodule GenexInterfaceWeb do
       use Phoenix.Router
       import Plug.Conn
       import Phoenix.Controller
+      import Phoenix.LiveView.Router
     end
   end
 

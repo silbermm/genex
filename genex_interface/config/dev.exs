@@ -52,7 +52,8 @@ config :genex_interface, GenexInterfaceWeb.Endpoint,
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
       ~r{priv/gettext/.*(po)$},
       ~r{lib/genex_interface_web/views/.*(ex)$},
-      ~r{lib/genex_interface_web/templates/.*(eex)$}
+      ~r{lib/genex_interface_web/templates/.*(eex)$},
+      ~r{lib/my_app_web/live/.*(ex)$}
     ]
   ]
 
