@@ -39,7 +39,8 @@ defmodule GenexInterface.MixProject do
       {:phoenix_live_view, github: "phoenixframework/phoenix_live_view"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
-      {:plug_cowboy, "~> 2.0"}
+      {:plug_cowboy, "~> 2.0"},
+      {:genex_core, path: "../genex_core"}
     ]
   end
 end
