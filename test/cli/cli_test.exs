@@ -1,6 +1,6 @@
 defmodule GenexTest.CLI do
   use ExUnit.Case
-  import ExUnit.CaptureIO 
+  import ExUnit.CaptureIO
   alias Genex.CLI
 
   test "prints help message" do
