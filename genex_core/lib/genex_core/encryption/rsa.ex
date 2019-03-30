@@ -17,7 +17,6 @@ defmodule GenexCore.Encryption.RSA do
   @impl Encryption
   def load(password \\ nil) do
     filename = Environment.load_variable("GENEX_PASSWORDS", :passwords_file)
-
     with {:ok, file_contents} <- File.read(filename),
          {:ok, private_key} <- get_key(@private_key_file, password) do
       try do

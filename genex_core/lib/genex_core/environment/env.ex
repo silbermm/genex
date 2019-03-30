@@ -12,7 +12,7 @@ defmodule GenexCore.Environment do
   @spec load_variable(String.t(), atom(), binary() | nil) :: binary()
   def load_variable(env_variable_name, genex_config_name, default \\ nil) do
     case System.get_env(env_variable_name) do
-      nil -> Application.get_env(:genex, genex_config_name, default)
+      nil -> Application.get_env(:genex_core, genex_config_name, default)
       val -> val
     end
   end

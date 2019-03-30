@@ -1,4 +1,4 @@
-defmodule GenexCore.CLI do
+defmodule Genex.CLI do
   @moduledoc """
   Password Manager that uses RSA to encrypt.
 
@@ -8,9 +8,10 @@ defmodule GenexCore.CLI do
   """
 
   alias IO.ANSI
-  alias GenexCore.CLI.Prompt
+  alias Genex.CLI.Prompt
 
-  @system Application.get_env(:genex_core, :system_module)
+  @system Application.get_env(:genex_cli, :system_module)
+  @genex_core Application.get_env(:genex_cli, :genex_core_module)
 
   def main(opts) do
     opts
@@ -24,7 +25,7 @@ defmodule GenexCore.CLI do
   end
 
   defp process(:generate) do
-    GenexCore.generate_password()
+    @genex_core.generate_password()
     |> display
     |> Prompt.prompt_to_save(&handle_save/2)
   end
@@ -34,7 +35,7 @@ defmodule GenexCore.CLI do
   end
 
   defp search_for(acc, password) do
-    case GenexCore.find_credentials(acc, password) do
+    case @genex_core.find_credentials(acc, password) do
       {:error, :password} ->
         Prompt.prompt_for_encryption_key_password(acc, &search_for/2)
 

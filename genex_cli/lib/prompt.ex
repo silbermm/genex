@@ -1,4 +1,4 @@
-defmodule GenexCore.CLI.Prompt do
+defmodule Genex.CLI.Prompt do
   @moduledoc """
   Prompts in the CLI
   """
