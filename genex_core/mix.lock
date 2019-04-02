@@ -5,8 +5,10 @@
   "exgpg": {:hex, :exgpg, "0.0.3", "feec58da946c1ab46f8bb46d6b34c362a50f5bd04d159ec8694fface2ab879c0", [:mix], [{:porcelain, "~> 2.0.0", [hex: :porcelain, repo: "hexpm", optional: false]}, {:uuid, "~> 0.1.5", [hex: :uuid, repo: "hexpm", optional: false]}], "hexpm"},
   "file_system": {:hex, :file_system, "0.2.6", "fd4dc3af89b9ab1dc8ccbcc214a0e60c41f34be251d9307920748a14bf41f1d3", [:mix], [], "hexpm"},
   "jason": {:hex, :jason, "1.1.2", "b03dedea67a99223a2eaf9f1264ce37154564de899fd3d8b9a21b1a6fd64afe7", [:mix], [{:decimal, "~> 1.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm"},
+  "libcluster": {:hex, :libcluster, "3.0.3", "492e98c7f5c9a6e95b8d51f0b198cf8eab60af3b490f40b958d4bc326d11e40e", [:mix], [{:jason, "~> 1.0", [hex: :jason, repo: "hexpm", optional: false]}], "hexpm"},
   "mix_test_watch": {:hex, :mix_test_watch, "0.9.0", "c72132a6071261893518fa08e121e911c9358713f62794a90c95db59042af375", [:mix], [{:file_system, "~> 0.2.1 or ~> 0.3", [hex: :file_system, repo: "hexpm", optional: false]}], "hexpm"},
   "poison": {:hex, :poison, "4.0.1", "bcb755a16fac91cad79bfe9fc3585bb07b9331e50cfe3420a24bcc2d735709ae", [:mix], [], "hexpm"},
   "porcelain": {:hex, :porcelain, "2.0.3", "2d77b17d1f21fed875b8c5ecba72a01533db2013bd2e5e62c6d286c029150fdc", [:mix], [], "hexpm"},
+  "ranch": {:hex, :ranch, "1.7.1", "6b1fab51b49196860b733a49c07604465a47bdb78aa10c1c16a3d199f7f8c881", [:rebar3], [], "hexpm"},
   "uuid": {:hex, :uuid, "0.1.5", "b6ace36a422cb8a1c3b02901aa5627595f115fe185ac8b0fdd0a8ee48c235068", [:mix], [], "hexpm"},
 }
