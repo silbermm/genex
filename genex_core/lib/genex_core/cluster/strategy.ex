@@ -1,4 +1,4 @@
-defmodule Genex.Core.Strategy do
+defmodule Genex.Core.Cluster.Strategy do
   @moduledoc """
   This module defines the behaviour for implementing clustering strategies.
   """
@@ -32,14 +32,13 @@ defmodule Genex.Core.Strategy do
 
   All failures are logged.
   """
-  @spec connect_nodes(topology, mfa_tuple, mfa_tuple, [atom()]) :: :ok | {:error, bad_nodes}
-  def connect_nodes(topology, {_, _, _} = connect, {_, _, _} = list_nodes, nodes)
-      when is_list(nodes) do
+  @spec connect_nodes(topology, mfa_tuple, mfa_tuple, [atom()], binary) :: :ok | {:error, bad_nodes}
+  def connect_nodes(topology, {_, _, _} = connect, {_, _, _} = list_nodes, nodes, public_key)
+  when is_list(nodes) do
     {connect_mod, connect_fun, connect_args} = connect
     {list_mod, list_fun, list_args} = list_nodes
     ensure_exported!(list_mod, list_fun, length(list_args))
     current_node = Node.self()
-
     need_connect =
       nodes
       |> difference(apply(list_mod, list_fun, list_args))
@@ -49,11 +48,9 @@ defmodule Genex.Core.Strategy do
       Enum.reduce(need_connect, [], fn n, acc ->
         fargs = connect_args ++ [n]
         ensure_exported!(connect_mod, connect_fun, length(fargs))
-
-        case apply(connect_mod, connect_fun, fargs) do
+        case Genex.Core.Connection.connect(fargs, public_key) do
           true ->
             Cluster.Logger.info(topology, "connected to #{inspect(n)}")
-            IO.inspect("CONNECTED NEW NODE - INITIATE INFO SHARE")
             acc
 
           false ->
@@ -158,3 +155,4 @@ defmodule Genex.Core.Strategy do
     end
   end
 end
+

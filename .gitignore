@@ -1,5 +1,7 @@
 # The directory Mix will write compiled artifacts to.
 /_build/
+genex_core/_build
+
 
 # If you run "mix test --cover", coverage assets end up here.
 /cover/
@@ -22,3 +24,4 @@ erl_crash.dump
 # Ignore package tarball (built via "mix hex.build").
 genex-*.tar
 
+Mnesia.*

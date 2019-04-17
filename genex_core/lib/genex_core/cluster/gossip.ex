@@ -1,4 +1,4 @@
-defmodule Genex.Core.Gossip do
+defmodule Genex.Core.Cluster.Gossip do
   @moduledoc """
   This clustering strategy uses multicast UDP to gossip node names
   to other nodes on the network. These packets are listened for on
@@ -43,22 +43,24 @@ defmodule Genex.Core.Gossip do
   All the checks are done at runtime, so you can flip the debug level without being forced to shutdown your node.
   """
   use GenServer
+  use Genex.Core.Cluster.Strategy
   import Cluster.Logger
 
-  require Logger
+  alias Cluster.Strategy.State
 
   @default_port 45892
   @default_addr {0, 0, 0, 0}
   @default_multicast_addr {230, 1, 1, 251}
   @sol_socket 0xFFFF
   @so_reuseport 0x0200
+  @public_key File.read!("/home/silbermm/.genex/public_key.pem")
 
   def start_link(args) do
     GenServer.start_link(__MODULE__, args)
   end
 
   @impl true
-  def init(%{config: config}) do
+  def init([%State{config: config} = state]) do
     port = Keyword.get(config, :port, @default_port)
 
     ip =
@@ -88,7 +90,7 @@ defmodule Genex.Core.Gossip do
     {:ok, socket} = :gen_udp.open(port, options)
 
     secret = Keyword.get(config, :secret, nil)
-    state = %{:meta => {multicast_addr, port, socket, secret}, :connected_nodes => []}
+    state = %State{state | :meta => {multicast_addr, port, socket, secret, @public_key}}
     {:ok, state, 0}
   end
 
@@ -123,7 +125,8 @@ defmodule Genex.Core.Gossip do
   @impl true
   def handle_info(:timeout, state), do: handle_info(:heartbeat, state)
 
-  def handle_info(:heartbeat, %{meta: {multicast_addr, port, socket, _}} = state) do
+  def handle_info(:heartbeat, %State{meta: {multicast_addr, port, socket, _, _}} = state) do
+    debug(state.topology, "heartbeat")
     :gen_udp.send(socket, multicast_addr, port, heartbeat(node(), state))
     Process.send_after(self(), :heartbeat, :rand.uniform(5_000))
     {:noreply, state}
@@ -132,7 +135,7 @@ defmodule Genex.Core.Gossip do
   # Handle received heartbeats
   def handle_info(
         {:udp, _socket, _ip, _port, <<"heartbeat::", _::binary>> = packet},
-        %{meta: {_, _, _, secret}} = state
+        %State{meta: {_, _, _, secret, _}} = state
       )
       when is_nil(secret) do
     handle_heartbeat(state, packet)
@@ -141,7 +144,7 @@ defmodule Genex.Core.Gossip do
 
   def handle_info(
         {:udp, _socket, _ip, _port, <<iv::binary-size(16)>> <> ciphertext},
-        %{meta: {_, _, _, secret}} = state
+        %State{meta: {_, _, _, secret, _}} = state
       )
       when is_binary(secret) do
     case decrypt(ciphertext, secret, iv) do
@@ -154,23 +157,23 @@ defmodule Genex.Core.Gossip do
     end
   end
 
-  def handle_info({:udp, _socket, _ip, _port, _}, state) do
+  def handle_info({:udp, _socket, _ip, _port, _, _}, state) do
     {:noreply, state}
   end
 
-  def terminate(_type, _reason, %{meta: {_, _, socket, _}}) do
+  def terminate(_type, _reason, %State{meta: {_, _, socket, _, _}}) do
     :gen_udp.close(socket)
     :ok
   end
 
   # Construct iodata representing packet to send
-  defp heartbeat(node_name, %{meta: {_, _, _, secret}})
+  defp heartbeat(node_name, %State{meta: {_, _, _, secret, public_key}})
        when is_nil(secret) do
-    ["heartbeat::", :erlang.term_to_binary(%{node: node_name})]
+    ["heartbeat::", :erlang.term_to_binary(%{node: node_name, public_key: public_key})]
   end
 
-  defp heartbeat(node_name, %{meta: {_, _, _, secret}}) when is_binary(secret) do
-    message = "heartbeat::" <> :erlang.term_to_binary(%{node: node_name})
+  defp heartbeat(node_name, %State{meta: {_, _, _, secret, public_key}}) when is_binary(secret) do
+    message = "heartbeat::" <> :erlang.term_to_binary(%{node: node_name, public_key: public_key})
     {:ok, iv, msg} = encrypt(message, secret)
 
     [iv, msg]
@@ -180,20 +183,19 @@ defmodule Genex.Core.Gossip do
   # is connected to us, and if not, we connect to it.
   # If the connection fails, it's likely because the cookie
   # is different, and thus a node we can ignore
-  defp handle_heartbeat(state, <<"heartbeat::", rest::binary>>) do
+  @spec handle_heartbeat(State.t(), binary) :: :ok
+  defp handle_heartbeat(%State{} = state, <<"heartbeat::", rest::binary>>) do
     self = node()
-    #connect = state.connect
-    #list_nodes = state.list_nodes
-    #topology = state.topology
-
+    connect = state.connect
+    list_nodes = state.list_nodes
+    topology = state.topology
     case :erlang.binary_to_term(rest) do
-      %{node: ^self} ->
+      %{node: ^self, public_key: _} ->
         :ok
 
-      %{node: n} when is_atom(n) ->
-        Logger.debug("received heartbeat from #{n}")
-        #Genex.Core.Strategy.connect_nodes(topology, connect, list_nodes, [n])
-        # TODO: Connect nodes via TCP
+      %{node: n, public_key: public_key} when is_atom(n) ->
+        debug(state.topology, "received heartbeat from #{n} and public_key #{public_key}")
+        Genex.Core.Cluster.Strategy.connect_nodes(topology, connect, list_nodes, [n], public_key)
         :ok
 
       _ ->
@@ -273,3 +275,4 @@ defmodule Genex.Core.Gossip do
     end
   end
 end
+
