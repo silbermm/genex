@@ -3,7 +3,7 @@ defmodule Genex.Core.Connection do
   alias Genex.Core.DataStore
   alias __MODULE__
 
-  defstruct [:trusted_devices, :non_trusted_devices]
+  defstruct [:trusted_devices]
 
   def start_link(args), do: GenServer.start_link(__MODULE__, args, name: __MODULE__)
 
@@ -14,7 +14,7 @@ defmodule Genex.Core.Connection do
       {:ok, devices} -> devices
       _ -> []
     end
-    {:ok, %Connection{trusted_devices: all_trusted, non_trusted_devices: []}}
+    {:ok, %Connection{trusted_devices: all_trusted}}
   end
 
   def handle_call({:connect, n, pub}, _from, state) do
@@ -23,26 +23,26 @@ defmodule Genex.Core.Connection do
       {:reply, Node.connect(n), state}
     else
       IO.inspect("NODE NOT TRUSTED (#{n})", label: "CONNECT_CLIENT")
-      non_trusted = state.non_trusted_devices ++ n
-      {:reply, false, %{state | non_trusted_devices: non_trusted}}
+      {:reply, false, state}
     end
   end
 
-  def handle_cast({:trust, n, pub, replicate?}, _from, state) do
+  def handle_cast({:trust, n, pub, replicate?}, state) do
     DataStore.add_trusted_device(n, pub)
-    if (replicate) do
-      {Genex.TaskSupervisor, n}
-      |> Task.Supervisor.async(Genex.Core.Connect, trust_node, [node(), "1234", false])
+    if (replicate?) do
+      IO.puts("replicating to #{n}")
+       GenServer.cast({Genex.Core.Connection, :b@silbermm}, {:trust, :a@silbermm, "1234", false})
     end
-    {:no_reply, %{state | [state.trusted_devices | {n, pub}]}}
+    st = state.trusted_devices ++ {n, pub}
+    {:noreply, %{state | trusted_devices: st}}
   end
 
   def connect([n], public_key) do
     GenServer.call(__MODULE__, {:connect, n, public_key})
   end
 
-  def trust_node(node_name, public_key, replicate // false) do
-    GenServer.cast(__MODULE__, {:trust, n, public_key, replicate})
+  def trust_node(node_name, public_key, replicate \\ false) do
+    GenServer.cast(__MODULE__, {:trust, node_name, public_key, replicate})
   end
 
   defp node_trusted?(node_name, public_key, %{trusted_devices: trusted_devices} = _state) do
