@@ -11,7 +11,7 @@ defmodule Genex.Core.Connection do
   def init(_args) do
     # get all trusted devices and set in state
     all_trusted = case DataStore.get_all_trusted_devices() do
-      {:ok, devices} -> devices
+      {:ok, { _, public_key }} -> public_key
       _ -> []
     end
     {:ok, %Connection{trusted_devices: all_trusted}}
@@ -20,6 +20,7 @@ defmodule Genex.Core.Connection do
   def handle_call({:connect, n, pub}, _from, state) do
     if(node_trusted?(n, pub, state)) do
       IO.inspect("NODE TRUSTED (#{n})", label: "CONNECT_CLIENT")
+      state = %Connection{ trusted_devices | [{n, pub} | state.trusted_devices] }
       {:reply, Node.connect(n), state}
     else
       IO.inspect("NODE NOT TRUSTED (#{n})", label: "CONNECT_CLIENT")
@@ -46,12 +47,9 @@ defmodule Genex.Core.Connection do
   end
 
   defp node_trusted?(node_name, public_key, %{trusted_devices: trusted_devices} = _state) do
-    Enum.any?(trusted_devices, fn {name, pub_key} ->
-      name == node_name && pub_key == public_key
-    end)
-  end
-
-  defp remote_supervisor(recipient) do
-    {Chat.TaskSupervisor, recipient}
+    case Genex.Core.DataStore.get_trusted_device(node_name) do
+      {:ok, {_, pub_key}} -> public_key == pub_key
+      _ -> false
+    end
   end
 end

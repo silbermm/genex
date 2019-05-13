@@ -14,6 +14,7 @@ defmodule Genex.CLI do
   @genex_core Application.get_env(:genex_cli, :genex_core_module)
 
   def main(opts) do
+    # set the nodename and cookie
     opts
     |> parse_args
     |> process

@@ -28,10 +28,10 @@ defmodule GenexCli.MixProject do
     [
       {:dialyxir, "~> 1.0.0-rc.4", only: [:dev], runtime: false},
       {:mix_test_watch, "~> 0.8", only: :dev, runtime: false},
-      {:genex_core, path: "../genex_core"}
+      {:genex_core, path: "../genex_core", runtime: false}
     ]
   end
-  
+
   defp escript do
     [main_module: Genex.CLI]
   end
