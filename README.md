@@ -1,37 +1,21 @@
-# Genex
+# GenexCli
 
-Build a password from readable words using the [Diceware](http://world.std.com/~reinhold/diceware.html) word list.
+**TODO: Add description**
 
 ## Installation
 
-`mix escript.install github silbermm/genex`
+If [available in Hex](https://hex.pm/docs/publish), the package can be installed
+by adding `genex_cli` to your list of dependencies in `mix.exs`:
 
-This will install genex into your ~/.mix/escripts directory.
-
-> You should add ~/.mix/escripts to your PATH
-
-If you installed elixir with [asdf](https://github.com/asdf-vm/asdf), make sure to run `asdf reshim elixir`
-
-## Setup
-
-Create a new rsa public/private keypair (requires openssl is installed on your system)
-
-```
-openssl genrsa -des3 -out genex_private.pem 4096
-openssl rsa -in genex_private.pem -out genex_public.pem -outform PEM -pubout
+```elixir
+def deps do
+  [
+    {:genex_cli, "~> 0.1.0"}
+  ]
+end
 ```
 
-Place both files in a new folder in your home directory named `.genex/` (notice the `.` in the folder name). genex will use these files to encrypt and decrypt your password file.
+Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
+and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
+be found at [https://hexdocs.pm/genex_cli](https://hexdocs.pm/genex_cli).
 
-> Don't lose the private key, in fact, back it up somewhere safe. If you lose the file, there will be no way to recover your passwords!
-
-
-## Usage
-
-`genex` will display a generated password on the screen. Continue to run it until you get one you can remember.
-
-Once you agree that you want to save the password, it will add it to an encrypted file in the `~/.genex/passwords` folder. You can alway view the encrypted file using openssl with the following command:
-
-```
-openssl rsautl -decrypt -inkey ~/.genex/genex_private.pem -in ~/.genex_passwords.rsa
-```
