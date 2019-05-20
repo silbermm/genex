@@ -11,44 +11,6 @@ defmodule Genex.Core.Encryption.RSA do
   @private_key_file Application.get_env(:genex_cli, :private_key)
   @public_key_file Application.get_env(:genex_cli, :public_key)
 
-  @doc """
-  Load the genex RSA encrypted file into memory. If the file doesn't exist, returns an error
-  """
-  @impl Encryption
-  def load(password \\ nil) do
-    filename = Environment.load_variable("GENEX_PASSWORDS", :passwords_file)
-    with {:ok, file_contents} <- File.read(filename),
-         {:ok, private_key} <- get_key(@private_key_file, password) do
-      try do
-        {:ok, :public_key.decrypt_private(file_contents, private_key)}
-      rescue
-        _e in _ -> {:error, "Unable to decrypt"}
-      end
-    else
-      {:error, :nokeydecrypt} = e -> e
-      {:error, :noloadkey} = e -> e
-      _ -> {:error, :noexists}
-    end
-  end
-
-  @doc """
-  Save the supplied data to the genex password file, overwritting whats already there
-  """
-  @impl Encryption
-  def save(data) do
-    filename = Environment.load_variable("GENEX_PASSWORDS", :passwords_file)
-
-    with {:ok, raw_public_key} <- File.read(@public_key_file),
-         [enc_public_key] <- :public_key.pem_decode(raw_public_key),
-         public_key <- :public_key.pem_entry_decode(enc_public_key) do
-      enc_data = :public_key.encrypt_public(data, public_key)
-      File.write!(filename, enc_data)
-      :ok
-    else
-      _ -> {:error, "Unable to save to encrypted file"}
-    end
-  end
-
   @impl Encryption
   def encrypt(data) do
     with {:ok, raw_public_key} <- File.read(@public_key_file),
@@ -65,6 +27,7 @@ defmodule Genex.Core.Encryption.RSA do
     end
   end
 
+  @impl Encryption
   def decrypt(data, password \\ nil) do
     try do
       {:ok, private_key} = get_key(@private_key_file, password)

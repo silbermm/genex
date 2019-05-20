@@ -9,6 +9,7 @@ defmodule Genex.Core do
   alias Genex.Core.Credentials
   alias Genex.Core.Diceware
   alias Genex.Core.Environment
+  alias Genex.Core.PasswordFile
 
   @encryption Application.get_env(:genex_cli, :encryption_module)
   @random Application.get_env(:genex_cli, :random_number_module)
@@ -29,31 +30,17 @@ defmodule Genex.Core do
   @doc """
   Saves the provided credentials to the designated encyrpted file
   """
-  @type save_creds_return :: :ok | {:error, :not_unique | :nokeydecrypt | :password} | :error
-  @spec save_credentials(Credentials.t(), binary() | nil) :: save_creds_return
-  def save_credentials(credentials, password) do
-    filename = Environment.load_variable("GENEX_PASSWORDS", :passwords_file)
-
+  @type save_creds_return :: :ok | {:error, atom()} | :error
+  @spec save_credentials(Credentials.t()) :: save_creds_return
+  def save_credentials(credentials) do
     {:ok, encrypted} = @encryption.encrypt(credentials.password)
     creds = Credentials.add_encrypted_password(credentials, encrypted)
-    with {:ok, file} <- File.read(filename),
-         {:ok, d} <- Jason.decode(file) do
-      data = Jason.encode!(d ++ [creds])
-      File.write(filename, data);
-    else
-      {:error, :enoent} -> File.write(filename, Jason.encode!([creds]))
-      err -> IO.inspect(err, label: "ERRORED")
-    end
-  end
 
-  def show_credentials(password) do
-    filename = Environment.load_variable("GENEX_PASSWORDS", :passwords_file)
-    with {:ok, file} <- File.read(filename),
-         {:ok, d} <- Jason.decode(file) do
-      passwords = Enum.map(d, fn p -> @encryption.decrypt(Map.get(p, "encrypted_password"), password) end)
-      IO.inspect(passwords)
-    else
-      err -> IO.inspect(err, label: "ERRORED")
+    case PasswordFile.load() do
+      {:ok, data} -> 
+        data = Jason.encode!(data ++ [creds])
+        PasswordFile.write(data);
+      :error -> PasswordFile.write(Jason.encode!([creds]))
     end
   end
 
@@ -62,15 +49,35 @@ defmodule Genex.Core do
   """
   @spec find_credentials(String.t, String.t | nil) :: [Credentials.t()] | {:error, :password} | :error
   def find_credentials(account, password) do
-    case @encryption.load(password) do
-      {:ok, current_passwords} ->
-        current_passwords
-        |> Jason.decode!
-        |> Enum.map(&Credentials.new/1)
-        |> Enum.filter(fn x -> x.account == account end)
+    case PasswordFile.load() do
+      {:ok, data} ->
+        try do
+          data
+          |> Enum.filter(fn c -> Map.get(c, "account") == account end)
+          |> Enum.map(&Credentials.new/1)
+          |> Enum.group_by(fn c -> Map.get(c, :username) end)
+          |> Enum.map(&(decrypt_passwords(&1, password)))
+        rescue
+          _e in _ -> {:error, :password}
+        end
+      :error -> :error
+    end
+  end
 
-      {:error, :nokeydecrypt} -> {:error, :password}
-      _ -> :error
+  defp decrypt_passwords({ u, accnts }, password) do
+    account =
+      accnts
+      |> Enum.sort(&compare_datetime/2)
+      |> List.last()
+    {:ok, pass} = @encryption.decrypt(account.encrypted_password, password)
+    Credentials.add_password(account, pass)
+  end
+
+  defp compare_datetime(first, second) do
+    case DateTime.compare(first.created_at, second.created_at) do
+      :gt -> false
+      :lt -> true
+      :eq -> true
     end
   end
 
