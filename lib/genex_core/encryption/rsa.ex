@@ -16,11 +16,11 @@ defmodule Genex.Core.Encryption.RSA do
     with {:ok, raw_public_key} <- File.read(@public_key_file),
          [enc_public_key] <- :public_key.pem_decode(raw_public_key),
          public_key <- :public_key.pem_entry_decode(enc_public_key) do
-
       enc_data =
         data
         |> :public_key.encrypt_public(public_key)
-        |> :base64.encode
+        |> :base64.encode()
+
       {:ok, enc_data}
     else
       _ -> {:error, "Unable to save to encrypted file"}

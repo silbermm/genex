@@ -18,7 +18,7 @@ defmodule Genex.Core do
   Generate a password by first creating 6 random numbers and
   pulling the appropriate word from the dicware word list
   """
-  @spec generate_password(number()) :: [String.t]
+  @spec generate_password(number()) :: [String.t()]
   def generate_password(num \\ 6) do
     wordlist = Diceware.wordlist()
 
@@ -37,17 +37,20 @@ defmodule Genex.Core do
     creds = Credentials.add_encrypted_password(credentials, encrypted)
 
     case PasswordFile.load() do
-      {:ok, data} -> 
+      {:ok, data} ->
         data = Jason.encode!(data ++ [creds])
-        PasswordFile.write(data);
-      :error -> PasswordFile.write(Jason.encode!([creds]))
+        PasswordFile.write(data)
+
+      :error ->
+        PasswordFile.write(Jason.encode!([creds]))
     end
   end
 
   @doc """
   Find credenials for a specific account
   """
-  @spec find_credentials(String.t, String.t | nil) :: [Credentials.t()] | {:error, :password} | :error
+  @spec find_credentials(String.t(), String.t() | nil) ::
+          [Credentials.t()] | {:error, :password} | :error
   def find_credentials(account, password) do
     case PasswordFile.load() do
       {:ok, data} ->
@@ -56,19 +59,22 @@ defmodule Genex.Core do
           |> Enum.filter(fn c -> Map.get(c, "account") == account end)
           |> Enum.map(&Credentials.new/1)
           |> Enum.group_by(fn c -> Map.get(c, :username) end)
-          |> Enum.map(&(decrypt_passwords(&1, password)))
+          |> Enum.map(&decrypt_passwords(&1, password))
         rescue
           _e in _ -> {:error, :password}
         end
-      :error -> :error
+
+      :error ->
+        :error
     end
   end
 
-  defp decrypt_passwords({ u, accnts }, password) do
+  defp decrypt_passwords({u, accnts}, password) do
     account =
       accnts
       |> Enum.sort(&compare_datetime/2)
       |> List.last()
+
     {:ok, pass} = @encryption.decrypt(account.encrypted_password, password)
     Credentials.add_password(account, pass)
   end

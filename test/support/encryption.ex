@@ -14,9 +14,11 @@ defmodule Genex.Core.Support.Encryption do
        ]
      """}
   end
+
   def load(:incorrect), do: {:error, :nokeydecrypt}
   def load(:badkey), do: {:error, :noloadkey}
   def load(:noexists), do: {:error, :noexists}
+
   def load(nil) do
     {:ok,
      """

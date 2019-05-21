@@ -16,7 +16,7 @@ defmodule GenexTest.CLI do
   end
 
   test "does not find a password" do
-    assert capture_io(fn -> CLI.main(["--find", "facebook"]) end) == "Unable to find a password with that account name\n"
+    assert capture_io(fn -> CLI.main(["--find", "facebook"]) end) ==
+             "Unable to find a password with that account name\n"
   end
-
 end

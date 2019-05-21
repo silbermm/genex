@@ -4,5 +4,5 @@ defmodule Genex.Core.Encryption do
   """
 
   @callback encrypt(String.t()) :: term
-  @callback decrypt(String.t(), String.t | nil) :: term
+  @callback decrypt(String.t(), String.t() | nil) :: term
 end

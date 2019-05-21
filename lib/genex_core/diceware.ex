@@ -25,5 +25,4 @@ defmodule Genex.Core.Diceware do
     [k, v] = String.split(word, "\t")
     {k, v}
   end
-
 end

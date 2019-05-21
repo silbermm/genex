@@ -34,7 +34,7 @@ defmodule Genex.Core.Test do
   end
 
   test "generates random password" do
-    password = Genex.Core.generate_password
+    password = Genex.Core.generate_password()
     assert Enum.count(password) == 6
     assert Enum.all?(password, fn p -> String.length(p) > 0 end)
     assert password == Enum.uniq(password)
@@ -48,8 +48,8 @@ defmodule Genex.Core.Test do
   end
 
   test "generates 2 random passwords - not equal" do
-    password = Genex.Core.generate_password
-    password2 = Genex.Core.generate_password
+    password = Genex.Core.generate_password()
+    password2 = Genex.Core.generate_password()
     assert password != password2
   end
 end

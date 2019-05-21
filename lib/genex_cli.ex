@@ -142,7 +142,8 @@ defmodule Genex.CLI do
         IO.puts("Something went wrong trying to save your password, please try again")
         System.halt(2)
 
-      _ -> System.halt(0)
+      _ ->
+        System.halt(0)
     end
   end
 

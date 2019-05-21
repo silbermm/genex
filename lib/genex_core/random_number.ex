@@ -1,5 +1,4 @@
 defmodule Genex.Core.RandomNumber do
-
   @doc "Generate a randomn number string from 11111 to 66666"
   @spec random_number :: binary()
   def random_number() do

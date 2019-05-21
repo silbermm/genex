@@ -3,6 +3,8 @@ defmodule Genex.Core.PasswordFile do
   Takes care of safely loading and writing the passwords file.
   """
 
+  alias Genex.Core.Environment
+
   @spec load() :: {:ok, binary()} | :error
   def load() do
     with filename <- Environment.load_variable("GENEX_PASSWORDS", :passwords_file),
