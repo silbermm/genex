@@ -5,7 +5,7 @@ defmodule Genex.Core.PasswordFile do
 
   alias Genex.Core.Environment
 
-  @spec load() :: {:ok, binary()} | :error
+  @spec load() :: {:ok, list()} | :error
   def load() do
     with filename <- Environment.load_variable("GENEX_PASSWORDS", :passwords_file),
          {:ok, file} <- File.read(filename) do

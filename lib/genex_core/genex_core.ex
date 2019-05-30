@@ -30,7 +30,7 @@ defmodule Genex.Core do
   @doc """
   Saves the provided credentials to the designated encyrpted file
   """
-  @type save_creds_return :: :ok | {:error, atom()} | :error
+  @type save_creds_return :: :ok | {:error, atom()}
   @spec save_credentials(Credentials.t()) :: save_creds_return
   def save_credentials(credentials) do
     {:ok, encrypted} = @encryption.encrypt(credentials.password)
@@ -38,7 +38,8 @@ defmodule Genex.Core do
 
     case PasswordFile.load() do
       {:ok, data} ->
-        data = Jason.encode!(data ++ [creds])
+        combined = data ++ [creds]
+        data = Jason.encode!(combined)
         PasswordFile.write(data)
 
       :error ->
@@ -56,8 +57,8 @@ defmodule Genex.Core do
       {:ok, data} ->
         try do
           data
-          |> Enum.filter(fn c -> Map.get(c, "account") == account end)
-          |> Enum.map(&Credentials.new/1)
+          |> Stream.filter(fn c -> Map.get(c, "account") == account end)
+          |> Stream.map(&Credentials.new/1)
           |> Enum.group_by(fn c -> Map.get(c, :username) end)
           |> Enum.map(&decrypt_passwords(&1, password))
         rescue

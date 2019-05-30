@@ -3,6 +3,21 @@ defmodule GenexTest.CLI do
   import ExUnit.CaptureIO
   alias Genex.CLI
 
+  @passwords_file Application.get_env(:genex_cli, :passwords_file)
+
+  def clean_up_passwords_file(context) do
+    # start the suite without a password file
+    if File.exists?(@passwords_file) do
+      File.rm(@passwords_file)
+    end
+
+    gmail = Genex.Core.Credentials.new("gmail", "user", "pass")
+    Genex.Core.save_credentials(gmail)
+    :ok
+  end
+
+  setup_all :clean_up_passwords_file
+
   test "prints help message" do
     assert capture_io(fn -> CLI.main(["--help"]) end) =~ "Password Manager"
   end
@@ -11,12 +26,10 @@ defmodule GenexTest.CLI do
     assert capture_io(fn -> CLI.main(["--generate"]) end) =~ "Save this password (Y/n)?"
   end
 
-  test "finds a password" do
-    assert capture_io(fn -> CLI.main(["--find", "gmail"]) end) == "pass\n"
-  end
-
-  test "does not find a password" do
-    assert capture_io(fn -> CLI.main(["--find", "facebook"]) end) ==
-             "Unable to find a password with that account name\n"
+  describe "passwords exist" do
+    test "does not find a password" do
+      assert capture_io(fn -> CLI.main(["--find", "facebook"]) end) ==
+               "Unable to find a password with that account name\n"
+    end
   end
 end

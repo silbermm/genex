@@ -2,5 +2,6 @@ use Mix.Config
 
 config :genex_cli,
   system_module: Genex.Core.Support.System,
-  genex_core_module: Genex.CLI.Support.Core,
-  encryption_module: Genex.Core.Support.Encryption
+  public_key: "priv/test/genex_public_test.pem",
+  private_key: "priv/test_/genex_private_test.pem",
+  passwords_file: "priv/test/passwords"
