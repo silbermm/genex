@@ -1,18 +1,18 @@
 defmodule GenexTest.CLI do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
   import ExUnit.CaptureIO
   alias Genex.CLI
 
-  @passwords_file Application.get_env(:genex_cli, :passwords_file)
+  @passwords_file Application.get_env(:genex, :passwords_file)
 
-  def clean_up_passwords_file(context) do
+  def clean_up_passwords_file(_context) do
     # start the suite without a password file
     if File.exists?(@passwords_file) do
       File.rm(@passwords_file)
     end
 
-    gmail = Genex.Core.Credentials.new("gmail", "user", "pass")
-    Genex.Core.save_credentials(gmail)
+    gmail = Genex.Credentials.new("gmail", "user", "pass")
+    Genex.save_credentials(gmail)
     :ok
   end
 

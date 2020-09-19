@@ -1,8 +1,8 @@
 defmodule GenexTest.Diceware do
   use ExUnit.Case
-  doctest Genex.Core
+  doctest Genex.Diceware
 
-  alias Genex.Core.Diceware
+  alias Genex.Diceware
 
   setup do
     wordlist = Diceware.wordlist()
