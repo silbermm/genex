@@ -8,7 +8,6 @@ defmodule Genex.CLI do
     --create-certs  Create Public and Private Key Certificates
   """
 
-  alias IO.ANSI
   alias Genex.CLI.Prompt
 
   @system Application.get_env(:genex, :system_module, System)

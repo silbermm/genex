@@ -51,6 +51,6 @@ defmodule Genex.CLI.Prompt do
     account = IO.read(:stdio, :line) |> String.trim()
     IO.write("Enter a username for this account/password: ")
     username = IO.read(:stdio, :line) |> String.trim()
-    Genex.Credentials.new(account, username, password)
+    Genex.Data.Credentials.new(account, username, password)
   end
 end

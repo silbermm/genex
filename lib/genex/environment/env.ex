@@ -1,5 +1,5 @@
 defmodule Genex.Environment do
-  @defmodule """
+  @moduledoc """
   Deals with GenexCore specific environment, such as loading specific
   GenexCore environment variables or providing defaults.
   """

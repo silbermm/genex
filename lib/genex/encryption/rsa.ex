@@ -4,7 +4,6 @@ defmodule Genex.Encryption.RSA do
   """
 
   alias Genex.Encryption
-  alias Genex.Environment
 
   @behaviour Genex.Encryption
 
@@ -34,7 +33,7 @@ defmodule Genex.Encryption.RSA do
       data = :base64.decode(data)
       {:ok, :public_key.decrypt_private(data, private_key)}
     rescue
-      e in _ ->
+      _e in _ ->
         {:error, "Unable to decrypt"}
     end
   end

@@ -6,12 +6,10 @@ defmodule Genex do
   """
 
   alias Jason
-  alias Genex.Credentials
-  alias Genex.Environment
+  alias Genex.Data.Credentials
   alias Genex.PasswordFile
 
   @encryption Application.get_env(:genex, :encryption_module)
-  @random Application.get_env(:genex, :random_number_module)
 
   @doc """
   Generate a password by first creating 6 random numbers and
@@ -66,7 +64,7 @@ defmodule Genex do
     end
   end
 
-  defp decrypt_passwords({u, accnts}, password) do
+  defp decrypt_passwords({_u, accnts}, password) do
     account =
       accnts
       |> Enum.sort(&compare_datetime/2)
@@ -82,16 +80,5 @@ defmodule Genex do
       :lt -> true
       :eq -> true
     end
-  end
-
-  defp validate_unique(%Credentials{account: account, username: username, password: _}, current) do
-    current
-    |> Enum.find(fn x ->
-      Map.get(x, "username") == username && Map.get(x, "account") == account
-    end)
-    |> case do
-      nil -> :ok
-      _ -> {:error, :not_unique}
-    end
-  end
+  end 
 end
