@@ -5,13 +5,14 @@ defmodule Genex.CLI do
     --help          Prints help message
     --generate      Generate a password and save it
     --find account  Find a previously saved password based on a certain account
+    --create-certs  Create Public and Private Key Certificates
   """
 
   alias IO.ANSI
   alias Genex.CLI.Prompt
 
-  @system Application.get_env(:genex, :system_module)
-  @genex_core Application.get_env(:genex, :genex_core_module)
+  @system Application.get_env(:genex, :system_module, System)
+  @genex_core Application.get_env(:genex, :genex_core_module, Genex)
 
   def main(opts) do
     # set the nodename and cookie
@@ -26,9 +27,13 @@ defmodule Genex.CLI do
   end
 
   defp process(:generate) do
-    @genex_core.generate_password()
-    |> display
-    |> Prompt.prompt_to_save(&handle_save/2)
+    passphrase = @genex_core.generate_password() 
+    display(passphrase)
+    Prompt.prompt_to_save(passphrase, &handle_save/2)
+  end
+
+  defp process(:create_certs) do
+    IO.write("create certificiates") 
   end
 
   defp process({:find, acc}) do
@@ -63,8 +68,8 @@ defmodule Genex.CLI do
   defp parse_args(opts) do
     cmd_opts =
       OptionParser.parse(opts,
-        switches: [help: :boolean, generate: :boolean, find: :string],
-        aliases: [h: :help, g: :generate, f: :find]
+        switches: [help: :boolean, generate: :boolean, find: :string, create_certs: :boolean],
+        aliases: [h: :help, g: :generate, f: :find, c: :create_certs]
       )
 
     case cmd_opts do
@@ -77,17 +82,18 @@ defmodule Genex.CLI do
       {[find: acc], _, _} ->
         {:find, acc}
 
+      {[create_certs: true], _, _} ->
+        :create_certs
+
       _ ->
         :help
     end
   end
 
-  defp display(password_list) do
-    password_list
-    |> with_colors
+  defp display(passphrase) do
+    passphrase
+    |> Diceware.with_colors
     |> IO.puts()
-
-    Enum.join(password_list) |> String.trim()
   end
 
   defp handle_find_password_with_username(acc, credentials, username) do
@@ -136,18 +142,11 @@ defmodule Genex.CLI do
     case Genex.save_credentials(credentials) do
       :ok ->
         IO.puts("Account saved")
-        System.halt(0)
+        @system.halt(0)
 
       {:error, _reason} ->
         IO.puts("Something went wrong trying to save your password, please try again")
-        System.halt(2)
+        @system.halt(2)
     end
-  end
-
-  defp with_colors(wordlist) do
-    [ANSI.cyan(), ANSI.magenta(), ANSI.yellow(), ANSI.blue(), ANSI.green(), ANSI.red()]
-    |> Enum.zip(wordlist)
-    |> Enum.map(fn {c, w} -> c <> w end)
-    |> Enum.join()
   end
 end

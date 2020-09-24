@@ -31,13 +31,10 @@ defmodule Genex.Encryption.RSA do
   def decrypt(data, password \\ nil) do
     try do
       {:ok, private_key} = get_key(@private_key_file, password)
-      IO.inspect("got private key from #{@private_key_file}")
       data = :base64.decode(data)
-      IO.inspect(data)
       {:ok, :public_key.decrypt_private(data, private_key)}
     rescue
       e in _ ->
-        IO.inspect(e)
         {:error, "Unable to decrypt"}
     end
   end

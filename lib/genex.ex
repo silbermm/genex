@@ -7,7 +7,6 @@ defmodule Genex do
 
   alias Jason
   alias Genex.Credentials
-  alias Genex.Diceware
   alias Genex.Environment
   alias Genex.PasswordFile
 
@@ -18,13 +17,10 @@ defmodule Genex do
   Generate a password by first creating 6 random numbers and
   pulling the appropriate word from the dicware word list
   """
-  @spec generate_password(number()) :: [String.t()]
+  @spec generate_password(number()) :: [Diceware.Passphrase.t()]
   def generate_password(num \\ 6) do
-    wordlist = Diceware.wordlist()
-
-    1..num
-    |> Enum.map(fn _ -> @random.random_number() end)
-    |> Enum.map(&Diceware.find_word(wordlist, &1))
+    file = :genex |> :code.priv_dir() |> Path.join("diceware.txt")
+    Diceware.generate(number_of_words: num, wordlist_file: file)
   end
 
   @doc """
@@ -71,12 +67,11 @@ defmodule Genex do
   end
 
   defp decrypt_passwords({u, accnts}, password) do
-    IO.inspect({u,accnts})
     account =
       accnts
       |> Enum.sort(&compare_datetime/2)
       |> List.last()
-    IO.inspect(account, label: "ACCOUNT")
+
     {:ok, pass} = @encryption.decrypt(account.encrypted_password, password)
     Credentials.add_password(account, pass)
   end

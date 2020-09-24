@@ -26,6 +26,7 @@ defmodule GenexCli.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:diceware, "~> 0.2.1"},
       {:dialyxir, "~> 1.0.0-rc.4", only: [:dev], runtime: false},
       {:mix_test_watch, "~> 0.8", only: :dev, runtime: false},
       {:jason, "~> 1.1"},

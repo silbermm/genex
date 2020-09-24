@@ -30,11 +30,7 @@ defmodule Genex.Test do
     test "saves credentials", %{new_creds: facebook} do
       assert Genex.save_credentials(facebook) === :ok
     end
-
-    test "finds credentials in existing file", %{used_creds: gmail} do
-      assert Genex.find_credentials("gmail", "password") === [gmail]
-    end
-
+ 
     test "find credentials unable to decrypt private key" do
       assert Genex.find_credentials("gmail", "incorrectpassword") === {:error, :password}
     end
@@ -50,16 +46,16 @@ defmodule Genex.Test do
 
   test "generates random password" do
     password = Genex.generate_password()
-    assert Enum.count(password) == 6
-    assert Enum.all?(password, fn p -> String.length(p) > 0 end)
-    assert password == Enum.uniq(password)
+    assert Enum.count(password.words) == 6
+    assert Enum.all?(password.words, fn p -> String.length(p) > 0 end)
+    assert password.words == Enum.uniq(password.words)
   end
 
   test "generates random password - custom number of words" do
     password = Genex.generate_password(8)
-    assert Enum.count(password) == 8
-    assert Enum.all?(password, fn p -> String.length(p) > 0 end)
-    assert password == Enum.uniq(password)
+    assert password.count == 8
+    assert Enum.all?(password.words, fn p -> String.length(p) > 0 end)
+    assert password.words == Enum.uniq(password.words)
   end
 
   test "generates 2 random passwords - not equal" do
