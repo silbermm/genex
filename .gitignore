@@ -26,3 +26,5 @@ erl_crash.dump
 genex-*.tar
 
 Mnesia.*
+
+genex

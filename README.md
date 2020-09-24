@@ -35,3 +35,4 @@ Once you agree that you want to save the password, it will add it to an encrypte
 ```
 openssl rsautl -decrypt -inkey ~/.genex/genex_private.pem -in ~/.genex_passwords.rsa
 ```
+
