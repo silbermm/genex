@@ -40,7 +40,7 @@ defmodule Genex.Encryption.RSA do
 
   defp get_key(key_file, password) do
     with {:ok, raw_key} <- File.read(key_file),
-         [enc_key] = :public_key.pem_decode(raw_key) do
+         [enc_key] <- :public_key.pem_decode(raw_key) do
       case enc_key do
         {_, _, :not_encrypted} = res ->
           {:ok, :public_key.pem_entry_decode(res)}

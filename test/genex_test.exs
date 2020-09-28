@@ -17,8 +17,8 @@ defmodule Genex.Test do
 
   describe "creates file" do
     setup do
-      facebook = Genex.Credentials.new("facebook", "me", "passw0rd")
-      gmail = Genex.Credentials.new("gmail", "user", "pass")
+      facebook = Genex.Data.Credentials.new("facebook", "me", "passw0rd")
+      gmail = Genex.Data.Credentials.new("gmail", "user", "pass")
       Genex.save_credentials(gmail)
       [new_creds: facebook, used_creds: gmail]
     end

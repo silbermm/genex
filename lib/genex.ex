@@ -17,8 +17,7 @@ defmodule Genex do
   """
   @spec generate_password(number()) :: [Diceware.Passphrase.t()]
   def generate_password(num \\ 6) do
-    file = :genex |> :code.priv_dir() |> Path.join("diceware.txt")
-    Diceware.generate(number_of_words: num, wordlist_file: file)
+    Diceware.generate(count: num)
   end
 
   @doc """

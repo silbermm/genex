@@ -50,7 +50,6 @@ defmodule Genex.CLI do
       res ->
         count = Enum.count(res)
 
-        # TODO: Put all of this in the Prompt module
         cond do
           count == 0 ->
             IO.puts("Unable to find a password with that account name")

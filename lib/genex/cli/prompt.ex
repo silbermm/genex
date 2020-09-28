@@ -46,7 +46,6 @@ defmodule Genex.CLI.Prompt do
   end
 
   def prompt_for_account(password) do
-    # TODO: error handling input
     IO.write("Enter an account that this password belongs to: ")
     account = IO.read(:stdio, :line) |> String.trim()
     IO.write("Enter a username for this account/password: ")
