@@ -26,13 +26,13 @@ defmodule Genex.CLI do
   end
 
   defp process(:generate) do
-    passphrase = @genex_core.generate_password() 
+    passphrase = @genex_core.generate_password()
     display(passphrase)
     Prompt.prompt_to_save(passphrase, &handle_save/2)
   end
 
   defp process(:create_certs) do
-    IO.write("create certificiates") 
+    IO.write("create certificiates")
   end
 
   defp process({:find, acc}) do
@@ -90,7 +90,7 @@ defmodule Genex.CLI do
 
   defp display(passphrase) do
     passphrase
-    |> Diceware.with_colors
+    |> Diceware.with_colors()
     |> IO.puts()
   end
 

@@ -23,11 +23,16 @@ defmodule Genex do
   @doc """
   Saves the provided credentials to the designated encyrpted file
   """
-  @type save_creds_return :: :ok | {:error, atom()}
-  @spec save_credentials(Credentials.t()) :: save_creds_return
+  @spec save_credentials(Credentials.t()) :: :ok | {:error, atom()}
   def save_credentials(credentials) do
+    # TODO: Error checking
     {:ok, encrypted} = @encryption.encrypt(credentials.password)
-    creds = Credentials.add_encrypted_password(credentials, encrypted)
+    {:ok, encrypted_username} = @encryption.encrypt(credentials.username)
+
+    creds =
+      credentials
+      |> Credentials.add_encrypted_password(encrypted)
+      |> Credentials.add_encrypted_username(encrypted_username)
 
     case PasswordFile.load() do
       {:ok, data} ->
@@ -52,8 +57,9 @@ defmodule Genex do
           data
           |> Stream.filter(fn c -> Map.get(c, "account") == account end)
           |> Stream.map(&Credentials.new/1)
+          |> Stream.map(&@encryption.decrypt_credentials(&1, password))
           |> Enum.group_by(fn c -> Map.get(c, :username) end)
-          |> Enum.map(&decrypt_passwords(&1, password))
+          |> Enum.map(&sort_accounts/1)
         rescue
           _e in _ -> {:error, :password}
         end
@@ -63,14 +69,11 @@ defmodule Genex do
     end
   end
 
-  defp decrypt_passwords({_u, accnts}, password) do
+  defp sort_accounts({_u, accnts}) do
     account =
       accnts
       |> Enum.sort(&compare_datetime/2)
       |> List.last()
-
-    {:ok, pass} = @encryption.decrypt(account.encrypted_password, password)
-    Credentials.add_password(account, pass)
   end
 
   defp compare_datetime(first, second) do
@@ -79,5 +82,5 @@ defmodule Genex do
       :lt -> true
       :eq -> true
     end
-  end 
+  end
 end

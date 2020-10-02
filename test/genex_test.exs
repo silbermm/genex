@@ -30,7 +30,7 @@ defmodule Genex.Test do
     test "saves credentials", %{new_creds: facebook} do
       assert Genex.save_credentials(facebook) === :ok
     end
- 
+
     test "find credentials unable to decrypt private key" do
       assert Genex.find_credentials("gmail", "incorrectpassword") === {:error, :password}
     end

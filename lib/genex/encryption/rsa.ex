@@ -4,6 +4,7 @@ defmodule Genex.Encryption.RSA do
   """
 
   alias Genex.Encryption
+  alias Genex.Data.Credentials
 
   @behaviour Genex.Encryption
 
@@ -35,6 +36,25 @@ defmodule Genex.Encryption.RSA do
     rescue
       _e in _ ->
         {:error, "Unable to decrypt"}
+    end
+  end
+
+  @impl true
+  def decrypt_credentials(creds, password \\ nil) do
+    IO.inspect("decrypt")
+
+    try do
+      {:ok, private_key} = get_key(@private_key_file, password)
+      data = :base64.decode(creds.encrypted_password)
+      data_username = :base64.decode(creds.encrypted_username)
+      pass = :public_key.decrypt_private(data, private_key)
+      username = :public_key.decrypt_private(data_username, private_key)
+
+      creds
+      |> Credentials.add_password(pass)
+      |> Credentials.add_username(username)
+    rescue
+      _e in _ -> creds
     end
   end
 
