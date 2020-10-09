@@ -45,11 +45,11 @@ defmodule Genex.CLI.Prompt do
     password
   end
 
-  def prompt_for_account(password) do
+  def prompt_for_account(handler) do
     IO.write("Enter an account that this password belongs to: ")
     account = IO.read(:stdio, :line) |> String.trim()
     IO.write("Enter a username for this account/password: ")
     username = IO.read(:stdio, :line) |> String.trim()
-    Genex.Data.Credentials.new(account, username, password)
+    handler.(account, username)
   end
 end

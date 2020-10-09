@@ -70,10 +70,9 @@ defmodule Genex do
   end
 
   defp sort_accounts({_u, accnts}) do
-    account =
-      accnts
-      |> Enum.sort(&compare_datetime/2)
-      |> List.last()
+    accnts
+    |> Enum.sort(&compare_datetime/2)
+    |> List.last()
   end
 
   defp compare_datetime(first, second) do

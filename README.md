@@ -17,14 +17,12 @@ If you installed elixir with [asdf](https://github.com/asdf-vm/asdf), make sure 
 Create a new rsa public/private keypair (requires openssl is installed on your system)
 
 ```
-openssl genrsa -des3 -out genex_private.pem 4096
-openssl rsa -in genex_private.pem -out genex_public.pem -outform PEM -pubout
+genex --create-certs
 ```
 
-Place both files in a new folder in your home directory named `.genex/` (notice the `.` in the folder name). genex will use these files to encrypt and decrypt your password file.
+This creates two  files in a new folder in your home directory named `.genex/` (notice the `.` in the folder name). genex will use these files to encrypt and decrypt your passwords.
 
 > Don't lose the private key, in fact, back it up somewhere safe. If you lose the file, there will be no way to recover your passwords!
-
 
 ## Usage
 

@@ -9,6 +9,7 @@ defmodule Genex.CLI do
   """
 
   alias Genex.CLI.Prompt
+  alias Genex.Data.Credentials
 
   @system Application.get_env(:genex, :system_module, System)
   @genex_core Application.get_env(:genex, :genex_core_module, Genex)
@@ -121,13 +122,15 @@ defmodule Genex.CLI do
         Prompt.prompt_for_next()
 
       "y" ->
-        password
-        |> Prompt.prompt_for_account()
+        Prompt.prompt_for_account(fn account, username -> 
+          Credentials.new(account, username, password.phrase)
+        end)
         |> save_creds
 
       "" ->
-        password
-        |> Prompt.prompt_for_account()
+        Prompt.prompt_for_account(fn account, username -> 
+          Credentials.new(account, username, password.phrase)
+        end)
         |> save_creds
 
       _ ->
