@@ -29,13 +29,11 @@ defmodule Genex.Encryption.RSA do
 
   @impl Encryption
   def decrypt(data, password \\ nil) do
-    try do
-      {:ok, private_key} = get_key(@private_key_file, password)
-      data = :base64.decode(data)
-      {:ok, :public_key.decrypt_private(data, private_key)}
-    rescue
-      _e in _ ->
-        {:error, "Unable to decrypt"}
+    with {:ok, private_key} <- get_key(@private_key_file, password),
+         data <- :base64.decode(data) do
+      :public_key.decrypt_private(data, private_key)
+    else
+      {:error, :nokeydecrypt} -> raise "nokeydecrypt"
     end
   end
 
@@ -66,9 +64,6 @@ defmodule Genex.Encryption.RSA do
           rescue
             _ in _ -> {:error, :nokeydecrypt}
           end
-
-        _ ->
-          {:error, :noloadkey}
       end
     else
       error -> error
