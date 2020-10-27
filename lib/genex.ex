@@ -9,6 +9,7 @@ defmodule Genex do
   alias Genex.Data.Credentials
 
   @encryption Application.get_env(:genex, :encryption_module)
+  @store Application.get_env(:genex, :store_module, Genex.Store.ETS)
 
   @doc """
   Generate a password by first creating 6 random numbers and
@@ -26,7 +27,7 @@ defmodule Genex do
   def save_credentials(credentials) do
     with {:ok, encoded} <- Jason.encode(credentials),
          {:ok, encrypted} <- @encryption.encrypt(encoded) do
-      Genex.Store.save_credentials(
+      @store.save_credentials(
         credentials.account,
         credentials.username,
         credentials.created_at,
@@ -48,7 +49,7 @@ defmodule Genex do
           [Credentials.t()] | {:error, :password} | :error
   def find_credentials(account, password) do
     account
-    |> Genex.Store.find_account()
+    |> @store.find_account()
     |> Enum.map(fn {_, _, _, creds} -> @encryption.decrypt(creds, password) end)
     |> Enum.map(fn creds ->
       creds
