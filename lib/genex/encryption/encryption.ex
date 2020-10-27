@@ -7,5 +7,4 @@ defmodule Genex.Encryption do
 
   @callback encrypt(String.t()) :: term
   @callback decrypt(String.t(), String.t() | nil) :: term
-  @callback decrypt_credentials(Credentials.t(), String.t()) :: Credentials.t()
 end

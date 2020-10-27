@@ -3,6 +3,7 @@ defmodule Genex.Test do
   doctest Genex
 
   @passwords_file Application.get_env(:genex, :passwords_file)
+  @passphrase Diceware.generate()
 
   def clean_up_passwords_file(_context) do
     # start the suite without a password file
@@ -10,15 +11,16 @@ defmodule Genex.Test do
       File.rm(@passwords_file)
     end
 
+    start_supervised(Genex.Store.ETS)
     :ok
   end
 
-  setup_all :clean_up_passwords_file
+  setup :clean_up_passwords_file
 
   describe "creates file" do
     setup do
-      facebook = Genex.Data.Credentials.new("facebook", "me", "passw0rd")
-      gmail = Genex.Data.Credentials.new("gmail", "user", "pass")
+      facebook = Genex.Data.Credentials.new("facebook", "me", @passphrase)
+      gmail = Genex.Data.Credentials.new("gmail", "user", @passphrase)
       Genex.save_credentials(gmail)
       [new_creds: facebook, used_creds: gmail]
     end
@@ -37,10 +39,8 @@ defmodule Genex.Test do
   end
 
   describe "no file" do
-    setup :clean_up_passwords_file
-
     test "find credentials, no file exists" do
-      assert Genex.find_credentials("gmail", :noexists) === :error
+      assert Genex.find_credentials("gmail", :noexists) === []
     end
   end
 

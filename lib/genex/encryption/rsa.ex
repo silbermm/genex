@@ -37,19 +37,6 @@ defmodule Genex.Encryption.RSA do
     end
   end
 
-  @impl true
-  def decrypt_credentials(creds, password \\ nil) do
-    {:ok, private_key} = get_key(@private_key_file, password)
-    data = :base64.decode(creds.encrypted_password)
-    data_username = :base64.decode(creds.encrypted_username)
-    pass = :public_key.decrypt_private(data, private_key)
-    username = :public_key.decrypt_private(data_username, private_key)
-
-    creds
-    |> Credentials.add_password(pass)
-    |> Credentials.add_username(username)
-  end
-
   defp get_key(key_file, password) do
     with {:ok, raw_key} <- File.read(key_file),
          [enc_key] <- :public_key.pem_decode(raw_key) do
