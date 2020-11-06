@@ -3,6 +3,11 @@ defmodule GenexTest.CLI do
   import ExUnit.CaptureIO
   alias Genex.CLI
 
+  import Mox
+
+  setup :set_mox_from_context
+  setup :verify_on_exit!
+
   @passwords_file Application.get_env(:genex, :passwords_file)
   @passphrase Diceware.generate()
 
@@ -22,11 +27,21 @@ defmodule GenexTest.CLI do
   setup_all :clean_up_passwords_file
 
   test "prints help message" do
+    Genex.Support.System
+    |> expect(:stop, fn code ->
+      assert code == 0
+    end)
+
     assert capture_io(fn -> CLI.main(["--help"]) end) =~ "Password Manager"
   end
 
   test "generates random password" do
-    assert capture_io(fn -> CLI.main(["--generate"]) end) =~ "Save this password? (Y/n)"
+    Genex.Support.System
+    |> expect(:stop, fn code ->
+      assert code == 0
+    end)
+
+    assert capture_io("n\n", fn -> CLI.main(["--generate"]) end) =~ "Save this password? (Y/n)"
   end
 
   # TODO; figure out why this test hangs

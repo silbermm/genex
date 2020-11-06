@@ -4,8 +4,6 @@ defmodule Genex.Encryption.RSA do
   """
 
   alias Genex.Encryption
-  alias Genex.Data.Credentials
-
   @behaviour Genex.Encryption
 
   @private_key_file Application.get_env(:genex, :private_key)

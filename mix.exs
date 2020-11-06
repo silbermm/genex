@@ -12,7 +12,7 @@ defmodule GenexCli.MixProject do
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
       escript: escript(),
-      releases: [{@app, release()}]
+      preferred_cli_env: [release: :prod]
     ]
   end
 
@@ -27,25 +27,16 @@ defmodule GenexCli.MixProject do
     ]
   end
 
-  def release() do
-    [
-      overwrite: true,
-      cookie: "#{@app}_cookie",
-      steps: [:assemble, &Bakeware.assemble/1],
-      strip_beams: Mix.env() == :prod
-    ]
-  end
-
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
       {:jason, "~> 1.1"},
       {:diceware, "~> 0.2.5"},
-      {:prompt, "~> 0.1.5"},
+      {:prompt, "~> 0.1.7"},
       {:dialyxir, "~> 1.0.0-rc.4", only: [:dev], runtime: false},
-      {:credo, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:mix_test_watch, "~> 0.8", only: :dev, runtime: false},
-      {:bakeware, path: "../bakeware/bakeware", runtime: false}
+      {:mox, "~> 0.5", only: :test}
     ]
   end
 
