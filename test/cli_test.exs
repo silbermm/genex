@@ -28,18 +28,14 @@ defmodule GenexTest.CLI do
 
   test "prints help message" do
     Genex.Support.System
-    |> expect(:stop, fn code ->
-      assert code == 0
-    end)
+    |> expect(:stop, &assert_exit_code_0/1)
 
     assert capture_io(fn -> CLI.main(["--help"]) end) =~ "Password Manager"
   end
 
   test "generates random password" do
     Genex.Support.System
-    |> expect(:stop, fn code ->
-      assert code == 0
-    end)
+    |> expect(:stop, &assert_exit_code_0/1)
 
     assert capture_io("n\n", fn -> CLI.main(["--generate"]) end) =~ "Save this password? (Y/n)"
   end
@@ -49,4 +45,6 @@ defmodule GenexTest.CLI do
   # assert capture_io(fn -> CLI.main(["--find", "facebook"]) end) ==
   # "Unable to find a password with that account name\n"
   # end
+  
+  defp assert_exit_code_0(code), do: assert code == 0
 end
