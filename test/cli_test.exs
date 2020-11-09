@@ -45,6 +45,6 @@ defmodule GenexTest.CLI do
   # assert capture_io(fn -> CLI.main(["--find", "facebook"]) end) ==
   # "Unable to find a password with that account name\n"
   # end
-  
-  defp assert_exit_code_0(code), do: assert code == 0
+
+  defp assert_exit_code_0(code), do: assert(code == 0)
 end
