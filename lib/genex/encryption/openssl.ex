@@ -12,12 +12,13 @@ defmodule Genex.Encryption.OpenSSL do
     if !override && (File.exists?(private_file) || File.exists?(public_file)) do
       {:error, :ekeyexists}
     else
+      # TODO: make sure .genex folder exists
       case private_key(private_file, password) do
         {_, 0} ->
           public_key(public_file, private_file, password)
 
-        {_, code} ->
-          {:error, :private_key, code}
+        {_, _code} ->
+          {:error, :private_key}
       end
     end
   rescue
