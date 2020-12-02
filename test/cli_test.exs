@@ -27,24 +27,15 @@ defmodule GenexTest.CLI do
   setup_all :clean_up_passwords_file
 
   test "prints help message" do
-    Genex.Support.System
-    |> expect(:stop, &assert_exit_code_0/1)
-
     assert capture_io(fn -> CLI.main(["--help"]) end) =~ "Password Manager"
   end
 
   test "generates random password" do
-    Genex.Support.System
-    |> expect(:stop, &assert_exit_code_0/1)
-
     assert capture_io("n\n", fn -> CLI.main(["--generate"]) end) =~ "Save this password? (Y/n)"
   end
 
-  # TODO; figure out why this test hangs
-  # test "does not find a password" do
-  # assert capture_io(fn -> CLI.main(["--find", "facebook"]) end) ==
-  # "Unable to find a password with that account name\n"
-  # end
-
-  defp assert_exit_code_0(code), do: assert(code == 0)
+  test "does not find a password" do
+    assert capture_io(fn -> CLI.main(["--find", "facebook"]) end) =~
+             "Unable to find a password with that account name"
+  end
 end

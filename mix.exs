@@ -12,7 +12,12 @@ defmodule GenexCli.MixProject do
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
       escript: escript(),
-      preferred_cli_env: [release: :prod]
+      preferred_cli_env: [release: :prod],
+      releases: [
+        genex: [
+          steps: [:assemble, &Bakeware.assemble/1]
+        ]
+      ]
     ]
   end
 
@@ -21,16 +26,23 @@ defmodule GenexCli.MixProject do
 
   # Run "mix help compile.app" to learn about applications.
   def application do
-    [
-      extra_applications: [:logger, :public_key],
-      mod: {Genex.Application, [env: Mix.env()]}
-    ]
+    if Mix.env() == :test do
+      [
+        extra_applications: [:logger, :public_key]
+      ]
+    else
+      [
+        extra_applications: [:logger, :public_key],
+        mod: {Genex.Application, [env: Mix.env()]}
+      ]
+    end
   end
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
       {:jason, "~> 1.1"},
+      {:bakeware, "~> 0.1.4"},
       {:diceware, "~> 0.2.5"},
       {:prompt, "~> 0.2.0"},
       {:dialyxir, "~> 1.0.0-rc.4", only: [:dev], runtime: false},

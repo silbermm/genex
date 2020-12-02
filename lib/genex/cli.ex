@@ -19,7 +19,6 @@ defmodule Genex.CLI do
     opts
     |> parse_args()
     |> process()
-    |> @system.stop()
   end
 
   defp process(:help) do
@@ -58,7 +57,7 @@ defmodule Genex.CLI do
 
   defp process(:list) do
     display("all accounts")
-    @system.stop(0)
+    0
   end
 
   defp create_certs(password, overwrite \\ false) do

@@ -1,27 +1,14 @@
 defmodule Genex.Application do
   @moduledoc false
-  use Application
+  use Bakeware.Script
 
-  @impl Application
-  def start(_type, env: :test) do
-    children = []
-
+  @impl true
+  def main(args) do
     opts = [strategy: :one_for_one, name: Genex.Supervisor]
+    children = [{Genex.Store.ETS, []}]
     Supervisor.start_link(children, opts)
-  end
 
-  @impl Application
-  def start(_type, _args) do
-    children = [
-      {Genex.Store.ETS, []}
-    ]
-
-    opts = [strategy: :one_for_one, name: Genex.Supervisor]
-    Supervisor.start_link(children, opts)
-  end
-
-  @impl Application
-  def stop(_) do
-    IO.puts("stopping")
+    Genex.CLI.main(args)
+    0
   end
 end
