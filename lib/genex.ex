@@ -42,6 +42,12 @@ defmodule Genex do
     end
   end
 
+  def list_accounts() do
+    @store.list_accounts()
+    |> account_names()
+    |> unique()
+  end
+
   @doc """
   Find credenials for a specific account
   """
@@ -75,4 +81,9 @@ defmodule Genex do
       :eq -> true
     end
   end
+
+  defp account_names(accounts), do: Enum.map(accounts, &account_name/1)
+  defp account_name({account_name, _, _, _}), do: account_name 
+
+  defp unique(accounts), do: Enum.uniq(accounts)
 end

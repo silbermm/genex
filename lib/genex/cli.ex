@@ -28,7 +28,7 @@ defmodule Genex.CLI do
 
   defp process(:generate) do
     passphrase = Genex.generate_password()
-    display(Diceware.with_colors(passphrase) <> "\n")
+    display(Diceware.with_colors(passphrase))
 
     "Save this password?"
     |> confirm()
@@ -56,7 +56,8 @@ defmodule Genex.CLI do
   end
 
   defp process(:list) do
-    display("all accounts")
+    accounts = Genex.list_accounts()
+    display(accounts, color: IO.ANSI.green())
     0
   end
 
@@ -108,7 +109,6 @@ defmodule Genex.CLI do
             creds.passphrase
             |> Diceware.with_colors()
             |> display()
-
             0
 
           count > 1 ->
@@ -181,7 +181,7 @@ defmodule Genex.CLI do
         0
 
       :yes ->
-        account_name = text("Enter and account that this password belongs to")
+        account_name = text("Enter an account name that this password belongs to")
         username = text("Enter a username for this account/password")
 
         account_name

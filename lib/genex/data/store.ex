@@ -23,6 +23,8 @@ defmodule Genex.Store.ETS do
 
   def find_account(account), do: GenServer.call(__MODULE__, {:find, account})
 
+  def list_accounts(), do: GenServer.call(__MODULE__, :list)
+
   @impl true
   def handle_call(:save, _from, %{filename: filename} = state) do
     res = save_table(filename)
@@ -31,6 +33,11 @@ defmodule Genex.Store.ETS do
 
   def handle_call({:find, account}, _from, state) do
     res = :ets.match_object(@tablename, {account, :_, :_, :_})
+    {:reply, res, state}
+  end
+
+  def handle_call(:list, _from, state) do
+    res = :ets.match_object(@tablename, {:"$1", :_, :_, :_})
     {:reply, res, state}
   end
 

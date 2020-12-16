@@ -26,7 +26,7 @@ defmodule GenexCli.MixProject do
 
   # Run "mix help compile.app" to learn about applications.
   def application do
-    if Mix.env() == :test do
+    if Mix.env() == :test || Mix.env() == :dev do
       [
         extra_applications: [:logger, :public_key]
       ]
@@ -44,7 +44,7 @@ defmodule GenexCli.MixProject do
       {:jason, "~> 1.1"},
       {:bakeware, "~> 0.1.4"},
       {:diceware, "~> 0.2.5"},
-      {:prompt, "~> 0.2.0"},
+      {:prompt, path: "../prompt"},
       {:dialyxir, "~> 1.0.0-rc.4", only: [:dev], runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:mix_test_watch, "~> 0.8", only: :dev, runtime: false},
