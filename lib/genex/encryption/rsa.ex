@@ -6,8 +6,8 @@ defmodule Genex.Encryption.RSA do
   alias Genex.Encryption
   @behaviour Genex.Encryption
 
-  @private_key_file Application.get_env(:genex, :private_key)
-  @public_key_file Application.get_env(:genex, :public_key)
+  @private_key_file Application.compile_env!(:genex, :private_key)
+  @public_key_file Application.compile_env!(:genex, :public_key)
 
   @impl Encryption
   def encrypt(data) do

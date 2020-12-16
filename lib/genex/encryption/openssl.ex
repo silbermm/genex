@@ -1,7 +1,7 @@
 defmodule Genex.Encryption.OpenSSL do
   @moduledoc "Creates RSA certs"
 
-  @system Application.get_env(:genex, :system_module, System)
+  @system Application.compile_env(:genex, :system_module, System)
   alias Genex.Environment
 
   @doc "Create public and private certificates"

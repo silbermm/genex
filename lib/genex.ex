@@ -2,14 +2,14 @@ defmodule Genex do
   @moduledoc """
   Build a password from readable words using 
   the [Diceware](http://world.std.com/~reinhold/diceware.html) word list
-  and save it to an encyrpted file.
+  and save it to an encrypted file.
   """
 
   alias Jason
   alias Genex.Data.Credentials
 
-  @encryption Application.get_env(:genex, :encryption_module)
-  @store Application.get_env(:genex, :store_module, Genex.Store.ETS)
+  @encryption Application.compile_env!(:genex, :encryption_module)
+  @store Application.compile_env(:genex, :store_module, Genex.Store.ETS)
 
   @doc """
   Generate a password by first creating 6 random numbers and
@@ -34,11 +34,7 @@ defmodule Genex do
         encrypted
       )
     else
-      :error ->
-        IO.inspect("ERROR")
-
-      err ->
-        IO.inspect(err)
+      err -> err
     end
   end
 
@@ -83,7 +79,7 @@ defmodule Genex do
   end
 
   defp account_names(accounts), do: Enum.map(accounts, &account_name/1)
-  defp account_name({account_name, _, _, _}), do: account_name 
+  defp account_name({account_name, _, _, _}), do: account_name
 
   defp unique(accounts), do: Enum.uniq(accounts)
 end

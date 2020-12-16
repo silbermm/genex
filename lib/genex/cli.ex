@@ -11,8 +11,8 @@ defmodule Genex.CLI do
   import Prompt
   alias Genex.Data.Credentials
 
-  @system Application.get_env(:genex, :system_module, System)
-  @genex_core Application.get_env(:genex, :genex_core_module, Genex)
+  @system Application.compile_env(:genex, :system_module, System)
+  @genex_core Application.compile_env(:genex, :genex_core_module, Genex)
 
   @spec main(list) :: 0 | 1
   def main(opts) do
@@ -109,6 +109,7 @@ defmodule Genex.CLI do
             creds.passphrase
             |> Diceware.with_colors()
             |> display()
+
             0
 
           count > 1 ->
