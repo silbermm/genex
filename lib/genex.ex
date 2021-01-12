@@ -12,8 +12,7 @@ defmodule Genex do
   @store Application.compile_env(:genex, :store_module, Genex.Store.ETS)
 
   @doc """
-  Generate a password by first creating 6 random numbers and
-  pulling the appropriate word from the dicware word list
+  Generate a password using the Dicware library
   """
   @spec generate_password(number()) :: Diceware.Passphrase.t()
   def generate_password(num \\ 6) do
