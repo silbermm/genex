@@ -6,6 +6,7 @@
   "dialyxir": {:hex, :dialyxir, "1.0.0", "6a1fa629f7881a9f5aaf3a78f094b2a51a0357c843871b8bc98824e7342d00a5", [:mix], [{:erlex, ">= 0.2.6", [hex: :erlex, repo: "hexpm", optional: false]}], "hexpm", "aeb06588145fac14ca08d8061a142d52753dbc2cf7f0d00fc1013f53f8654654"},
   "diceware": {:hex, :diceware, "0.2.5", "c2e9824cb19a898cee3637038fe49d97790aa1299f83294f4fbb1f9dd9567488", [:mix], [{:jason, "~> 1.1", [hex: :jason, repo: "hexpm", optional: false]}], "hexpm", "98a5529c5468236e9a941f4e559c512dd523c8b3c5f368f0aa059fdc42713ccd"},
   "elixir_make": {:hex, :elixir_make, "0.6.1", "8faa29a5597faba999aeeb72bbb9c91694ef8068f0131192fb199f98d32994ef", [:mix], [], "hexpm", "35d33270680f8d839a4003c3e9f43afb595310a592405a00afc12de4c7f55a18"},
+  "elixir_uuid": {:hex, :elixir_uuid, "1.2.1", "dce506597acb7e6b0daeaff52ff6a9043f5919a4c3315abb4143f0b00378c097", [:mix], [], "hexpm", "f7eba2ea6c3555cea09706492716b0d87397b88946e6380898c2889d68585752"},
   "erlex": {:hex, :erlex, "0.2.6", "c7987d15e899c7a2f34f5420d2a2ea0d659682c06ac607572df55a43753aa12e", [:mix], [], "hexpm", "2ed2e25711feb44d52b17d2780eabf998452f6efda104877a3881c2f8c0c0c75"},
   "file_system": {:hex, :file_system, "0.2.9", "545b9c9d502e8bfa71a5315fac2a923bd060fd9acb797fe6595f54b0f975fd32", [:mix], [], "hexpm", "3cf87a377fe1d93043adeec4889feacf594957226b4f19d5897096d6f61345d8"},
   "jason": {:hex, :jason, "1.2.2", "ba43e3f2709fd1aa1dce90aaabfd039d000469c05c56f0b8e31978e03fa39052", [:mix], [{:decimal, "~> 1.0 or ~> 2.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm", "18a228f5f0058ee183f29f9eae0805c6e59d61c3b006760668d8d18ff0d12179"},
@@ -13,7 +14,7 @@
   "mix_test_watch": {:hex, :mix_test_watch, "0.9.0", "c72132a6071261893518fa08e121e911c9358713f62794a90c95db59042af375", [:mix], [{:file_system, "~> 0.2.1 or ~> 0.3", [hex: :file_system, repo: "hexpm", optional: false]}], "hexpm", "817dec4a7f6edf260258002f99ac8ffaf7a8f395b27bf2d13ec24018beecec8a"},
   "mox": {:hex, :mox, "0.5.2", "55a0a5ba9ccc671518d068c8dddd20eeb436909ea79d1799e2209df7eaa98b6c", [:mix], [], "hexpm", "df4310628cd628ee181df93f50ddfd07be3e5ecc30232d3b6aadf30bdfe6092b"},
   "progress_bar": {:hex, :progress_bar, "2.0.0", "447285f533b4b8717881fdb7160c7360c2f2ab57276f8904ce6d40482857e573", [:mix], [{:decimal, "~> 1.0", [hex: :decimal, repo: "hexpm", optional: false]}], "hexpm", "9d8b879f322fd5563e8e7ec39f1d02a9da3ffc36019f05287788744e88260fde"},
-  "prompt": {:hex, :prompt, "0.2.0", "3b26d8b2d1be7952dccca17b29bde49b17ffc6fb90906eee5ab13d3f3b053157", [:mix], [], "hexpm", "a85687626533c9da2ab1ce78ca213625b7046f6123452a2c4b2530d37711f5eb"},
+  "prompt": {:hex, :prompt, "0.3.0", "4bcc793da60b3e64afea1aee4a3280e69356feca7c294329fc5ce7fbf475ee2a", [:mix], [], "hexpm", "d58b6a0a23ba5c2f49c77b56751c11a0c213a3c260a4d9071ab486f76b6f6833"},
   "ranch": {:hex, :ranch, "1.7.1", "6b1fab51b49196860b733a49c07604465a47bdb78aa10c1c16a3d199f7f8c881", [:rebar3], [], "hexpm"},
   "toml": {:hex, :toml, "0.5.2", "e471388a8726d1ce51a6b32f864b8228a1eb8edc907a0edf2bb50eab9321b526", [:mix], [], "hexpm", "f1e3dabef71fb510d015fad18c0e05e7c57281001141504c6b69d94e99750a07"},
 }

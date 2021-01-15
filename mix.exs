@@ -43,6 +43,7 @@ defmodule GenexCli.MixProject do
     [
       {:jason, "~> 1.1"},
       {:bakeware, "~> 0.1.4"},
+      {:elixir_uuid, "~> 1.2"},
       {:diceware, "~> 0.2.5"},
       {:prompt, "~> 0.3.0"},
       {:dialyxir, "~> 1.0.0-rc.4", only: [:dev], runtime: false},
