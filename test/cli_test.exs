@@ -17,7 +17,7 @@ defmodule GenexTest.CLI do
       File.rm(@passwords_file)
     end
 
-    start_supervised(Genex.Store.ETS)
+    start_supervised(Genex.Data.Passwords)
 
     gmail = Genex.Data.Credentials.new("gmail", "user", @passphrase)
     Genex.save_credentials(gmail)

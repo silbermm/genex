@@ -11,7 +11,7 @@ defmodule Genex.Test do
       File.rm(@passwords_file)
     end
 
-    start_supervised(Genex.Store.ETS)
+    start_supervised(Genex.Data.Passwords)
     :ok
   end
 

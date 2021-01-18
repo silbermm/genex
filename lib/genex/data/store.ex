@@ -1,4 +1,4 @@
-defmodule Genex.Store.ETS do
+defmodule Genex.Data.Passwords do
   @moduledoc "Save and retrieve credentials"
   use GenServer
 
