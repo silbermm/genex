@@ -6,6 +6,7 @@ config :genex,
   passwords_file: System.get_env("HOME") <> "/" <> ".genex/passwords",
   public_key: System.get_env("HOME") <> "/" <> ".genex/public_key.pem",
   private_key: System.get_env("HOME") <> "/" <> ".genex/private_key.pem",
-  manifest_file: System.get_env("HOME") <> "/" <> ".genex/manifest"
+  manifest_file: System.get_env("HOME") <> "/" <> ".genex/manifest",
+  remotes_file: Path.join(System.get_env("HOME"), ".genex/remotes")
 
 import_config "#{Mix.env()}.exs"
