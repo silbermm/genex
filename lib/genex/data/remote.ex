@@ -36,6 +36,9 @@ defmodule Genex.Data.Remote do
     %Remote{name: name, path: path, protocol: protocol}
   end
 
+  def has_error?(%Remote{error: error}), do: !is_nil(error)
+  def has_error?(_other), do: false
+
   @doc """
   Add a remote
   """
@@ -69,9 +72,7 @@ defmodule Genex.Data.Remote do
 
   @impl true
   def handle_cast({:add, remote}, %{filename: filename} = state) do
-    IO.inspect("casting")
     :ets.insert(@tablename, {remote.name, remote.path, remote.protocol})
-    IO.inspect("saving #{filename}")
     save_table(filename)
     {:noreply, state}
   end

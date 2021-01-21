@@ -10,6 +10,9 @@ defmodule Genex.Encryption.RSA do
   @public_key_file Application.compile_env!(:genex, :public_key)
 
   @impl Encryption
+  def local_public_key(), do: File.read!(@public_key_file)
+
+  @impl Encryption
   def encrypt(data) do
     with {:ok, raw_public_key} <- File.read(@public_key_file),
          [enc_public_key] <- :public_key.pem_decode(raw_public_key),
