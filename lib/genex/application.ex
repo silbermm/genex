@@ -4,10 +4,20 @@ defmodule Genex.Application do
 
   @impl true
   def main(args) do
-    opts = [strategy: :one_for_one, name: Genex.Supervisor]
-    children = [{Genex.Data.Passwords, []}, {Genex.Data.Manifest, []}]
-    Supervisor.start_link(children, opts)
-
+    application()
     Genex.CLI.main(args)
+  end
+
+  def application() do
+    opts = [strategy: :one_for_one, name: Genex.Supervisor]
+
+    children = [
+      {Genex.Data.Passwords, []},
+      {Genex.Data.Manifest, []},
+      {Genex.Data.Remote, []},
+      {Genex.Data.Remote.Supervisor, []}
+    ]
+
+    Supervisor.start_link(children, opts)
   end
 end

@@ -21,7 +21,7 @@ defmodule Genex.Data.Remote do
   Create a new Remote from name and path
   """
   @spec new(String.t(), String.t()) :: t()
-  def new(name, <<"file:" <> path>>) do
+  def new(name, <<"file:" <> _>> = path) do
     %Remote{name: name, path: path, protocol: :file}
   end
 
@@ -43,14 +43,13 @@ defmodule Genex.Data.Remote do
   Add a remote
   """
   @spec add(t()) :: :ok
-  def add(%Remote{} = remote) do
-    GenServer.cast(__MODULE__, {:add, remote})
-  end
+  def add(%Remote{} = remote), do: GenServer.cast(__MODULE__, {:add, remote})
 
   @spec list() :: [t()]
-  def list() do
-    GenServer.call(__MODULE__, :list)
-  end
+  def list(), do: GenServer.call(__MODULE__, :list)
+
+  @spec get(String.t()) :: t()
+  def get(remote_name), do: GenServer.call(__MODULE__, {:get, remote_name})
 
   def start_link(_) do
     GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
@@ -68,6 +67,17 @@ defmodule Genex.Data.Remote do
     res = :ets.match_object(@tablename, {:"$1", :_, :_})
     remotes = Enum.map(res, &new/1)
     {:reply, remotes, state}
+  end
+
+  @impl true
+  def handle_call({:get, remote_name}, _from, %{filename: filename} = state) do
+    res = :ets.match_object(@tablename, {remote_name, :_, :_})
+    remotes = Enum.map(res, &new/1)
+
+    case remotes do
+      [] -> {:reply, %Remote{error: :noexist}, state}
+      [h | _] -> {:reply, h, state}
+    end
   end
 
   @impl true
