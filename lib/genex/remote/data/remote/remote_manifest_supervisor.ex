@@ -17,14 +17,11 @@ defmodule Genex.Data.Remote.Supervisor do
     spec = {Genex.Data.Remote.Manifest, [path: remote_path]}
     {:ok, pid} = DynamicSupervisor.start_child(__MODULE__, spec)
     GenServer.call(pid, {:add, node_manifest})
-    GenServer.stop(pid)
   end
 
   def list_nodes(remote_path) do
     spec = {Genex.Data.Remote.Manifest, [path: remote_path]}
     {:ok, pid} = DynamicSupervisor.start_child(__MODULE__, spec)
-    res = GenServer.call(RemoteManifest, :list)
-    GenServer.stop(pid)
-    res
+    GenServer.call(RemoteManifest, :list)
   end
 end

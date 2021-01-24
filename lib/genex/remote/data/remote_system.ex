@@ -1,14 +1,14 @@
-defmodule Genex.Data.Remote do
+defmodule Genex.Remote.RemoteSystem do
   @moduledoc """
-  Defines remotes that the node knows about
+  Defines remotes systems that the node knows about
   """
   use GenServer
-  @tablename :remotes
+  @tablename :remote_systems
 
   alias __MODULE__
   alias Genex.Environment
 
-  @type t() :: %Remote{
+  @type t() :: %RemoteSystem{
           name: String.t() | nil,
           path: String.t() | nil,
           protocol: :file | nil,
@@ -18,32 +18,32 @@ defmodule Genex.Data.Remote do
   defstruct [:name, :path, :protocol, :error]
 
   @doc """
-  Create a new Remote from name and path
+  Create a new RemoteSystem from name and path
   """
   @spec new(String.t(), String.t()) :: t()
   def new(name, <<"file:" <> _>> = path) do
-    %Remote{name: name, path: path, protocol: :file}
+    %RemoteSystem{name: name, path: path, protocol: :file}
   end
 
-  def new(_, _), do: %Remote{error: "Unsupported Protocol"}
+  def new(_, _), do: %RemoteSystem{error: "Unsupported Protocol"}
 
   @spec new(String.t(), :file | :ssh, String.t()) :: t()
   def new(name, path, protocol) do
-    %Remote{name: name, path: path, protocol: protocol}
+    %RemoteSystem{name: name, path: path, protocol: protocol}
   end
 
   def new({name, path, protocol}) do
-    %Remote{name: name, path: path, protocol: protocol}
+    %RemoteSystem{name: name, path: path, protocol: protocol}
   end
 
-  def has_error?(%Remote{error: error}), do: !is_nil(error)
+  def has_error?(%RemoteSystem{error: error}), do: !is_nil(error)
   def has_error?(_other), do: false
 
   @doc """
   Add a remote
   """
   @spec add(t()) :: :ok
-  def add(%Remote{} = remote), do: GenServer.cast(__MODULE__, {:add, remote})
+  def add(%RemoteSystem{} = remote), do: GenServer.cast(__MODULE__, {:add, remote})
 
   @spec list() :: [t()]
   def list(), do: GenServer.call(__MODULE__, :list)
@@ -75,7 +75,7 @@ defmodule Genex.Data.Remote do
     remotes = Enum.map(res, &new/1)
 
     case remotes do
-      [] -> {:reply, %Remote{error: :noexist}, state}
+      [] -> {:reply, %RemoteSystem{error: :noexist}, state}
       [h | _] -> {:reply, h, state}
     end
   end
@@ -90,6 +90,7 @@ defmodule Genex.Data.Remote do
   @impl true
   def handle_continue(:init, %{filename: filename} = state) do
     if File.exists?(filename) do
+      IO.inspect("file exists, loading...")
       path = String.to_charlist(filename)
 
       case :ets.file2tab(path) do
@@ -97,7 +98,9 @@ defmodule Genex.Data.Remote do
         {:error, reason} -> {:stop, reason, state}
       end
     else
+      IO.inspect("file does not exist.. creating")
       _ = :ets.new(@tablename, [:set, :public, :named_table])
+      save_table(filename)
       {:noreply, state}
     end
   rescue

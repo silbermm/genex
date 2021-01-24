@@ -14,7 +14,7 @@ defmodule Genex.Application do
     children = [
       {Genex.Data.Passwords, []},
       {Genex.Data.Manifest, []},
-      {Genex.Data.Remote, []},
+      {Genex.Remote.RemoteSystem, []},
       {Genex.Data.Remote.Supervisor, []}
     ]
 

@@ -1,4 +1,4 @@
-defmodule Genex.Peers do
+defmodule Genex.Remote.LocalPeers do
   @moduledoc """
   Peers are other systems that we trust to send our passwords too and that typically trust us back. In this way
   we can share our passwords bi-directionally and in a decentralized way. 

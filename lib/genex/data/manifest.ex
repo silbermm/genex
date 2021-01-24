@@ -15,7 +15,8 @@ defmodule Genex.Data.Manifest do
           id: String.t(),
           host: String.t(),
           os: atom(),
-          is_local: bool()
+          is_local: bool(),
+          remote: nil | %Genex.Remote.RemoteSystem.t()
         }
   defstruct [:id, :host, :os, :is_local]
 

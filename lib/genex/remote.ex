@@ -10,49 +10,41 @@ defmodule Genex.Remote do
   """
   def add(name, path) do
     # add the remote to local node
-    remote = Genex.Data.Remote.new(name, path)
+    remote = Genex.Remote.RemoteSystem.new(name, path)
 
     # get local node info
     local = Genex.Data.Manifest.get_local_info()
 
-    if Genex.Data.Remote.has_error?(remote) do
+    if Genex.Remote.RemoteSystem.has_error?(remote) do
       {:error, remote.error}
     else
-      _ = Genex.Data.Remote.add(remote)
-      # copy this nodes public key to the correct place on the remote storage
-      _ = copy_public_key(remote, local)
-      _ = Genex.Data.Remote.Supervisor.add_node(path, local)
+      with :ok <- Genex.Remote.RemoteSystem.add(remote),
+           :ok <- copy_public_key(remote, local),
+           :ok <- Genex.Data.Remote.Supervisor.add_node(path, local) do
+        :ok
+      else
+        err -> err
+      end
     end
   end
 
   defp copy_public_key(remote, local_node) do
-    # get local nodes public key
     raw_public_key = @encryption.local_public_key()
-    path = Path.join(remote.path, local_node.id)
-    remote_public_key_file = Path.join(path, "public_key.pem")
-
-    mkdir = File.mkdir_p(path)
-
-    if mkdir == :ok do
-      File.write(remote_public_key_file, raw_public_key)
-      # add node to remote manifest
-    else
-      mkdir
-    end
+    Genex.Remote.FileSystem.copy_public_key(remote.path, local_node.id, raw_public_key)
   end
 
   @doc """
   List configured remotes.
   """
-  def list_remotes(), do: Genex.Data.Remote.list()
+  def list_remotes(), do: Genex.Remote.RemoteSystem.list()
 
   @doc """
   List the named remotes trusted peers
   """
   def list_remote_peers(remote) do
-    configured_remote = Genex.Data.Remote.get(remote)
+    configured_remote = Genex.Remote.RemoteSystem.get(remote)
 
-    if Genex.Data.Remote.has_error?(configured_remote) do
+    if Genex.Remote.RemoteSystem.has_error?(configured_remote) do
       :error
     else
       configured_remote.path
@@ -65,4 +57,6 @@ defmodule Genex.Remote do
     local = Genex.Data.Manifest.get_local_info()
     Enum.reject(lst, &(&1.id == local.id))
   end
+
+  defdelegate list_local_peers(), to: Genex.Remote.LocalPeers, as: :list
 end
