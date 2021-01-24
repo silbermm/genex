@@ -14,6 +14,7 @@ defmodule Genex.Remote do
 
     # get local node info
     local = Genex.Data.Manifest.get_local_info()
+    local = %{local | remote: remote}
 
     if Genex.Remote.RemoteSystem.has_error?(remote) do
       {:error, remote.error}

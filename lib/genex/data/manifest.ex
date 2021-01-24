@@ -16,11 +16,15 @@ defmodule Genex.Data.Manifest do
           host: String.t(),
           os: atom(),
           is_local: bool(),
-          remote: nil | %Genex.Remote.RemoteSystem.t()
+          remote: nil | Genex.Remote.RemoteSystem.t()
         }
-  defstruct [:id, :host, :os, :is_local]
+  defstruct [:id, :host, :os, :is_local, :remote]
 
-  def new({id, host, os, is_local}), do: %Manifest{id: id, host: host, os: os, is_local: is_local}
+  def new({id, host, os, is_local}),
+    do: %Manifest{id: id, host: host, os: os, is_local: is_local}
+
+  def new({id, host, os, is_local, remote}),
+    do: %Manifest{id: id, host: host, os: os, is_local: is_local, remote: remote}
 
   def new(%{id: id, host: host, os: os}),
     do: %Manifest{id: id, host: host, os: os, is_local: false}
@@ -59,7 +63,7 @@ defmodule Genex.Data.Manifest do
   end
 
   def handle_call(:get_local_info, _from, state) do
-    res = :ets.match_object(@tablename, {:"$1", :_, :_, true})
+    res = :ets.match_object(@tablename, {:"$1", :_, :_, true, :_})
 
     case res do
       [info | _] -> {:reply, new(info), state}
@@ -69,14 +73,18 @@ defmodule Genex.Data.Manifest do
 
   @impl true
   def handle_call({:add_peer, peer_manifest}, _from, %{filename: filename} = state) do
-    :ets.insert(@tablename, {peer_manifest.id, peer_manifest.host, peer_manifest.os, false})
+    :ets.insert(
+      @tablename,
+      {peer_manifest.id, peer_manifest.host, peer_manifest.os, false, peer_manifest.remote}
+    )
+
     save_table(filename)
     {:reply, :ok, state}
   end
 
   @impl true
   def handle_call(:get_peers, _from, state) do
-    res = :ets.match_object(@tablename, {:"$1", :_, :_, false})
+    res = :ets.match_object(@tablename, {:"$1", :_, :_, false, :_})
     peers = Enum.map(res, &new/1)
     {:reply, peers, state}
   end
@@ -127,7 +135,7 @@ defmodule Genex.Data.Manifest do
     {:ok, host} = :inet.gethostname()
     is_local = true
     unique_id = UUID.uuid4()
-    :ets.insert(@tablename, {unique_id, to_string(host), os, is_local})
+    :ets.insert(@tablename, {unique_id, to_string(host), os, is_local, nil})
     save_table(filename)
   end
 end

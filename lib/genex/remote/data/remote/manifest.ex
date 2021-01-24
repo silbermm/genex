@@ -26,14 +26,14 @@ defmodule Genex.Data.Remote.Manifest do
   def handle_call(:list, _from, %{filename: filename} = state) do
     res = :ets.match_object(@tablename, {:"$1", :_, :_, false})
     all = Enum.map(res, &Manifest.new/1)
-    {:stop, :normal, all, state}
+    {:reply, all, state}
   end
 
   @impl true
   def handle_call({:add, manifest}, _from, %{filename: filename} = state) do
     :ets.insert(@tablename, {manifest.id, manifest.host, manifest.os, false})
     save_table(filename)
-    {:stop, :normal, :ok, state}
+    {:reply, :ok, state}
   end
 
   @impl true
