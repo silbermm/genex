@@ -19,9 +19,15 @@ defmodule Genex.Data.Remote.Supervisor do
     GenServer.call(pid, {:add, node_manifest})
   end
 
+  def remove_node(remote_path, node_manifest) do
+    spec = {Genex.Data.Remote.Manifest, [path: remote_path]}
+    {:ok, pid} = DynamicSupervisor.start_child(__MODULE__, spec)
+    GenServer.call(pid, {:remove, node_manifest})
+  end
+
   def list_nodes(remote_path) do
     spec = {Genex.Data.Remote.Manifest, [path: remote_path]}
     {:ok, pid} = DynamicSupervisor.start_child(__MODULE__, spec)
-    GenServer.call(RemoteManifest, :list)
+    GenServer.call(pid, :list)
   end
 end

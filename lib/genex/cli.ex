@@ -7,9 +7,13 @@ defmodule Genex.CLI do
     --list, -l          List all accounts for which passwords exist
     --find account, -f  Find a previously saved password based on a certain account
     --create-certs, -c  Create Public and Private Key Certificates
+    --add-remote        Add a remote filesystem to share passwords - supports local filesystem or ssh
+    --list-remotes      List configured remotes and their status
+    --delete-remote     Delete an already configured remote
   """
   import Prompt
   alias Genex.Data.Credentials
+  alias Genex.Remote
 
   @system Application.compile_env(:genex, :system_module, System)
   @genex_core Application.compile_env(:genex, :genex_core_module, Genex)
@@ -50,15 +54,71 @@ defmodule Genex.CLI do
     create_certs(password)
   end
 
-  defp process({:find, acc}) do
-    acc
-    |> search_for(nil)
-  end
+  defp process({:find, acc}), do: search_for(acc, nil)
 
   defp process(:list) do
     accounts = Genex.list_accounts()
     display(accounts, color: IO.ANSI.green())
     0
+  end
+
+  defp process(:add_remote) do
+    res =
+      select(
+        "Choose a protocol",
+        ["file://", "ssh://"]
+      )
+
+    case res do
+      "file://" ->
+        display(
+          [
+            "",
+            "Enter the absolute path to the folder you want to use",
+            "i.e /home/user/mnt/passwords\n"
+          ],
+          color: IO.ANSI.green()
+        )
+
+      "ssh://" ->
+        display("Enter the path as user@host:/path", color: IO.ANSI.green())
+    end
+
+    path = text("Enter the path")
+
+    display("Enter a name to use when referencing the remote\n",
+      color: IO.ANSI.green()
+    )
+
+    name = text("Enter a name")
+
+    case Remote.add(name, res <> path) do
+      :ok ->
+        0
+
+      _ ->
+        # TODO: better error
+        display("Something went wrong.", IO.ANSI.red())
+        1
+    end
+  end
+
+  defp process(:list_remotes) do
+    case Remote.list_remotes() do
+      [] -> display("No remotes configured")
+      remotes -> display(format_remotes(remotes))
+    end
+  end
+
+  defp format_remotes(remotes) do
+    Enum.map(remotes, fn r ->
+      # TODO: Find a better way to add formatting 
+      IO.ANSI.bright() <> "  * #{r.name}" <> IO.ANSI.normal() <> " " <> r.path
+    end)
+  end
+
+  defp process({:delete_remote, remote}) do
+    Genex.Remote.delete(remote)
   end
 
   defp create_certs(password, overwrite \\ false) do
@@ -132,7 +192,10 @@ defmodule Genex.CLI do
           generate: :boolean,
           find: :string,
           create_certs: :boolean,
-          list: :boolean
+          list: :boolean,
+          add_remote: :boolean,
+          list_remotes: :boolean,
+          delete_remote: :string
         ],
         aliases: [h: :help, g: :generate, f: :find, c: :create_certs, l: :list]
       )
@@ -152,6 +215,15 @@ defmodule Genex.CLI do
 
       {[list: true], _, _} ->
         :list
+
+      {[add_remote: true], _, _} ->
+        :add_remote
+
+      {[list_remotes: true], _, _} ->
+        :list_remotes
+
+      {[delete_remote: remote], _, _} ->
+        {:delete_remote, remote}
 
       _ ->
         :help

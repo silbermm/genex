@@ -8,6 +8,7 @@ defmodule Genex.Remote do
   @doc """
   Add a new remote for the local node and copy the nodes public key and metadata to the remote.
   """
+  @spec add(String.t(), String.t()) :: :ok | {:error, binary()}
   def add(name, path) do
     # add the remote to local node
     remote = Genex.Remote.RemoteSystem.new(name, path)
@@ -26,6 +27,27 @@ defmodule Genex.Remote do
       else
         err -> err
       end
+    end
+  end
+
+  def delete(name) do
+    with remote_system <- Genex.Remote.RemoteSystem.get(name),
+         false <- Genex.Remote.RemoteSystem.has_error?(remote_system),
+         local <- Genex.Data.Manifest.get_local_info() do
+      # delete the public key from the remote if possible
+      _ = Genex.Remote.FileSystem.delete_public_key(remote_system.path, local.id)
+
+      # remove from the remote system file
+      Genex.Remote.RemoteSystem.delete(remote_system.name)
+
+      # remote from the remotes manifest
+      Genex.Data.Remote.Supervisor.remove_node(remote_system.path, local)
+    else
+      true ->
+        :noexist
+
+      _ ->
+        nil
     end
   end
 

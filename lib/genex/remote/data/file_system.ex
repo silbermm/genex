@@ -12,4 +12,13 @@ defmodule Genex.Remote.FileSystem do
       err -> err
     end
   end
+
+  def delete_public_key(<<"file:" <> path>>, node_id) do
+    path = Path.join(path, node_id)
+
+    case File.rm_rf(path) do
+      {:ok, _} -> :ok
+      err -> err
+    end
+  end
 end

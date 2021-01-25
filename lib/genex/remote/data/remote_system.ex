@@ -51,6 +51,9 @@ defmodule Genex.Remote.RemoteSystem do
   @spec get(String.t()) :: t()
   def get(remote_name), do: GenServer.call(__MODULE__, {:get, remote_name})
 
+  @spec delete(String.t()) :: boolean()
+  def delete(remote_name), do: GenServer.call(__MODULE__, {:delete, remote_name})
+
   def start_link(_) do
     GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
@@ -78,6 +81,12 @@ defmodule Genex.Remote.RemoteSystem do
       [] -> {:reply, %RemoteSystem{error: :noexist}, state}
       [h | _] -> {:reply, h, state}
     end
+  end
+
+  def handle_call({:delete, remote_name}, _from, %{filename: filename} = state) do
+    res = :ets.delete(@tablename, remote_name)
+    save_table(filename)
+    {:reply, res, state}
   end
 
   @impl true
