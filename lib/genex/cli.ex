@@ -10,6 +10,7 @@ defmodule Genex.CLI do
     --add-remote        Add a remote filesystem to share passwords - supports local filesystem or ssh
     --list-remotes      List configured remotes and their status
     --delete-remote     Delete an already configured remote
+    --add-peer          Add a trusted peer from a configured remote
   """
   import Prompt
   alias Genex.Data.Credentials
@@ -121,6 +122,19 @@ defmodule Genex.CLI do
     Genex.Remote.delete(remote)
   end
 
+  defp process(:add_peer) do
+    available_remotes = Remote.list_remotes()
+    # TODO: if only 1 remote, don't ask
+    # TODO: if no remotes, do something else
+    res = select("Which remote?", Enum.map(available_remotes, & &1.name))
+
+    # get peers from remote
+    peers = Remote.list_remote_peers(res)
+    # TODO filter out already added local peers
+
+    peer_res = select("Which peer?", Enum.map(peers, &"HOSTNAME: #{&1.host} - OS: #{&1.os}"))
+  end
+
   defp create_certs(password, overwrite \\ false) do
     case Genex.Encryption.OpenSSL.create_certs(password, overwrite) do
       {:error, :ekeyexists} ->
@@ -195,7 +209,8 @@ defmodule Genex.CLI do
           list: :boolean,
           add_remote: :boolean,
           list_remotes: :boolean,
-          delete_remote: :string
+          delete_remote: :string,
+          add_peer: :boolean
         ],
         aliases: [h: :help, g: :generate, f: :find, c: :create_certs, l: :list]
       )
@@ -224,6 +239,9 @@ defmodule Genex.CLI do
 
       {[delete_remote: remote], _, _} ->
         {:delete_remote, remote}
+
+      {[add_peer: true], _, _} ->
+        :add_peer
 
       _ ->
         :help
