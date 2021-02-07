@@ -83,9 +83,12 @@ defmodule Genex.Remote do
 
   defdelegate list_local_peers(), to: Genex.Remote.LocalPeers, as: :list
 
-  def add_peer(id, name, os, remote) do
-    # build manifest
-
-    # add to local manifest file
+  @doc """
+  Add a peer from a remote to the local system
+  """
+  def add_peer(manifest, remote) do
+    manifest = Genex.Data.Manifest.add_remote(manifest, remote)
+    public_key = Genex.Remote.FileSystem.read_remote_public_key(remote.path, manifest.id)
+    Genex.Remote.LocalPeers.add(manifest, public_key)
   end
 end

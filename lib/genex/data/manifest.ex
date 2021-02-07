@@ -29,6 +29,10 @@ defmodule Genex.Data.Manifest do
   def new(%{id: id, host: host, os: os}),
     do: %Manifest{id: id, host: host, os: os, is_local: false}
 
+  def add_remote(%Manifest{} = manifest, %Genex.Remote.RemoteSystem{} = remote) do
+    %Manifest{manifest | remote: remote}
+  end
+
   alias Genex.Environment
 
   def start_link(_) do

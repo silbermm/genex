@@ -21,4 +21,14 @@ defmodule Genex.Remote.FileSystem do
       err -> err
     end
   end
+
+  def read_remote_public_key(<<"file:" <> path>>, node_id) do
+    path = Path.join(path, node_id)
+    remote_public_key_file = Path.join(path, "public_key.pem")
+
+    case File.read(remote_public_key_file) do
+      {:ok, data} -> data
+      _ -> ""
+    end
+  end
 end

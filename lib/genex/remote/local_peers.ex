@@ -15,29 +15,25 @@ defmodule Genex.Remote.LocalPeers do
           os: String.t()
         }
 
-  @spec add(peer()) :: {:ok, String.t()} | {:error, atom()}
   @doc """
   Adds a trusted peer and returns the peers unique id
   """
-  def add(peer) do
+  def add(manifest, public_key) do
     # write public key to disc
     # file should live in .genex/#{peer_id}/public_key.pem
-    folder = Path.join(@home, peer.id)
+    folder = Path.join(@home, manifest.id)
 
     if !File.exists?(folder) do
       _ = File.mkdir(folder)
     end
 
-    case File.write(public_key_path(peer.id), peer.public_key) do
+    case File.write(public_key_path(manifest.id), public_key) do
       :ok ->
-        _ =
-          peer
-          |> Manifest.new()
-          |> Manifest.add_peer()
+        _ = Manifest.add_peer(manifest)
+        {:ok, manifest.id}
 
-        {:ok, peer.id}
-
-      _err ->
+      err ->
+        IO.inspect(err)
         {:error, :nowrite}
     end
   end
