@@ -23,7 +23,7 @@ defmodule Genex.Remote do
       with :ok <- Genex.Remote.RemoteSystem.add(remote),
            :ok <- copy_public_key(remote, local),
            :ok <- Genex.Data.Remote.Supervisor.add_node(path, local) do
-        :ok
+        {:ok, remote}
       else
         err -> err
       end
@@ -90,5 +90,26 @@ defmodule Genex.Remote do
     manifest = Genex.Data.Manifest.add_remote(manifest, remote)
     public_key = Genex.Remote.FileSystem.read_remote_public_key(remote.path, manifest.id)
     Genex.Remote.LocalPeers.add(manifest, public_key)
+  end
+
+  @doc """
+  Push local passwords to the remote for all peers to use
+  """
+  def push(remote, encryption_password) do
+    # encrypt passwords with each public key of peers for the specified remote
+
+    # First, get peers for remote
+    peers = Genex.Remote.LocalPeers.list_for_remote(remote)
+
+    # get all encrypted creds
+    {:ok, all_creds} = Genex.all(encryption_password)
+
+    # for each peer - create a task to save encrypt with it's private key
+    tasks =
+      for peer <- peers do
+        Task.async(fn ->
+          res = Genex.Remote.LocalPeers.encrypt_for_peer(peer, all_creds)
+        end)
+      end
   end
 end

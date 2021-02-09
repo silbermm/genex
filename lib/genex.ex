@@ -66,6 +66,21 @@ defmodule Genex do
     _e in RuntimeError -> {:error, :password}
   end
 
+  def all(password) do
+    data =
+      @store.all()
+      |> Enum.map(fn {account, username, date, creds} -> @encryption.decrypt(creds, password) end)
+      |> Enum.map(fn creds ->
+        creds
+        |> Jason.decode!()
+        |> Credentials.new()
+      end)
+
+    {:ok, data}
+  rescue
+    _e in RuntimeError -> {:error, :password}
+  end
+
   defp sort_accounts({_u, accnts}) do
     accnts
     |> Enum.sort(&compare_datetime/2)

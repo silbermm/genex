@@ -49,6 +49,11 @@ defmodule Genex.Remote.LocalPeers do
   """
   def list(), do: Manifest.get_peers()
 
+  def list_for_remote(remote) do
+    Manifest.get_peers()
+    |> Enum.reject(fn p -> p.remote.name != remote.name end)
+  end
+
   def encrypt_for_peer(_peer_id, _local_passwords) do
     # encrypt all passwords using the public key of the peer
     # save to a peer specific file for uploading to a server

@@ -25,6 +25,8 @@ defmodule Genex.Data.Passwords do
 
   def list_accounts(), do: GenServer.call(__MODULE__, :list)
 
+  def all(), do: GenServer.call(__MODULE__, :all)
+
   @impl true
   def handle_call(:save, _from, %{filename: filename} = state) do
     res = save_table(filename)
@@ -38,6 +40,11 @@ defmodule Genex.Data.Passwords do
 
   def handle_call(:list, _from, state) do
     res = :ets.match_object(@tablename, {:"$1", :_, :_, :_})
+    {:reply, res, state}
+  end
+
+  def handle_call(:all, _from, state) do
+    res = :ets.match_object(@tablename, {:"$1", :"$2", :"$3", :"$4"})
     {:reply, res, state}
   end
 

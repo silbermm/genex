@@ -10,7 +10,6 @@ defmodule Genex.CLI do
     --add-remote        Add a remote filesystem to share passwords - supports local filesystem or ssh
     --list-remotes      List configured remotes and their status
     --delete-remote     Delete an already configured remote
-    --add-peer          Add a trusted peer from a configured remote
     --list-peers        List trusted peers and which remote they belong to
   """
   import Prompt
@@ -95,10 +94,11 @@ defmodule Genex.CLI do
     name = text("Enter a name")
 
     case Remote.add(name, res <> path) do
-      :ok ->
+      {:ok, remote} ->
+        add_peers(remote)
         0
 
-      _ ->
+      err ->
         # TODO: better error
         display("Something went wrong.", color: IO.ANSI.red())
         1
@@ -123,29 +123,12 @@ defmodule Genex.CLI do
     Genex.Remote.delete(remote)
   end
 
-  defp process(:add_peer) do
-    available_remotes = Remote.list_remotes()
-    # TODO: if only 1 remote, don't ask
-    # TODO: if no remotes, do something else
-    remote = select("Which remote?", Enum.map(available_remotes, &{&1.name, &1}))
+  defp add_peers(remote) do
+    # add peers from remote just added
+    remote_peers = Remote.list_remote_peers(remote.name)
 
-    # get peers from remote
-    peers = Remote.list_remote_peers(remote.name)
-    # TODO filter out already added local peers
-
-    peer_res =
-      select("Which peer?", Enum.map(peers, &{"HOSTNAME: #{&1.host} - OS: #{&1.os}", &1}))
-
-    # TODO better description after adding peer
-    # TODO better error handling
-    case Remote.add_peer(peer_res, remote) do
-      {:ok, _id} ->
-        display("Peer Added!", color: IO.ANSI.green())
-        0
-
-      _ ->
-        display("Unable to add peer", color: IO.ANSI.red())
-        1
+    for peer <- remote_peers do
+      Remote.add_peer(peer, remote)
     end
   end
 
@@ -231,7 +214,6 @@ defmodule Genex.CLI do
           add_remote: :boolean,
           list_remotes: :boolean,
           delete_remote: :string,
-          add_peer: :boolean,
           list_peers: :boolean
         ],
         aliases: [h: :help, g: :generate, f: :find, c: :create_certs, l: :list]
@@ -261,9 +243,6 @@ defmodule Genex.CLI do
 
       {[delete_remote: remote], _, _} ->
         {:delete_remote, remote}
-
-      {[add_peer: true], _, _} ->
-        :add_peer
 
       {[list_peers: true], _, _} ->
         :list_peers
