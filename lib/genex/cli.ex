@@ -22,7 +22,8 @@ defmodule Genex.CLI do
   @spec main(list) :: 0 | 1
   def main(opts) do
     opts
-    |> parse_args()
+    |> build_opts()
+    |> parse_opts()
     |> process()
   end
 
@@ -107,9 +108,30 @@ defmodule Genex.CLI do
 
   defp process(:list_remotes) do
     case Remote.list_remotes() do
-      [] -> display("No remotes configured")
-      remotes -> display(format_remotes(remotes))
+      [] ->
+        display("No remotes configured")
+        0
+
+      remotes ->
+        display(format_remotes(remotes))
+        0
     end
+  end
+
+  defp process(:push_remotes) do
+    password = password("Private Key password")
+    remotes = Remote.list_remotes()
+
+    res =
+      select(
+        "Choose a remote to push to",
+        Enum.map(remotes, fn r ->
+          {IO.ANSI.bright() <> "  * #{r.name}" <> IO.ANSI.normal() <> " " <> r.path, r}
+        end)
+      )
+
+    Remote.push(res, password)
+    0
   end
 
   defp format_remotes(remotes) do
@@ -202,10 +224,10 @@ defmodule Genex.CLI do
     end
   end
 
-  defp parse_args(opts) do
+  defp build_opts(opts) do
     cmd_opts =
       OptionParser.parse(opts,
-        switches: [
+        strict: [
           help: :boolean,
           generate: :boolean,
           find: :string,
@@ -213,44 +235,25 @@ defmodule Genex.CLI do
           list: :boolean,
           add_remote: :boolean,
           list_remotes: :boolean,
+          push_remotes: :boolean,
           delete_remote: :string,
           list_peers: :boolean
         ],
         aliases: [h: :help, g: :generate, f: :find, c: :create_certs, l: :list]
       )
-
-    case cmd_opts do
-      {[help: true], _, _} ->
-        :help
-
-      {[generate: true], _, _} ->
-        :generate
-
-      {[find: acc], _, _} ->
-        {:find, acc}
-
-      {[create_certs: true], _, _} ->
-        :create_certs
-
-      {[list: true], _, _} ->
-        :list
-
-      {[add_remote: true], _, _} ->
-        :add_remote
-
-      {[list_remotes: true], _, _} ->
-        :list_remotes
-
-      {[delete_remote: remote], _, _} ->
-        {:delete_remote, remote}
-
-      {[list_peers: true], _, _} ->
-        :list_peers
-
-      _ ->
-        :help
-    end
   end
+
+  defp parse_opts({[help: true], _, _}), do: :help
+  defp parse_opts({[generate: true], _, _}), do: :generate
+  defp parse_opts({[find: acc], _, _}), do: {:find, acc}
+  defp parse_opts({[create_certs: true], _, _}), do: :create_certs
+  defp parse_opts({[list: true], _, _}), do: :list
+  defp parse_opts({[add_remote: true], _, _}), do: :add_remote
+  defp parse_opts({[list_remotes: true], _, _}), do: :list_remotes
+  defp parse_opts({[push_remotes: true], _, _}), do: :push_remotes
+  defp parse_opts({[delete_remote: remote], _, _}), do: {:delete_remote, remote}
+  defp parse_opts({[list_peers: true], _, _}), do: :list_peers
+  defp parse_opts(_), do: :help
 
   defp handle_find_password_with_username(credentials, username) do
     credentials

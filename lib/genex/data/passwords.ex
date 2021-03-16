@@ -80,12 +80,12 @@ defmodule Genex.Data.Passwords do
         {:error, reason} -> {:stop, reason, state}
       end
     else
-      _ = :ets.new(@tablename, [:bag, :public, :named_table])
+      _ = :ets.new(@tablename, [:bag, :protected, :named_table])
       {:noreply, state}
     end
   rescue
     _err ->
-      _ = :ets.new(@tablename, [:bag, :public, :named_table])
+      _ = :ets.new(@tablename, [:bag, :protected, :named_table])
       {:noreply, state}
   end
 

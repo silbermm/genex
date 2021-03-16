@@ -8,7 +8,7 @@ defmodule Genex.Remote do
   @doc """
   Add a new remote for the local node and copy the nodes public key and metadata to the remote.
   """
-  @spec add(String.t(), String.t()) :: :ok | {:error, binary()}
+  @spec add(String.t(), String.t()) :: {:ok, any()} | {:error, binary()}
   def add(name, path) do
     # add the remote to local node
     remote = Genex.Remote.RemoteSystem.new(name, path)
@@ -111,5 +111,7 @@ defmodule Genex.Remote do
           res = Genex.Remote.LocalPeers.encrypt_for_peer(peer, all_creds)
         end)
       end
+
+    tasks |> Task.await_many()
   end
 end

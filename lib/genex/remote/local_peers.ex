@@ -7,6 +7,7 @@ defmodule Genex.Remote.LocalPeers do
   alias Genex.Data.Manifest
 
   @home Application.compile_env!(:genex, :genex_home)
+  @encryption Application.compile_env!(:genex, :encryption_module)
 
   @type peer :: %{
           id: String.t(),
@@ -54,9 +55,35 @@ defmodule Genex.Remote.LocalPeers do
     |> Enum.reject(fn p -> p.remote.name != remote.name end)
   end
 
-  def encrypt_for_peer(_peer_id, _local_passwords) do
+  def encrypt_for_peer(peer, local_creds) do
     # encrypt all passwords using the public key of the peer
-    # save to a peer specific file for uploading to a server
+    # TODO: start up the process for the peer store
+    IO.inspect("starting passwords for #{peer.id}")
+    {:ok, pid} = Genex.Remote.Data.Passwords.start_link(peer: peer)
+
+    for cred <- local_creds do
+      IO.inspect("encrypting passwords for #{peer.id}")
+
+      with {:ok, encoded} <- Jason.encode(cred),
+           {:ok, encrypted} <- @encryption.encrypt(encoded, public_key_path(peer.id)) do
+        IO.inspect("saving passwords for #{peer.id}")
+
+        IO.inspect(GenServer.whereis(pid), label: "GENSERVER")
+
+        Genex.Remote.Data.Passwords.save_credentials(
+          pid,
+          cred.account,
+          cred.username,
+          cred.created_at,
+          encrypted
+        )
+      else
+        err -> err
+      end
+    end
+
+    IO.inspect("stopping passwords for #{peer.id}")
+    Genex.Remote.Data.Passwords.stop(pid)
   end
 
   def load_from_peer(_peer_id) do
@@ -67,5 +94,11 @@ defmodule Genex.Remote.LocalPeers do
     @home
     |> Path.join(peer_id)
     |> Path.join("public_key.pem")
+  end
+
+  def passwords_path(peer_id) do
+    @home
+    |> Path.join(peer_id)
+    |> Path.join("passwords")
   end
 end
