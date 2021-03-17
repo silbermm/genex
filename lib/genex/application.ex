@@ -12,7 +12,8 @@ defmodule Genex.Application do
     opts = [strategy: :one_for_one, name: Genex.Supervisor]
 
     children = [
-      {Genex.Data.Passwords, []},
+      {Genex.Passwords.Store, []},
+      {Genex.Passwords.Supervisor, []},
       {Genex.Data.Manifest, []},
       {Genex.Remote.RemoteSystem, []},
       {Genex.Data.Remote.Supervisor, []}

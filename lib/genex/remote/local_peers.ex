@@ -56,22 +56,13 @@ defmodule Genex.Remote.LocalPeers do
   end
 
   def encrypt_for_peer(peer, local_creds) do
-    # encrypt all passwords using the public key of the peer
-    # TODO: start up the process for the peer store
-    IO.inspect("starting passwords for #{peer.id}")
-    {:ok, pid} = Genex.Remote.Data.Passwords.start_link(peer: peer)
+    Genex.Passwords.Supervisor.load_password_store(peer)
 
     for cred <- local_creds do
-      IO.inspect("encrypting passwords for #{peer.id}")
-
       with {:ok, encoded} <- Jason.encode(cred),
            {:ok, encrypted} <- @encryption.encrypt(encoded, public_key_path(peer.id)) do
-        IO.inspect("saving passwords for #{peer.id}")
-
-        IO.inspect(GenServer.whereis(pid), label: "GENSERVER")
-
-        Genex.Remote.Data.Passwords.save_credentials(
-          pid,
+        Genex.Passwords.Supervisor.save_credentials(
+          peer.id,
           cred.account,
           cred.username,
           cred.created_at,
@@ -82,8 +73,7 @@ defmodule Genex.Remote.LocalPeers do
       end
     end
 
-    IO.inspect("stopping passwords for #{peer.id}")
-    Genex.Remote.Data.Passwords.stop(pid)
+    Genex.Passwords.Supervisor.unload_password_store(peer)
   end
 
   def load_from_peer(_peer_id) do

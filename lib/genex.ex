@@ -9,7 +9,7 @@ defmodule Genex do
   alias Genex.Data.Credentials
 
   @encryption Application.compile_env!(:genex, :encryption_module)
-  @store Application.compile_env(:genex, :store_module, Genex.Data.Passwords)
+  @store Application.compile_env(:genex, :store_module, Genex.Passwords.Store)
 
   @doc """
   Generate a password using the Dicware library
