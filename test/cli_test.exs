@@ -8,16 +8,16 @@ defmodule GenexTest.CLI do
   setup :set_mox_from_context
   setup :verify_on_exit!
 
-  @passwords_file Application.get_env(:genex, :passwords_file)
   @passphrase Diceware.generate()
 
   def clean_up_passwords_file(_context) do
-    # start the suite without a password file
-    if File.exists?(@passwords_file) do
-      File.rm(@passwords_file)
+    passwords_file = Application.get_env(:genex, :genex_home) <> "/passwords"
+
+    if File.exists?(passwords_file) do
+      File.rm(passwords_file)
     end
 
-    start_supervised(Genex.Data.Passwords)
+    start_supervised(Genex.Passwords.Store)
 
     gmail = Genex.Data.Credentials.new("gmail", "user", @passphrase)
     Genex.save_credentials(gmail)

@@ -2,17 +2,15 @@ defmodule Genex.Encryption.OpenSSL do
   @moduledoc "Creates RSA certs"
 
   @system Application.compile_env(:genex, :system_module, System)
-  alias Genex.Environment
 
   @doc "Create public and private certificates"
   def create_certs(password, override \\ false) do
-    private_file = Environment.load_variable("GENEX_PRIVATE_KEY", :private_key)
-    public_file = Environment.load_variable("GENEX_PUBLIC_KEY", :public_key)
+    private_file = Application.get_env(:genex, :genex_home) <> "/private_key.pem"
+    public_file = Application.get_env(:genex, :genex_home) <> "/public_key.pem"
 
     if !override && (File.exists?(private_file) || File.exists?(public_file)) do
       {:error, :ekeyexists}
     else
-      # TODO: make sure .genex folder exists
       case private_key(private_file, password) do
         {_, 0} ->
           public_key(public_file, private_file, password)

@@ -2,16 +2,16 @@ defmodule Genex.Test do
   use ExUnit.Case, async: false
   doctest Genex
 
-  @passwords_file Application.get_env(:genex, :passwords_file)
   @passphrase Diceware.generate()
 
   def clean_up_passwords_file(_context) do
+    passwords_file = Application.get_env(:genex, :genex_home) <> "/passwords"
     # start the suite without a password file
-    if File.exists?(@passwords_file) do
-      File.rm(@passwords_file)
+    if File.exists?(passwords_file) do
+      File.rm(passwords_file)
     end
 
-    start_supervised(Genex.Data.Passwords)
+    start_supervised(Genex.Passwords.Store)
     :ok
   end
 

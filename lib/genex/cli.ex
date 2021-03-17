@@ -16,7 +16,6 @@ defmodule Genex.CLI do
   alias Genex.Data.Credentials
   alias Genex.Remote
 
-  @system Application.compile_env(:genex, :system_module, System)
   @genex_core Application.compile_env(:genex, :genex_core_module, Genex)
 
   @spec main(list) :: 0 | 1
@@ -99,7 +98,7 @@ defmodule Genex.CLI do
         add_peers(remote)
         0
 
-      err ->
+      _err ->
         # TODO: better error
         display("Something went wrong.", color: IO.ANSI.red())
         1
@@ -134,15 +133,22 @@ defmodule Genex.CLI do
     0
   end
 
+  defp process({:delete_remote, remote}) do
+    Genex.Remote.delete(remote)
+  end
+
+  defp process(:list_peers) do
+    peers = Remote.list_local_peers()
+    peers = Enum.map(peers, &"#{&1.id} - #{&1.host} - #{&1.remote.name}")
+    display(peers, color: IO.ANSI.green())
+    0
+  end
+
   defp format_remotes(remotes) do
     Enum.map(remotes, fn r ->
       # TODO: Find a better way to add formatting 
       IO.ANSI.bright() <> "  * #{r.name}" <> IO.ANSI.normal() <> " " <> r.path
     end)
-  end
-
-  defp process({:delete_remote, remote}) do
-    Genex.Remote.delete(remote)
   end
 
   defp add_peers(remote) do
@@ -152,13 +158,6 @@ defmodule Genex.CLI do
     for peer <- remote_peers do
       Remote.add_peer(peer, remote)
     end
-  end
-
-  defp process(:list_peers) do
-    peers = Remote.list_local_peers()
-    peers = Enum.map(peers, &"#{&1.id} - #{&1.host} - #{&1.remote.name}")
-    display(peers, color: IO.ANSI.green())
-    0
   end
 
   defp create_certs(password, overwrite \\ false) do
@@ -225,22 +224,21 @@ defmodule Genex.CLI do
   end
 
   defp build_opts(opts) do
-    cmd_opts =
-      OptionParser.parse(opts,
-        strict: [
-          help: :boolean,
-          generate: :boolean,
-          find: :string,
-          create_certs: :boolean,
-          list: :boolean,
-          add_remote: :boolean,
-          list_remotes: :boolean,
-          push_remotes: :boolean,
-          delete_remote: :string,
-          list_peers: :boolean
-        ],
-        aliases: [h: :help, g: :generate, f: :find, c: :create_certs, l: :list]
-      )
+    OptionParser.parse(opts,
+      strict: [
+        help: :boolean,
+        generate: :boolean,
+        find: :string,
+        create_certs: :boolean,
+        list: :boolean,
+        add_remote: :boolean,
+        list_remotes: :boolean,
+        push_remotes: :boolean,
+        delete_remote: :string,
+        list_peers: :boolean
+      ],
+      aliases: [h: :help, g: :generate, f: :find, c: :create_certs, l: :list]
+    )
   end
 
   defp parse_opts({[help: true], _, _}), do: :help

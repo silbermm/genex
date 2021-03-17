@@ -33,8 +33,6 @@ defmodule Genex.Data.Manifest do
     %Manifest{manifest | remote: remote}
   end
 
-  alias Genex.Environment
-
   def start_link(_) do
     GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
@@ -42,7 +40,7 @@ defmodule Genex.Data.Manifest do
   @impl true
   def init(:ok) do
     Process.flag(:trap_exit, true)
-    filename = Environment.load_variable("GENEX_MANIFEST", :manifest_file)
+    filename = Application.get_env(:genex, :genex_home) <> "/manifest"
     {:ok, %{filename: filename}, {:continue, :init}}
   end
 

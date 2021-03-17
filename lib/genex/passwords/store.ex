@@ -2,8 +2,6 @@ defmodule Genex.Passwords.Store do
   @moduledoc "Save and retrieve credentials"
   use GenServer
 
-  alias Genex.Environment
-
   def start_link(args) do
     GenServer.start_link(__MODULE__, args, name: get_tablename(args))
   end
@@ -118,6 +116,5 @@ defmodule Genex.Passwords.Store do
     end
   end
 
-  defp get_filename(_),
-    do: Environment.load_variable("GENEX_PASSWORDS", :passwords_file)
+  defp get_filename(_), do: Application.get_env(:genex, :genex_home) <> "/passwords"
 end

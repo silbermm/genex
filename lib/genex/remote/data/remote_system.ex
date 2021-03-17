@@ -6,7 +6,6 @@ defmodule Genex.Remote.RemoteSystem do
   @tablename :remote_systems
 
   alias __MODULE__
-  alias Genex.Environment
 
   @type t() :: %RemoteSystem{
           name: String.t() | nil,
@@ -61,7 +60,7 @@ defmodule Genex.Remote.RemoteSystem do
   @impl true
   def init(:ok) do
     Process.flag(:trap_exit, true)
-    filename = Environment.load_variable("GENEX_REMOTES", :remotes_file)
+    filename = Application.get_env(:genex, :genex_home) <> "/remotes"
     {:ok, %{filename: filename}, {:continue, :init}}
   end
 

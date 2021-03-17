@@ -69,7 +69,9 @@ defmodule Genex do
   def all(password) do
     data =
       @store.all()
-      |> Enum.map(fn {account, username, date, creds} -> @encryption.decrypt(creds, password) end)
+      |> Enum.map(fn {_account, _username, _date, creds} ->
+        @encryption.decrypt(creds, password)
+      end)
       |> Enum.map(fn creds ->
         creds
         |> Jason.decode!()

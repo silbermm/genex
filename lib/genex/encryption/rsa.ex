@@ -6,15 +6,15 @@ defmodule Genex.Encryption.RSA do
   alias Genex.Encryption
   @behaviour Genex.Encryption
 
-  @private_key_file Application.compile_env!(:genex, :private_key)
-  @public_key_file Application.compile_env!(:genex, :public_key)
-
   @impl Encryption
-  def local_public_key(), do: File.read!(@public_key_file)
+  def local_public_key() do
+    public_key_file = Application.get_env(:genex, :genex_home) <> "/public_key.pem"
+    File.read!(public_key_file)
+  end
 
   @impl Encryption
   def encrypt(data) do
-    with {:ok, raw_public_key} <- File.read(@public_key_file),
+    with raw_public_key <- local_public_key(),
          [enc_public_key] <- :public_key.pem_decode(raw_public_key),
          public_key <- :public_key.pem_entry_decode(enc_public_key) do
       enc_data =
@@ -24,7 +24,7 @@ defmodule Genex.Encryption.RSA do
 
       {:ok, enc_data}
     else
-      _ -> {:error, "Unable to save to encrypted file"}
+      _ -> {:error, "Unable to encrypt data"}
     end
   end
 
@@ -46,7 +46,9 @@ defmodule Genex.Encryption.RSA do
 
   @impl Encryption
   def decrypt(data, password \\ nil) do
-    with {:ok, private_key} <- get_key(@private_key_file, password),
+    private_key_file = Application.get_env(:genex, :genex_home) <> "/private_key.pem"
+
+    with {:ok, private_key} <- get_key(private_key_file, password),
          data <- :base64.decode(data) do
       :public_key.decrypt_private(data, private_key)
     else
