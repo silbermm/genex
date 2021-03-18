@@ -14,7 +14,7 @@ defmodule Genex.Remote do
     remote = Genex.Remote.RemoteSystem.new(name, path)
 
     # get local node info
-    local = Genex.Data.Manifest.get_local_info()
+    local = Genex.Manifest.Store.get_local_info()
     local = %{local | remote: remote}
 
     if Genex.Remote.RemoteSystem.has_error?(remote) do
@@ -22,7 +22,7 @@ defmodule Genex.Remote do
     else
       with :ok <- Genex.Remote.RemoteSystem.add(remote),
            :ok <- copy_public_key(remote, local),
-           :ok <- Genex.Data.Remote.Supervisor.add_node(path, local) do
+           :ok <- Genex.Manifest.Supervisor.add_node(path, local) do
         {:ok, remote}
       else
         err -> err
@@ -33,7 +33,7 @@ defmodule Genex.Remote do
   def delete(name) do
     with remote_system <- Genex.Remote.RemoteSystem.get(name),
          false <- Genex.Remote.RemoteSystem.has_error?(remote_system),
-         local <- Genex.Data.Manifest.get_local_info() do
+         local <- Genex.Manifest.Store.get_local_info() do
       # delete the public key from the remote if possible
       _ = Genex.Remote.FileSystem.delete_public_key(remote_system.path, local.id)
 
@@ -41,7 +41,7 @@ defmodule Genex.Remote do
       Genex.Remote.RemoteSystem.delete(remote_system.name)
 
       # remote from the remotes manifest
-      Genex.Data.Remote.Supervisor.remove_node(remote_system.path, local)
+      Genex.Manifest.Supervisor.remove_node(remote_system.path, local)
     else
       true ->
         :noexist
@@ -71,13 +71,13 @@ defmodule Genex.Remote do
       :error
     else
       configured_remote.path
-      |> Genex.Data.Remote.Supervisor.list_nodes()
+      |> Genex.Manifest.Supervisor.list_nodes()
       |> reject_local_node()
     end
   end
 
   defp reject_local_node(lst) do
-    local = Genex.Data.Manifest.get_local_info()
+    local = Genex.Manifest.Store.get_local_info()
     Enum.reject(lst, &(&1.id == local.id))
   end
 

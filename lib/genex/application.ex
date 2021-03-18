@@ -14,9 +14,9 @@ defmodule Genex.Application do
     children = [
       {Genex.Passwords.Store, []},
       {Genex.Passwords.Supervisor, []},
-      {Genex.Data.Manifest, []},
+      {Genex.Manifest.Store, []},
       {Genex.Remote.RemoteSystem, []},
-      {Genex.Data.Remote.Supervisor, []}
+      {Genex.Manifest.Supervisor, []}
     ]
 
     Supervisor.start_link(children, opts)

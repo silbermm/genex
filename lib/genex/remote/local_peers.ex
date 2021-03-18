@@ -4,7 +4,7 @@ defmodule Genex.Remote.LocalPeers do
   we can share our passwords bi-directionally and in a decentralized way. 
   """
 
-  alias Genex.Data.Manifest
+  alias Genex.Manifest
 
   @home Application.compile_env!(:genex, :genex_home)
   @encryption Application.compile_env!(:genex, :encryption_module)
@@ -20,7 +20,7 @@ defmodule Genex.Remote.LocalPeers do
   Adds a trusted peer and returns the peers unique id
   """
   def add(manifest, public_key) do
-    # write public key to disc
+    # write public key to disk
     # file should live in .genex/#{peer_id}/public_key.pem
     folder = Path.join(@home, manifest.id)
 
@@ -30,7 +30,7 @@ defmodule Genex.Remote.LocalPeers do
 
     case File.write(public_key_path(manifest.id), public_key) do
       :ok ->
-        _ = Manifest.add_peer(manifest)
+        _ = Manifest.Store.add_peer(manifest)
         {:ok, manifest.id}
 
       err ->
@@ -40,7 +40,7 @@ defmodule Genex.Remote.LocalPeers do
   end
 
   def remove do
-    # remove public key from disc
+    # remove public key from disk
     #
     # remove data from manifest
   end
@@ -48,10 +48,10 @@ defmodule Genex.Remote.LocalPeers do
   @doc """
   List all known trusted peers
   """
-  def list(), do: Manifest.get_peers()
+  def list(), do: Manifest.Store.get_peers()
 
   def list_for_remote(remote) do
-    Manifest.get_peers()
+    Manifest.Store.get_peers()
     |> Enum.reject(fn p -> p.remote.name != remote.name end)
   end
 
