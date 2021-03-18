@@ -22,8 +22,8 @@ defmodule Genex.Data.Remote.Manifest do
     {:ok, %{filename: Path.join(path, "manifest")}, {:continue, :init}}
   end
 
-  @imple true
-  def handle_call(:list, _from, %{filename: filename} = state) do
+  @impl true
+  def handle_call(:list, _from, state) do
     res = :ets.match_object(@tablename, {:"$1", :_, :_, false})
     all = Enum.map(res, &Manifest.new/1)
     {:stop, :normal, all, state}

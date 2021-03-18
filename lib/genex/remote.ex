@@ -104,12 +104,9 @@ defmodule Genex.Remote do
     # get all encrypted creds
     {:ok, all_creds} = Genex.all(encryption_password)
 
-    # for each peer - create a task to save encrypt with it's private key
     tasks =
       for peer <- peers do
-        Task.async(fn ->
-          res = Genex.Remote.LocalPeers.encrypt_for_peer(peer, all_creds)
-        end)
+        Task.async(fn -> Genex.Remote.LocalPeers.encrypt_for_peer(peer, all_creds) end)
       end
 
     tasks |> Task.await_many()

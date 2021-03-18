@@ -72,7 +72,7 @@ defmodule Genex.Remote.RemoteSystem do
   end
 
   @impl true
-  def handle_call({:get, remote_name}, _from, %{filename: filename} = state) do
+  def handle_call({:get, remote_name}, _from, state) do
     res = :ets.match_object(@tablename, {remote_name, :_, :_})
     remotes = Enum.map(res, &new/1)
 
