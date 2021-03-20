@@ -3,6 +3,7 @@ defmodule Genex.Remote do
   Support for remote filesystem (file:// and ssh://) to sync changes to/from
   """
 
+  alias Genex.Data.Credentials
   @encryption Application.compile_env!(:genex, :encryption_module)
 
   @doc """
@@ -34,13 +35,9 @@ defmodule Genex.Remote do
     with remote_system <- Genex.Remote.RemoteSystem.get(name),
          false <- Genex.Remote.RemoteSystem.has_error?(remote_system),
          local <- Genex.Manifest.Store.get_local_info() do
-      # delete the public key from the remote if possible
       _ = Genex.Remote.FileSystem.delete_public_key(remote_system.path, local.id)
 
-      # remove from the remote system file
       Genex.Remote.RemoteSystem.delete(remote_system.name)
-
-      # remote from the remotes manifest
       Genex.Manifest.Supervisor.remove_node(remote_system.path, local)
     else
       true ->
@@ -110,5 +107,43 @@ defmodule Genex.Remote do
       end
 
     tasks |> Task.await_many()
+  end
+
+  @doc """
+  Pull local passwords from the remote for local use
+  """
+  def pull(remote, encryption_password) do
+    peers = Genex.Remote.LocalPeers.list_for_remote(remote)
+
+    tasks =
+      for peer <- peers do
+        Task.async(fn ->
+          # get passwords from peer
+          all = Genex.Remote.LocalPeers.load_from_peer(peer)
+          # decrypt
+          decrypted_creds =
+            all
+            |> Enum.map(fn {_account, _username, _date, creds} ->
+              @encryption.decrypt(creds, encryption_password)
+            end)
+            |> Enum.map(&map_creds/1)
+            |> Enum.reject(fn c -> c == nil end)
+
+          # add to local db
+          for cred <- decrypted_creds do
+            Genex.save_credentials(cred)
+          end
+        end)
+      end
+
+    tasks |> Task.await_many()
+  end
+
+  defp map_creds(:error), do: nil
+
+  defp map_creds(creds) do
+    creds
+    |> Jason.decode!()
+    |> Credentials.new()
   end
 end

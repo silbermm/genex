@@ -10,6 +10,9 @@ defmodule Genex.CLI do
     --add-remote        Add a remote filesystem to share passwords - supports local filesystem or ssh
     --list-remotes      List configured remotes and their status
     --delete-remote     Delete an already configured remote
+    --push-remotes      Push passwords to peers for a remote
+    --pull-remotes      Pull passwords from peers for a remote
+    --sync-peers        Pull in new peers from a remote
     --list-peers        List trusted peers and which remote they belong to
   """
   import Prompt
@@ -118,7 +121,6 @@ defmodule Genex.CLI do
   end
 
   defp process(:push_remotes) do
-    password = password("Private Key password")
     remotes = Remote.list_remotes()
 
     res =
@@ -129,7 +131,29 @@ defmodule Genex.CLI do
         end)
       )
 
+    password = password("Private key password")
     Remote.push(res, password)
+    0
+  end
+
+  defp process(:pull_remotes) do
+    # pull remotes passwords into our db password
+    remotes = Remote.list_remotes()
+
+    res =
+      select(
+        "Choose a remote to pull from",
+        Enum.map(remotes, fn r ->
+          {IO.ANSI.bright() <> "  * #{r.name}" <> IO.ANSI.normal() <> " " <> r.path, r}
+        end)
+      )
+
+    password = password("Private key password")
+
+    ProgressBar.render_indeterminate(fn ->
+      Remote.pull(res, password)
+    end)
+
     0
   end
 
@@ -142,6 +166,29 @@ defmodule Genex.CLI do
     peers = Enum.map(peers, &"#{&1.id} - #{&1.host} - #{&1.remote.name}")
     display(peers, color: IO.ANSI.green())
     0
+  end
+
+  defp process(:sync_peers) do
+    remotes = Remote.list_remotes()
+
+    res =
+      select(
+        "Choose a remote to sync with",
+        Enum.map(remotes, fn r ->
+          {IO.ANSI.bright() <> "  * #{r.name}" <> IO.ANSI.normal() <> " " <> r.path, r}
+        end)
+      )
+
+    case Remote.add(res.name, res.path) do
+      {:ok, remote} ->
+        add_peers(remote)
+        0
+
+      _err ->
+        # TODO: better error
+        display("Something went wrong.", color: IO.ANSI.red())
+        1
+    end
   end
 
   defp format_remotes(remotes) do
@@ -234,8 +281,10 @@ defmodule Genex.CLI do
         add_remote: :boolean,
         list_remotes: :boolean,
         push_remotes: :boolean,
+        pull_remotes: :boolean,
         delete_remote: :string,
-        list_peers: :boolean
+        list_peers: :boolean,
+        sync_peers: :boolean
       ],
       aliases: [h: :help, g: :generate, f: :find, c: :create_certs, l: :list]
     )
@@ -249,8 +298,10 @@ defmodule Genex.CLI do
   defp parse_opts({[add_remote: true], _, _}), do: :add_remote
   defp parse_opts({[list_remotes: true], _, _}), do: :list_remotes
   defp parse_opts({[push_remotes: true], _, _}), do: :push_remotes
+  defp parse_opts({[pull_remotes: true], _, _}), do: :pull_remotes
   defp parse_opts({[delete_remote: remote], _, _}), do: {:delete_remote, remote}
   defp parse_opts({[list_peers: true], _, _}), do: :list_peers
+  defp parse_opts({[sync_peers: true], _, _}), do: :sync_peers
   defp parse_opts(_), do: :help
 
   defp handle_find_password_with_username(credentials, username) do

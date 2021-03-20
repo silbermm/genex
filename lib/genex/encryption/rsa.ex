@@ -54,6 +54,8 @@ defmodule Genex.Encryption.RSA do
     else
       {:error, :nokeydecrypt} -> raise "nokeydecrypt"
     end
+  rescue
+    e -> :error
   end
 
   defp get_key(key_file, password) do

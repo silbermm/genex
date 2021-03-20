@@ -98,7 +98,6 @@ defmodule Genex.Remote.RemoteSystem do
   @impl true
   def handle_continue(:init, %{filename: filename} = state) do
     if File.exists?(filename) do
-      IO.inspect("file exists, loading...")
       path = String.to_charlist(filename)
 
       case :ets.file2tab(path) do
@@ -106,7 +105,6 @@ defmodule Genex.Remote.RemoteSystem do
         {:error, reason} -> {:stop, reason, state}
       end
     else
-      IO.inspect("file does not exist.. creating")
       _ = :ets.new(@tablename, [:set, :public, :named_table])
       save_table(filename)
       {:noreply, state}

@@ -34,7 +34,6 @@ defmodule Genex.Remote.LocalPeers do
         {:ok, manifest.id}
 
       err ->
-        IO.inspect(err)
         {:error, :nowrite}
     end
   end
@@ -76,8 +75,11 @@ defmodule Genex.Remote.LocalPeers do
     Genex.Passwords.Supervisor.unload_password_store(peer)
   end
 
-  def load_from_peer(_peer_id) do
-    # load peer encrypted passwords for syncing
+  def load_from_peer(peer) do
+    Genex.Passwords.Supervisor.load_password_store(peer)
+    creds = Genex.Passwords.Supervisor.all_credentials(peer.id)
+    Genex.Passwords.Supervisor.unload_password_store(peer)
+    creds
   end
 
   def public_key_path(peer_id) do

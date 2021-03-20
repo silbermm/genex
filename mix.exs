@@ -46,6 +46,7 @@ defmodule GenexCli.MixProject do
       {:elixir_uuid, "~> 1.2"},
       {:diceware, "~> 0.2.5"},
       {:prompt, "~> 0.4.1"},
+      {:progress_bar, "~> 2.0"},
       {:dialyxir, "~> 1.0.0-rc.4", only: [:dev], runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:mix_test_watch, "~> 0.8", only: :dev, runtime: false},

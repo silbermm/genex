@@ -1,4 +1,7 @@
 defmodule Genex.Passwords.Supervisor do
+  @moduledoc """
+  A Dynamic Supervisor for different password stores on a remote store
+  """
   use DynamicSupervisor
 
   def start_link(_) do
@@ -25,6 +28,16 @@ defmodule Genex.Passwords.Supervisor do
     GenServer.call(pid, {:save, account, username, created_at, encrypted_creds})
   end
 
+  def all_credentials(peer_id) do
+    name =
+      peer_id
+      |> String.replace("-", "_")
+      |> String.to_atom()
+
+    pid = GenServer.whereis(name)
+    GenServer.call(pid, :all)
+  end
+
   def unload_password_store(peer) do
     name =
       peer.id
@@ -33,8 +46,7 @@ defmodule Genex.Passwords.Supervisor do
 
     pid = GenServer.whereis(name)
     DynamicSupervisor.terminate_child(__MODULE__, pid)
-  catch
-    e ->
-      IO.inspect(e)
+  rescue
+    _e -> :error
   end
 end

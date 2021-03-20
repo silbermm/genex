@@ -40,7 +40,6 @@ defmodule Genex.Manifest.Store do
   """
   def save_file(), do: GenServer.call(__MODULE__, :save)
 
-  @spec get_local_info() :: Manifest.t()
   @doc "Get info about the local node"
   def get_local_info(), do: GenServer.call(:manifest, :get_local_info)
 
