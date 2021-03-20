@@ -99,7 +99,7 @@ defmodule Genex.Remote do
     peers = Genex.Remote.Peers.list_for_remote(remote)
 
     # get all encrypted creds
-    {:ok, all_creds} = Genex.all(encryption_password)
+    {:ok, all_creds} = Genex.Passwords.all(encryption_password)
 
     tasks =
       for peer <- peers do
@@ -131,7 +131,7 @@ defmodule Genex.Remote do
 
           # add to local db
           for cred <- decrypted_creds do
-            Genex.save_credentials(cred)
+            Genex.Passwords.save(cred)
           end
         end)
       end

@@ -17,9 +17,7 @@ defmodule Genex.CLI do
   """
   import Prompt
   alias Genex.Data.Credentials
-  alias Genex.Remote
-
-  @genex_core Application.compile_env(:genex, :genex_core_module, Genex)
+  alias Genex.{Passwords, Remote}
 
   @spec main(list) :: 0 | 1
   def main(opts) do
@@ -35,7 +33,7 @@ defmodule Genex.CLI do
   end
 
   defp process(:generate) do
-    passphrase = Genex.generate_password()
+    passphrase = Passwords.generate()
     display(Diceware.with_colors(passphrase))
 
     "Save this password?"
@@ -61,7 +59,7 @@ defmodule Genex.CLI do
   defp process({:find, acc}), do: search_for(acc, nil)
 
   defp process(:list) do
-    accounts = Genex.list_accounts()
+    accounts = Passwords.list_accounts()
     display(accounts, color: IO.ANSI.green())
     0
   end
@@ -156,9 +154,7 @@ defmodule Genex.CLI do
     0
   end
 
-  defp process({:delete_remote, remote}) do
-    Genex.Remote.delete(remote)
-  end
+  defp process({:delete_remote, remote}), do: Remote.delete(remote)
 
   defp process(:list_peers) do
     peers = Remote.list_local_peers()
@@ -233,7 +229,7 @@ defmodule Genex.CLI do
   end
 
   defp search_for(acc, password) do
-    case @genex_core.find_credentials(acc, password) do
+    case Passwords.find(acc, password) do
       {:error, :password} ->
         password = password("Enter private key password")
         search_for(acc, password)
@@ -340,7 +336,7 @@ defmodule Genex.CLI do
 
   @spec save_creds(Credentials.t()) :: no_return()
   defp save_creds(credentials) do
-    case Genex.save_credentials(credentials) do
+    case Passwords.save(credentials) do
       :ok ->
         display("Account saved")
         0

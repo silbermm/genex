@@ -20,6 +20,13 @@ defmodule Genex.Passwords.Store do
   def save_credentials(account, username, created_at, encrypted_creds),
     do: GenServer.call(:passwords, {:save, account, username, created_at, encrypted_creds})
 
+  def save_credentials(account, encrypted_creds),
+    do:
+      GenServer.call(
+        :passwords,
+        {:save, account.account, account.username, account.created_at, encrypted_creds}
+      )
+
   def find_account(account), do: GenServer.call(:passwords, {:find, account})
 
   def list_accounts(), do: GenServer.call(:passwords, :list)
