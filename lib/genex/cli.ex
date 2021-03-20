@@ -102,7 +102,6 @@ defmodule Genex.CLI do
         0
 
       _err ->
-        # TODO: better error
         display("Something went wrong.", color: IO.ANSI.red())
         1
     end
@@ -185,7 +184,6 @@ defmodule Genex.CLI do
         0
 
       _err ->
-        # TODO: better error
         display("Something went wrong.", color: IO.ANSI.red())
         1
     end
@@ -193,7 +191,6 @@ defmodule Genex.CLI do
 
   defp format_remotes(remotes) do
     Enum.map(remotes, fn r ->
-      # TODO: Find a better way to add formatting 
       IO.ANSI.bright() <> "  * #{r.name}" <> IO.ANSI.normal() <> " " <> r.path
     end)
   end

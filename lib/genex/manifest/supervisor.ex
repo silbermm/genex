@@ -1,4 +1,7 @@
 defmodule Genex.Manifest.Supervisor do
+  @moduledoc """
+  A dynamic supervisor for Manifests typically used for remote manifests
+  """
   use DynamicSupervisor
 
   def start_link(_) do

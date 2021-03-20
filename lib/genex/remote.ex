@@ -78,7 +78,7 @@ defmodule Genex.Remote do
     Enum.reject(lst, &(&1.id == local.id))
   end
 
-  defdelegate list_local_peers(), to: Genex.Remote.LocalPeers, as: :list
+  defdelegate list_local_peers(), to: Genex.Remote.Peers, as: :list
 
   @doc """
   Add a peer from a remote to the local system
@@ -86,7 +86,7 @@ defmodule Genex.Remote do
   def add_peer(manifest, remote) do
     manifest = Genex.Data.Manifest.add_remote(manifest, remote)
     public_key = Genex.Remote.FileSystem.read_remote_public_key(remote.path, manifest.id)
-    Genex.Remote.LocalPeers.add(manifest, public_key)
+    Genex.Remote.Peers.add(manifest, public_key)
   end
 
   @doc """
@@ -96,14 +96,14 @@ defmodule Genex.Remote do
     # encrypt passwords with each public key of peers for the specified remote
 
     # First, get peers for remote
-    peers = Genex.Remote.LocalPeers.list_for_remote(remote)
+    peers = Genex.Remote.Peers.list_for_remote(remote)
 
     # get all encrypted creds
     {:ok, all_creds} = Genex.all(encryption_password)
 
     tasks =
       for peer <- peers do
-        Task.async(fn -> Genex.Remote.LocalPeers.encrypt_for_peer(peer, all_creds) end)
+        Task.async(fn -> Genex.Remote.Peers.encrypt_for_peer(peer, all_creds) end)
       end
 
     tasks |> Task.await_many()
@@ -113,13 +113,13 @@ defmodule Genex.Remote do
   Pull local passwords from the remote for local use
   """
   def pull(remote, encryption_password) do
-    peers = Genex.Remote.LocalPeers.list_for_remote(remote)
+    peers = Genex.Remote.Peers.list_for_remote(remote)
 
     tasks =
       for peer <- peers do
         Task.async(fn ->
           # get passwords from peer
-          all = Genex.Remote.LocalPeers.load_from_peer(peer)
+          all = Genex.Remote.Peers.load_from_peer(peer)
           # decrypt
           decrypted_creds =
             all

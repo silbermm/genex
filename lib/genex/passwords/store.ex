@@ -111,7 +111,6 @@ defmodule Genex.Passwords.Store do
       <<"file:" <> tmp>> = peer.remote.path
       tmp <> "/#{peer.id}/passwords"
     else
-      # TODO: ssh
       ""
     end
   end
