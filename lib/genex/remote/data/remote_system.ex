@@ -7,7 +7,7 @@ defmodule Genex.Remote.RemoteSystem do
 
   alias __MODULE__
 
-  @type t() :: %RemoteSystem{
+  @type t() :: %__MODULE__{
           name: String.t() | nil,
           path: String.t() | nil,
           protocol: :file | nil,

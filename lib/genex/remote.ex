@@ -1,68 +1,61 @@
 defmodule Genex.Remote do
   @moduledoc """
-  Support for remote filesystem (file:// and ssh://) to sync changes to/from
+  Support for configuring, pushing, pulling and syncing remotes (ssh or file) 
   """
 
   alias Genex.Data.Credentials
+  alias Genex.Remote.RemoteSystem
+  alias Genex.Manifest
+
   @encryption Application.compile_env!(:genex, :encryption_module)
 
   @doc """
-  Add a new remote for the local node and copy the nodes public key and metadata to the remote.
+  Add a new remote for the local node and copy
+  the nodes public key and metadata to the remote
   """
   @spec add(String.t(), String.t()) :: {:ok, any()} | {:error, binary()}
   def add(name, path) do
-    # add the remote to local node
-    remote = Genex.Remote.RemoteSystem.new(name, path)
+    remote = RemoteSystem.new(name, path)
 
-    # get local node info
-    local = Genex.Manifest.Store.get_local_info()
-    local = %{local | remote: remote}
+    local =
+      Manifest.Store.get_local_info()
+      |> Genex.Data.Manifest.add_remote(remote)
 
-    if Genex.Remote.RemoteSystem.has_error?(remote) do
-      {:error, remote.error}
+    with false <- RemoteSystem.has_error?(remote),
+         :ok <- RemoteSystem.add(remote),
+         :ok <- copy_public_key(remote, local),
+         :ok <- Manifest.Supervisor.add_node(path, local) do
+      {:ok, remote}
     else
-      with :ok <- Genex.Remote.RemoteSystem.add(remote),
-           :ok <- copy_public_key(remote, local),
-           :ok <- Genex.Manifest.Supervisor.add_node(path, local) do
-        {:ok, remote}
-      else
-        err -> err
-      end
+      true -> {:error, remote.error}
+      err -> err
     end
   end
 
+  @doc "Delete a remote from the local node"
+  @spec delete(binary()) :: :ok | :noexist | :error
   def delete(name) do
-    with remote_system <- Genex.Remote.RemoteSystem.get(name),
-         false <- Genex.Remote.RemoteSystem.has_error?(remote_system),
-         local <- Genex.Manifest.Store.get_local_info() do
-      _ = Genex.Remote.FileSystem.delete_public_key(remote_system.path, local.id)
-
-      Genex.Remote.RemoteSystem.delete(remote_system.name)
-      Genex.Manifest.Supervisor.remove_node(remote_system.path, local)
+    with remote_system <- RemoteSystem.get(name),
+         false <- RemoteSystem.has_error?(remote_system),
+         local <- Manifest.Store.get_local_info(),
+         :ok <- Genex.Remote.FileSystem.delete_public_key(remote_system.path, local.id) do
+      RemoteSystem.delete(remote_system.name)
+      Manifest.Supervisor.remove_node(remote_system.path, local)
     else
-      true ->
-        :noexist
-
-      _ ->
-        nil
+      {:error, reason, _} -> :error
+      true -> :noexist
+      _ -> :error
     end
   end
 
-  defp copy_public_key(remote, local_node) do
-    raw_public_key = @encryption.local_public_key()
-    Genex.Remote.FileSystem.copy_public_key(remote.path, local_node.id, raw_public_key)
-  end
+  @doc "List configured remotes"
+  @spec list_remotes() :: list(RemoteSystem.t())
+  defdelegate list_remotes(), to: RemoteSystem, as: :list
 
-  @doc """
-  List configured remotes.
-  """
-  def list_remotes(), do: Genex.Remote.RemoteSystem.list()
-
-  @doc """
-  List the named remotes trusted peers
-  """
-  def list_remote_peers(remote) do
-    configured_remote = Genex.Remote.RemoteSystem.get(remote)
+  @doc "List the named remotes trusted peers"
+  @spec list_remote_peers(binary()) :: list(Genex.Data.Manifest.t()) | :error
+  def list_remote_peers(remote_name) do
+    configured_remote = Genex.Remote.RemoteSystem.get(remote_name)
 
     if Genex.Remote.RemoteSystem.has_error?(configured_remote) do
       :error
@@ -73,77 +66,70 @@ defmodule Genex.Remote do
     end
   end
 
-  defp reject_local_node(lst) do
-    local = Genex.Manifest.Store.get_local_info()
-    Enum.reject(lst, &(&1.id == local.id))
-  end
-
+  @doc "List the local nodes trusted peers"
+  @spec list_local_peers() :: list(Genex.Data.Manifest.t())
   defdelegate list_local_peers(), to: Genex.Remote.Peers, as: :list
 
-  @doc """
-  Add a peer from a remote to the local system
-  """
+  @doc "Trust a peer from a configured remote"
+  @spec add_peer(Genex.Data.Manifest.t(), RemoteSystem.t()) ::
+          {:ok, binary()} | {:error, :nowrite}
   def add_peer(manifest, remote) do
     manifest = Genex.Data.Manifest.add_remote(manifest, remote)
     public_key = Genex.Remote.FileSystem.read_remote_public_key(remote.path, manifest.id)
     Genex.Remote.Peers.add(manifest, public_key)
   end
 
-  @doc """
-  Push local passwords to the remote for all peers to use
-  """
+  @doc "Push local passwords to the remote for all peers to use"
+  @spec push(Genex.Data.Manifest.t(), binary() | nil) :: [atom()]
   def push(remote, encryption_password) do
-    # encrypt passwords with each public key of peers for the specified remote
-
-    # First, get peers for remote
     peers = Genex.Remote.Peers.list_for_remote(remote)
-
-    # get all encrypted creds
     {:ok, all_creds} = Genex.Passwords.all(encryption_password)
 
-    tasks =
-      for peer <- peers do
-        Task.async(fn -> Genex.Remote.Peers.encrypt_for_peer(peer, all_creds) end)
-      end
-
-    tasks |> Task.await_many()
+    peers
+    |> Enum.map(&build_push_tasks(&1, all_creds))
+    |> Task.await_many()
   end
 
-  @doc """
-  Pull local passwords from the remote for local use
-  """
+  @doc "Pull local passwords from the remote for local use"
+  @spec pull(Genex.Data.Manifest.t(), binary() | nil) :: list(atom())
   def pull(remote, encryption_password) do
-    peers = Genex.Remote.Peers.list_for_remote(remote)
-
-    tasks =
-      for peer <- peers do
-        Task.async(fn ->
-          # get passwords from peer
-          all = Genex.Remote.Peers.load_from_peer(peer)
-          # decrypt
-          decrypted_creds =
-            all
-            |> Enum.map(fn {_account, _username, _date, creds} ->
-              @encryption.decrypt(creds, encryption_password)
-            end)
-            |> Enum.map(&map_creds/1)
-            |> Enum.reject(fn c -> c == nil end)
-
-          # add to local db
-          for cred <- decrypted_creds do
-            Genex.Passwords.save(cred)
-          end
-        end)
-      end
-
-    tasks |> Task.await_many()
+    remote
+    |> Genex.Remote.Peers.list_for_remote()
+    |> Enum.map(&build_pull_tasks(&1, encryption_password))
+    |> Task.await_many()
   end
 
+  @spec build_push_tasks(Genex.Data.Manifest.t(), list(Credentials.t())) :: Task.t()
+  defp build_push_tasks(peer, creds),
+    do: Task.async(fn -> Genex.Remote.Peers.encrypt_for_peer(peer, creds) end)
+
+  @spec build_pull_tasks(Genex.Data.Manifest.t(), binary() | nil) :: Task.t()
+  defp build_pull_tasks(peer, password) do
+    Task.async(fn ->
+      password
+      |> Genex.Passwords.all(peer)
+      |> Enum.map(&Genex.Passwords.save/1)
+    end)
+  end
+
+  @spec map_creds(binary() | :error) :: nil | Credentials.t()
   defp map_creds(:error), do: nil
 
   defp map_creds(creds) do
     creds
     |> Jason.decode!()
     |> Credentials.new()
+  end
+
+  @spec copy_public_key(RemoteSystem.t(), Genex.Data.Manifest.t()) :: :ok | {:error, atom()}
+  defp copy_public_key(remote, local_node) do
+    raw_public_key = @encryption.local_public_key()
+    Genex.Remote.FileSystem.copy_public_key(remote.path, local_node.id, raw_public_key)
+  end
+
+  @spec reject_local_node(list(Genex.Data.Manifest.t())) :: list(Genex.Data.Manifest.t())
+  defp reject_local_node(lst) do
+    local = Genex.Manifest.Store.get_local_info()
+    Enum.reject(lst, &(&1.id == local.id))
   end
 end

@@ -47,10 +47,24 @@ defmodule Genex.Passwords do
   end
 
   @doc "Get all accounts out of the store"
-  @spec all(binary()) :: {:ok, list(Credentials.t())} | {:error, :password}
-  def all(password) do
+  @spec all(binary(), Genex.Data.Manifest.t() | nil) ::
+          {:ok, list(Credentials.t())} | {:error, :password}
+  def all(password, nil \\ nil) do
     {:ok,
      Store.all()
+     |> Enum.map(&decrypt_credentials(&1, password))
+     |> Enum.map(&to_credentials/1)}
+  rescue
+    _e in RuntimeError -> {:error, :password}
+  end
+
+  def all(password, peer) do
+    Genex.Passwords.Supervisor.load_password_store(peer)
+    creds = Genex.Passwords.Supervisor.all_credentials(peer.id)
+    Genex.Passwords.Supervisor.unload_password_store(peer)
+
+    {:ok,
+     creds
      |> Enum.map(&decrypt_credentials(&1, password))
      |> Enum.map(&to_credentials/1)}
   rescue

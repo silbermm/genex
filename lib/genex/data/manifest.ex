@@ -3,7 +3,7 @@ defmodule Genex.Data.Manifest do
 
   alias __MODULE__
 
-  @type t() :: %{
+  @type t() :: %__MODULE__{
           id: String.t(),
           host: String.t(),
           os: atom(),
