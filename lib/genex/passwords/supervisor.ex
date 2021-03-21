@@ -18,14 +18,18 @@ defmodule Genex.Passwords.Supervisor do
     DynamicSupervisor.start_child(__MODULE__, spec)
   end
 
-  def save_credentials(peer_id, account, username, created_at, encrypted_creds) do
+  def save_credentials(peer_id, credentials, encrypted_creds) do
     name =
       peer_id
       |> String.replace("-", "_")
       |> String.to_atom()
 
     pid = GenServer.whereis(name)
-    GenServer.call(pid, {:save, account, username, created_at, encrypted_creds})
+
+    GenServer.call(
+      pid,
+      {:save, credentials.account, credentials.username, credentials.created_at, encrypted_creds}
+    )
   end
 
   def all_credentials(peer_id) do

@@ -68,21 +68,21 @@ defmodule Genex.Remote do
 
   @doc "List the local nodes trusted peers"
   @spec list_local_peers() :: list(Genex.Data.Manifest.t())
-  defdelegate list_local_peers(), to: Genex.Remote.Peers, as: :list
+  def list_local_peers(), do: Manifest.Store.get_peers()
 
   @doc "Trust a peer from a configured remote"
   @spec add_peer(Genex.Data.Manifest.t(), RemoteSystem.t()) ::
           {:ok, binary()} | {:error, :nowrite}
   def add_peer(manifest, remote) do
     manifest = Genex.Data.Manifest.add_remote(manifest, remote)
-    public_key = Genex.Remote.FileSystem.read_remote_public_key(remote.path, manifest.id)
-    Genex.Remote.Peers.add(manifest, public_key)
+    public_key = Genex.Remote.FileSystem.read_peer_public_key(remote.path, manifest.id)
+    _add_peer(manifest, public_key)
   end
 
   @doc "Push local passwords to the remote for all peers to use"
   @spec push(Genex.Data.Manifest.t(), binary() | nil) :: [atom()]
   def push(remote, encryption_password) do
-    peers = Genex.Remote.Peers.list_for_remote(remote)
+    peers = list_for_remote(remote)
     {:ok, all_creds} = Genex.Passwords.all(encryption_password)
 
     peers
@@ -94,14 +94,14 @@ defmodule Genex.Remote do
   @spec pull(Genex.Data.Manifest.t(), binary() | nil) :: list(atom())
   def pull(remote, encryption_password) do
     remote
-    |> Genex.Remote.Peers.list_for_remote()
+    |> list_for_remote()
     |> Enum.map(&build_pull_tasks(&1, encryption_password))
     |> Task.await_many()
   end
 
   @spec build_push_tasks(Genex.Data.Manifest.t(), list(Credentials.t())) :: Task.t()
   defp build_push_tasks(peer, creds),
-    do: Task.async(fn -> Genex.Remote.Peers.encrypt_for_peer(peer, creds) end)
+    do: Task.async(fn -> Genex.Passwords.save_for_peer(creds, peer, public_key_path(peer.id)) end)
 
   @spec build_pull_tasks(Genex.Data.Manifest.t(), binary() | nil) :: Task.t()
   defp build_pull_tasks(peer, password) do
@@ -131,5 +131,42 @@ defmodule Genex.Remote do
   defp reject_local_node(lst) do
     local = Genex.Manifest.Store.get_local_info()
     Enum.reject(lst, &(&1.id == local.id))
+  end
+
+  @spec _add_peer(Genex.Data.Manifest.t(), binary()) :: {:ok, binary()} | {:error, :nowrite}
+  defp _add_peer(manifest, public_key) do
+    folder = Path.join(home(), manifest.id)
+
+    if !File.exists?(folder) do
+      _ = File.mkdir(folder)
+    end
+
+    manifest.id
+    |> public_key_path()
+    |> File.write(public_key)
+    |> case do
+      :ok ->
+        _ = Manifest.Store.add_peer(manifest)
+        {:ok, manifest.id}
+
+      _err ->
+        {:error, :nowrite}
+    end
+  end
+
+  @spec home() :: binary()
+  defp home(), do: Application.get_env(:genex, :genex_home)
+
+  @spec public_key_path(binary()) :: binary()
+  defp public_key_path(peer_id) do
+    home()
+    |> Path.join(peer_id)
+    |> Path.join("public_key.pem")
+  end
+
+  @spec list_for_remote(Genex.Data.Manifest.t()) :: list(Genex.Data.Manifest.t())
+  defp list_for_remote(remote) do
+    Manifest.Store.get_peers()
+    |> Enum.reject(fn p -> p.remote.name != remote.name end)
   end
 end
