@@ -10,6 +10,7 @@ defmodule Genex.Manifest.Store do
   """
   use GenServer, restart: :temporary
   import Genex.Data.Manifest
+  alias Genex.Data.Manifest
 
   def start_link(path: path) do
     GenServer.start_link(__MODULE__, {:remote, path}, name: :remote_manifest)
@@ -40,6 +41,7 @@ defmodule Genex.Manifest.Store do
   """
   def save_file(), do: GenServer.call(__MODULE__, :save)
 
+  @spec get_local_info() :: Manifest.t()
   @doc "Get info about the local node"
   def get_local_info(), do: GenServer.call(:manifest, :get_local_info)
 
