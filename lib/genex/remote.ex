@@ -91,12 +91,12 @@ defmodule Genex.Remote do
   end
 
   @doc "Pull local passwords from the remote for local use"
-  @spec pull(Genex.Data.Manifest.t(), binary() | nil) :: list(atom())
+  @spec pull(RemoteSystem.t(), binary() | nil) :: list(atom())
   def pull(remote, encryption_password) do
-    remote
-    |> list_for_remote()
-    |> Enum.map(&build_pull_tasks(&1, encryption_password))
-    |> Task.await_many()
+    local = Genex.Manifest.Store.get_local_info()
+    # get the plain text creds from the remote store for the local host
+    creds = Genex.Passwords.all(encryption_password, remote: remote, id: local.id)
+    Enum.map(creds, &Genex.Passwords.save/1)
   end
 
   @spec build_push_tasks(Genex.Data.Manifest.t(), list(Credentials.t())) :: Task.t()

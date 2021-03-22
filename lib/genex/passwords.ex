@@ -3,9 +3,8 @@ defmodule Genex.Passwords do
   The core module for generating, finding, encrypting, decrypting and storing passwords
   """
 
-  alias Genex.Passwords.{Supervisor, Store}
+  alias Genex.Passwords.Store
   alias Genex.Data.Credentials
-  alias Genex.Remote.Peers
 
   @encryption Application.compile_env!(:genex, :encryption_module)
 
@@ -63,27 +62,29 @@ defmodule Genex.Passwords do
     |> Enum.map(&sort_accounts/1)
   rescue
     _e in RuntimeError -> {:error, :password}
+    e -> {:error, :password}
   end
 
   @doc "Get all accounts out of the store"
-  @spec all(binary(), Genex.Data.Manifest.t() | nil) ::
+  @spec all(binary(), keyword()) ::
           {:ok, list(Credentials.t())} | {:error, :password}
-  def all(password, nil \\ nil) do
+  def all(password, remote: remote, id: id) do
+    Genex.Passwords.Supervisor.load_password_store(remote, id)
+    creds = Genex.Passwords.Supervisor.all_credentials(remote, id)
+    Genex.Passwords.Supervisor.unload_password_store(remote, id)
+
     {:ok,
-     Store.all()
+     creds
      |> Enum.map(&decrypt_credentials(&1, password))
      |> Enum.map(&to_credentials/1)}
   rescue
     _e in RuntimeError -> {:error, :password}
+    e -> {:error, :password}
   end
 
-  def all(password, peer) do
-    Genex.Passwords.Supervisor.load_password_store(peer)
-    creds = Genex.Passwords.Supervisor.all_credentials(peer.id)
-    Genex.Passwords.Supervisor.unload_password_store(peer)
-
+  def all(password, _opts \\ []) do
     {:ok,
-     creds
+     Store.all()
      |> Enum.map(&decrypt_credentials(&1, password))
      |> Enum.map(&to_credentials/1)}
   rescue

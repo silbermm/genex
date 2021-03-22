@@ -12,7 +12,7 @@ defmodule Genex.Passwords.Store do
     # get filename 
     filename = get_filename(args)
     tablename = get_tablename(args)
-    {:ok, %{tablename: tablename, filename: filename}, {:continue, :init}}
+    {:ok, %{tablename: tablename, filename: filename, remote: true}, {:continue, :init}}
   end
 
   def save_file(), do: GenServer.call(:passwords, :save)
@@ -100,23 +100,39 @@ defmodule Genex.Passwords.Store do
     save_table(tablename, filename)
   end
 
-  defp save_table(tablename, filename) do
+  def save_table(tablename, filename) do
     path = String.to_charlist(filename)
     _ = :ets.tab2file(tablename, path)
   end
 
-  defp get_tablename(peer: peer) do
+  def get_tablename(peer: peer) do
     peer.id
     |> String.replace("-", "_")
     |> String.to_atom()
   end
 
-  defp get_tablename(_), do: :passwords
+  def get_tablename(remote: remote, peer_id: id) do
+    (id <> remote.name)
+    |> String.replace("-", "_")
+    |> String.replace(" ", "")
+    |> String.to_atom()
+  end
+
+  def get_tablename(_), do: :passwords
 
   defp get_filename(peer: peer) do
     if peer.remote.protocol == :file do
       <<"file:" <> tmp>> = peer.remote.path
       tmp <> "/#{peer.id}/passwords"
+    else
+      ""
+    end
+  end
+
+  defp get_filename(remote: remote, peer_id: id) do
+    if remote.protocol == :file do
+      <<"file:" <> tmp>> = remote.path
+      tmp <> "/#{id}/passwords"
     else
       ""
     end

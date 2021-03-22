@@ -20,7 +20,7 @@ defmodule GenexTest.CLI do
     start_supervised(Genex.Passwords.Store)
 
     gmail = Genex.Data.Credentials.new("gmail", "user", @passphrase)
-    Genex.save_credentials(gmail)
+    Genex.Passwords.save(gmail)
     :ok
   end
 

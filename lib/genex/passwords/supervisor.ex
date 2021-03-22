@@ -13,21 +13,21 @@ defmodule Genex.Passwords.Supervisor do
     DynamicSupervisor.init(strategy: :one_for_one)
   end
 
-  def load_password_store(peer) do
+  def load_password_store(%Genex.Data.Manifest{} = peer) do
     spec = {Genex.Passwords.Store, [peer: peer]}
     DynamicSupervisor.start_child(__MODULE__, spec)
   end
 
+  def load_password_store(%Genex.Remote.RemoteSystem{} = remote, peer_id) do
+    spec = {Genex.Passwords.Store, [remote: remote, peer_id: peer_id]}
+    DynamicSupervisor.start_child(__MODULE__, spec)
+  end
+
   def save_credentials(peer_id, credentials, encrypted_creds) do
-    name =
-      peer_id
-      |> String.replace("-", "_")
-      |> String.to_atom()
-
-    pid = GenServer.whereis(name)
-
-    GenServer.call(
-      pid,
+    [peer: %{id: peer_id}]
+    |> Genex.Passwords.Store.get_tablename()
+    |> GenServer.whereis()
+    |> GenServer.call(
       {:save, credentials.account, credentials.username, credentials.created_at, encrypted_creds}
     )
   end
@@ -42,6 +42,13 @@ defmodule Genex.Passwords.Supervisor do
     GenServer.call(pid, :all)
   end
 
+  def all_credentials(remote, peer_id) do
+    [remote: remote, peer_id: peer_id]
+    |> Genex.Passwords.Store.get_tablename()
+    |> GenServer.whereis()
+    |> GenServer.call(:all)
+  end
+
   def unload_password_store(peer) do
     name =
       peer.id
@@ -49,6 +56,17 @@ defmodule Genex.Passwords.Supervisor do
       |> String.to_atom()
 
     pid = GenServer.whereis(name)
+    DynamicSupervisor.terminate_child(__MODULE__, pid)
+  rescue
+    _e -> :error
+  end
+
+  def unload_password_store(remote, peer_id) do
+    pid =
+      [remote: remote, peer_id: peer_id]
+      |> Genex.Passwords.Store.get_tablename()
+      |> GenServer.whereis()
+
     DynamicSupervisor.terminate_child(__MODULE__, pid)
   rescue
     _e -> :error
