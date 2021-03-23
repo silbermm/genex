@@ -94,9 +94,9 @@ defmodule Genex.Remote do
   @spec pull(RemoteSystem.t(), binary() | nil) :: list(atom())
   def pull(remote, encryption_password) do
     local = Genex.Manifest.Store.get_local_info()
-    # get the plain text creds from the remote store for the local host
-    creds = Genex.Passwords.all(encryption_password, remote: remote, id: local.id)
-    Enum.map(creds, &Genex.Passwords.save/1)
+    {:ok, creds} = Genex.Passwords.all(encryption_password, remote: remote, id: local.id)
+    IO.inspect(creds)
+    # Enum.map(creds, &Genex.Passwords.save/1)
   end
 
   @spec build_push_tasks(Genex.Data.Manifest.t(), list(Credentials.t())) :: Task.t()

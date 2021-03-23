@@ -12,7 +12,9 @@ defmodule Genex.Passwords.Store do
     # get filename 
     filename = get_filename(args)
     tablename = get_tablename(args)
-    {:ok, %{tablename: tablename, filename: filename, remote: true}, {:continue, :init}}
+
+    {:ok, %{tablename: tablename, table: nil, filename: filename, remote: true},
+     {:continue, :init}}
   end
 
   def save_file(), do: GenServer.call(:passwords, :save)
@@ -34,23 +36,23 @@ defmodule Genex.Passwords.Store do
   def all(), do: GenServer.call(:passwords, :all)
 
   @impl true
-  def handle_call(:save, _from, %{tablename: tablename, filename: filename} = state) do
-    res = save_table(tablename, filename)
+  def handle_call(:save, _from, %{table: table, filename: filename} = state) do
+    res = save_table(table, filename)
     {:reply, res, state}
   end
 
-  def handle_call({:find, account}, _from, %{tablename: tablename} = state) do
-    res = :ets.match_object(tablename, {account, :_, :_, :_})
+  def handle_call({:find, account}, _from, %{table: table} = state) do
+    res = :ets.match_object(table, {account, :_, :_, :_})
     {:reply, res, state}
   end
 
-  def handle_call(:list, _from, %{tablename: tablename} = state) do
-    res = :ets.match_object(tablename, {:"$1", :_, :_, :_})
+  def handle_call(:list, _from, %{table: table} = state) do
+    res = :ets.match_object(table, {:"$1", :_, :_, :_})
     {:reply, res, state}
   end
 
-  def handle_call(:all, _from, %{tablename: tablename} = state) do
-    res = :ets.match_object(tablename, {:"$1", :"$2", :"$3", :"$4"})
+  def handle_call(:all, _from, %{table: table} = state) do
+    res = :ets.match_object(table, {:"$1", :"$2", :"$3", :"$4"})
     {:reply, res, state}
   end
 
@@ -58,10 +60,10 @@ defmodule Genex.Passwords.Store do
   def handle_call(
         {:save, account, username, created_at, creds},
         _from,
-        %{tablename: tablename, filename: filename} = state
+        %{table: table, filename: filename} = state
       ) do
-    :ets.insert(tablename, {account, username, created_at, creds})
-    res = save_table(tablename, filename)
+    :ets.insert(table, {account, username, created_at, creds})
+    res = save_table(table, filename)
     {:reply, res, state}
   end
 
@@ -71,38 +73,41 @@ defmodule Genex.Passwords.Store do
   end
 
   @impl true
-  def handle_info(_, %{tablename: tablename, filename: filename} = state) do
-    save_table(tablename, filename)
+  def handle_info(_, %{table: table, filename: filename} = state) do
+    save_table(table, filename)
     {:noreply, state}
   end
 
   @impl true
   def handle_continue(:init, %{tablename: tablename, filename: filename} = state) do
     if File.exists?(filename) do
+      IO.inspect("file exists for #{filename}")
       path = String.to_charlist(filename)
 
       case :ets.file2tab(path) do
-        {:ok, _} -> {:noreply, state}
+        {:ok, table} -> {:noreply, %{state | table: table}}
         {:error, reason} -> {:stop, reason, state}
       end
     else
-      _ = :ets.new(tablename, [:bag, :protected, :named_table])
-      {:noreply, state}
+      IO.inspect("file DOES NOT exist for #{tablename}")
+      table = :ets.new(tablename, [:bag, :protected])
+      {:noreply, %{state | table: table}}
     end
   rescue
     _err ->
-      _ = :ets.new(tablename, [:bag, :protected, :named_table])
-      {:noreply, state}
+      IO.inspect("exception for #{tablename}")
+      table = :ets.new(tablename, [:bag, :protected])
+      {:noreply, %{state | table: table}}
   end
 
   @impl true
-  def terminate(_reason, %{tablename: tablename, filename: filename}) do
-    save_table(tablename, filename)
+  def terminate(_reason, %{table: table, filename: filename}) do
+    save_table(table, filename)
   end
 
-  def save_table(tablename, filename) do
+  def save_table(table, filename) do
     path = String.to_charlist(filename)
-    _ = :ets.tab2file(tablename, path)
+    _ = :ets.tab2file(table, path)
   end
 
   def get_tablename(peer: peer) do

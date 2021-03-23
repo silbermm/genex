@@ -146,11 +146,7 @@ defmodule Genex.CLI do
       )
 
     password = password("Private key password")
-
-    ProgressBar.render_indeterminate(fn ->
-      Remote.pull(res, password)
-    end)
-
+    Remote.pull(res, password)
     0
   end
 
