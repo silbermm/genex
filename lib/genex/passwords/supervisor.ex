@@ -39,7 +39,7 @@ defmodule Genex.Passwords.Supervisor do
       |> String.to_atom()
 
     pid = GenServer.whereis(name)
-    GenServer.call(pid, :all)
+    GenServer.call(pid, :debug)
   end
 
   def all_credentials(remote, peer_id) do

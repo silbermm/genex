@@ -56,6 +56,11 @@ defmodule Genex.Passwords.Store do
     {:reply, res, state}
   end
 
+  def handle_call(:debug, _from, %{table: table} = state) do
+    res = :ets.tab2list(table)
+    {:reply, res, state}
+  end
+
   @impl true
   def handle_call(
         {:save, account, username, created_at, creds},
@@ -81,7 +86,6 @@ defmodule Genex.Passwords.Store do
   @impl true
   def handle_continue(:init, %{tablename: tablename, filename: filename} = state) do
     if File.exists?(filename) do
-      IO.inspect("file exists for #{filename}")
       path = String.to_charlist(filename)
 
       case :ets.file2tab(path) do
@@ -89,13 +93,11 @@ defmodule Genex.Passwords.Store do
         {:error, reason} -> {:stop, reason, state}
       end
     else
-      IO.inspect("file DOES NOT exist for #{tablename}")
       table = :ets.new(tablename, [:bag, :protected])
       {:noreply, %{state | table: table}}
     end
   rescue
     _err ->
-      IO.inspect("exception for #{tablename}")
       table = :ets.new(tablename, [:bag, :protected])
       {:noreply, %{state | table: table}}
   end
