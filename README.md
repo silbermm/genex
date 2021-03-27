@@ -4,13 +4,7 @@ Build a password from readable words using the [Diceware](http://world.std.com/~
 
 ## Installation
 
-`mix escript.install github silbermm/genex`
-
-This will install genex into your ~/.mix/escripts directory.
-
-> You should add ~/.mix/escripts to your PATH
-
-If you installed elixir with [asdf](https://github.com/asdf-vm/asdf), make sure to run `asdf reshim elixir`
+Grab the latest release from the [release](https://github.com/silbermm/genex/releases) page, and add it to your path
 
 ## Setup
 
@@ -28,6 +22,22 @@ This creates two  files in a new folder in your home directory named `.genex/` (
 
 `genex --generate` will display a generated password on the screen. Continue to run it until you get one you can remember.
 
-Once you agree that you want to save the password, it will add it to a file stored by default at `~/.genex/passwords`. The file will be JSON formatted and have you encrypted username and password in it. 
+![Image of --generate](./docs/generate.png)
+
+Once you agree that you want to save the password and enter an account to associate the password to, genex will add it to a file stored by default at `~/.genex/passwords`.
 
 You can view your previously saved passwords using `genex --find account_name` where `acccount_name` is the account you saved your password under.
+
+## Syncing passwords
+
+Genex doesn't use cloud storage or servers to synchronize your passwords. Instead it gives you the power to decide where you want to store your passwords and which systems you trust to sync too/from.
+
+There are currently two mechanisms to share passwords with other systems.
+  * local file storage i.e a flash drive or hard drive
+  * ssh (not yet implemented)
+
+Both ways require other the other systems to have genex installed as well.
+
+### Local file storage
+
+TODO
