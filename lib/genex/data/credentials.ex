@@ -16,6 +16,10 @@ defmodule Genex.Data.Credentials do
   @derive {Jason.Encoder, only: [:account, :username, :created_at, :passphrase]}
   defstruct [:account, :username, :passphrase, :created_at]
 
+  def empty() do
+    %Credentials{}
+  end
+
   def new(%{
         "account" => account,
         "username" => username,

@@ -3,6 +3,7 @@ defmodule Genex.CLI do
   Password Manager that uses RSA to encrypt.
 
     --help, -h          Prints help message
+    --version, -v       Prints the version
     --generate, -g      Generate a password and save it
     --list, -l          List all accounts for which passwords exist
     --find account, -f  Find a previously saved password based on a certain account
@@ -32,6 +33,12 @@ defmodule Genex.CLI do
     0
   end
 
+  defp process(:version) do
+    {:ok, vsn} = :application.get_key(:genex, :vsn)
+    _ = display("genex - #{List.to_string(vsn)}")
+    0
+  end
+
   defp process(:generate) do
     passphrase = Passwords.generate()
     display(Diceware.with_colors(passphrase))
@@ -47,7 +54,7 @@ defmodule Genex.CLI do
         "",
         "Your private key will be protected by a password.",
         "Be sure to remember this one very important password",
-        "If lost, all of your Genex data will be lost.\n"
+        "If forgotten, all of your Genex data will be lost.\n"
       ],
       color: IO.ANSI.green()
     )
@@ -263,6 +270,7 @@ defmodule Genex.CLI do
     OptionParser.parse(opts,
       strict: [
         help: :boolean,
+        version: :boolean,
         generate: :boolean,
         find: :string,
         create_certs: :boolean,
@@ -275,11 +283,12 @@ defmodule Genex.CLI do
         list_peers: :boolean,
         sync_peers: :boolean
       ],
-      aliases: [h: :help, g: :generate, f: :find, c: :create_certs, l: :list]
+      aliases: [h: :help, v: :version, g: :generate, f: :find, c: :create_certs, l: :list]
     )
   end
 
   defp parse_opts({[help: true], _, _}), do: :help
+  defp parse_opts({[version: true], _, _}), do: :version
   defp parse_opts({[generate: true], _, _}), do: :generate
   defp parse_opts({[find: acc], _, _}), do: {:find, acc}
   defp parse_opts({[create_certs: true], _, _}), do: :create_certs
