@@ -2,9 +2,10 @@ defmodule Genex.CLI do
   @moduledoc """
   Password Manager that uses RSA to encrypt.
 
+    generate            Generate a password and save it
     --help, -h          Prints help message
     --version, -v       Prints the version
-    --generate, -g      Generate a password and save it
+
     --list, -l          List all accounts for which passwords exist
     --find account, -f  Find a previously saved password based on a certain account
     --create-certs, -c  Create Public and Private Key Certificates
@@ -21,12 +22,14 @@ defmodule Genex.CLI do
   alias Genex.{Passwords, Remote}
 
   @spec main(list) :: 0 | 1
-  def main(opts) do
-    opts
-    |> build_opts()
-    |> parse_opts()
+  def main(argv) do
+    argv
+    |> parse_argv()
     |> process()
   end
+
+  defp process(:ok), do: 0
+  defp process({:error, _}), do: 1
 
   defp process(:help) do
     _ = display(@moduledoc)
@@ -37,15 +40,6 @@ defmodule Genex.CLI do
     {:ok, vsn} = :application.get_key(:genex, :vsn)
     _ = display("genex - #{List.to_string(vsn)}")
     0
-  end
-
-  defp process(:generate) do
-    passphrase = Passwords.generate()
-    display(Diceware.with_colors(passphrase))
-
-    "Save this password?"
-    |> confirm()
-    |> handle_save(passphrase)
   end
 
   defp process(:create_certs) do
@@ -266,12 +260,20 @@ defmodule Genex.CLI do
     end
   end
 
+  defp parse_argv(argv) do
+    argv
+    |> OptionParser.parse_head(
+      strict: [help: :boolean, version: :boolean],
+      aliases: [h: :help, v: :version]
+    )
+    |> parse_opts()
+  end
+
   defp build_opts(opts) do
     OptionParser.parse(opts,
       strict: [
         help: :boolean,
         version: :boolean,
-        generate: :boolean,
         find: :string,
         create_certs: :boolean,
         list: :boolean,
@@ -283,13 +285,12 @@ defmodule Genex.CLI do
         list_peers: :boolean,
         sync_peers: :boolean
       ],
-      aliases: [h: :help, v: :version, g: :generate, f: :find, c: :create_certs, l: :list]
+      aliases: [h: :help, v: :version, f: :find, c: :create_certs, l: :list]
     )
   end
 
   defp parse_opts({[help: true], _, _}), do: :help
   defp parse_opts({[version: true], _, _}), do: :version
-  defp parse_opts({[generate: true], _, _}), do: :generate
   defp parse_opts({[find: acc], _, _}), do: {:find, acc}
   defp parse_opts({[create_certs: true], _, _}), do: :create_certs
   defp parse_opts({[list: true], _, _}), do: :list
@@ -300,6 +301,7 @@ defmodule Genex.CLI do
   defp parse_opts({[delete_remote: remote], _, _}), do: {:delete_remote, remote}
   defp parse_opts({[list_peers: true], _, _}), do: :list_peers
   defp parse_opts({[sync_peers: true], _, _}), do: :sync_peers
+  defp parse_opts({[], ["generate" | rest], invalid}), do: Genex.CLI.Generate.init(rest)
   defp parse_opts(_), do: :help
 
   defp handle_find_password_with_username(credentials, username) do
@@ -316,39 +318,6 @@ defmodule Genex.CLI do
         |> display()
 
         0
-    end
-  end
-
-  defp handle_save(answer, password) do
-    case answer do
-      :no ->
-        confirm("Generate a different password")
-        0
-
-      :yes ->
-        account_name = text("Enter an account name that this password belongs to")
-        username = text("Enter a username for this account/password")
-
-        account_name
-        |> Credentials.new(username, password)
-        |> save_creds
-
-      :error ->
-        display("Error", error: true)
-        1
-    end
-  end
-
-  @spec save_creds(Credentials.t()) :: no_return()
-  defp save_creds(credentials) do
-    case Passwords.save(credentials) do
-      :ok ->
-        display("Account saved")
-        0
-
-      {:error, _reason} ->
-        display("Something went wrong trying to save your password, please try again")
-        1
     end
   end
 end
