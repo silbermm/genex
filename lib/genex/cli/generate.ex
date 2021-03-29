@@ -1,6 +1,6 @@
 defmodule Genex.CLI.Generate do
   @moduledoc """
-  generate generates a random passphrase
+  genex generate generates a random passphrase
     --help, -h                Prints this help message
     --length  passphrase_size Sets the amount of words to use for the passphrase - Defaults to 6
     --save, -s                Save the passphrase for retrieval later
