@@ -1,6 +1,7 @@
 defmodule Genex.CLI.ListAccounts do
   @moduledoc """
-  genex list - lists the accounts that are known to the system
+  #{IO.ANSI.green()}genex list#{IO.ANSI.reset()}
+  Lists the accounts that are known to the system
 
     --help, -h   Prints this help message
   """
@@ -9,13 +10,11 @@ defmodule Genex.CLI.ListAccounts do
   alias Genex.Passwords
   import Prompt
 
-  @type t :: %ListAccounts{
-          help: boolean()
-        }
+  @type t :: %ListAccounts{help: boolean()}
   defstruct help: false
 
-  @doc "init the generate command"
-  @spec(init(list(String.t())) :: :ok, {:error, binary()})
+  @doc "init the list accounts command"
+  @spec init(list(String.t())) :: :ok | {:error, binary()}
   def init(argv) do
     argv
     |> parse()
@@ -30,13 +29,13 @@ defmodule Genex.CLI.ListAccounts do
     |> _parse()
   end
 
-  @spec _parse({list(), list(), list()}) :: Generate.t()
+  @spec _parse({list(), list(), list()}) :: ListAccounts.t()
   defp _parse({opts, _, _}) do
     help = Keyword.get(opts, :help, false)
     %ListAccounts{help: help}
   end
 
-  @spec process(Generate.t()) :: :ok
+  @spec process(ListAccounts.t()) :: :ok
   defp process(%ListAccounts{help: true}), do: display(@moduledoc)
 
   defp process(%ListAccounts{} = _) do

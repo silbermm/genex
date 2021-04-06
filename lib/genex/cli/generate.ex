@@ -19,7 +19,7 @@ defmodule Genex.CLI.Generate do
   defstruct length: 6, help: false, save: false
 
   @doc "init the generate command"
-  @spec(init(list(String.t())) :: :ok, {:error, binary()})
+  @spec init(list(String.t())) :: :ok | {:error, any()}
   def init(argv) do
     argv
     |> parse()
@@ -45,7 +45,7 @@ defmodule Genex.CLI.Generate do
     %Generate{help: help, save: save, length: length}
   end
 
-  @spec process(Generate.t()) :: :ok
+  @spec process(Generate.t()) :: :ok | {:error, any()}
   defp process(%Generate{help: true}), do: display(@moduledoc)
 
   defp process(%Generate{save: false, length: length}) do
@@ -62,7 +62,7 @@ defmodule Genex.CLI.Generate do
     |> handle_save(passphrase)
   end
 
-  @spec handle_save(:yes | :no | :error, Diceware.Passphrase.t()) :: :ok
+  @spec handle_save(:yes | :no | :error, Diceware.Passphrase.t()) :: :ok | {:error, any()}
   defp handle_save(:no, _password) do
     confirm("Generate a different password")
     :ok

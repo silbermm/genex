@@ -4,12 +4,11 @@ defmodule Genex.CLI do
 
     generate            Generate a password and save it
     list                List all accounts that have saved passwords
+    show <account_name> Show password for account
+    certs               Generate public and private key certificates
+
     --help, -h          Prints help message
     --version, -v       Prints the version
-
-    --find account, -f  Find a previously saved password based on a certain account
-
-    --create-certs, -c  Create Public and Private Key Certificates
 
     --add-remote        Add a remote filesystem to share passwords - supports local filesystem or ssh
     --list-remotes      List configured remotes and their status
@@ -44,23 +43,6 @@ defmodule Genex.CLI do
     _ = display("genex - #{List.to_string(vsn)}")
     0
   end
-
-  defp process(:create_certs) do
-    display(
-      [
-        "",
-        "Your private key will be protected by a password.",
-        "Be sure to remember this one very important password",
-        "If forgotten, all of your Genex data will be lost.\n"
-      ],
-      color: IO.ANSI.green()
-    )
-
-    password = password("Enter a password")
-    create_certs(password)
-  end
-
-  defp process({:find, acc}), do: search_for(acc, nil)
 
   defp process(:add_remote) do
     res =
@@ -194,69 +176,6 @@ defmodule Genex.CLI do
     end
   end
 
-  defp create_certs(password, overwrite \\ false) do
-    case Genex.Encryption.OpenSSL.create_certs(password, overwrite) do
-      {:error, :ekeyexists} ->
-        display("Keys already exist!\n", color: IO.ANSI.red())
-
-        answer =
-          confirm("Do you want to overwrite existing keys?",
-            default_answer: :no
-          )
-
-        if answer == :yes do
-          create_certs(password, true)
-        else
-          2
-        end
-
-      :ok ->
-        display("Keys created successfully", position: :left)
-        0
-
-      {:error, err} ->
-        display("something went wrong #{inspect(err)}")
-        1
-    end
-
-    0
-  end
-
-  defp search_for(acc, password) do
-    case Passwords.find(acc, password) do
-      {:error, :password} ->
-        password = password("Enter private key password")
-        search_for(acc, password)
-
-      res ->
-        count = Enum.count(res)
-
-        cond do
-          count == 0 ->
-            display("Unable to find a password with that account name", error: true)
-            0
-
-          count == 1 ->
-            creds = res |> List.first()
-
-            creds.passphrase
-            |> Diceware.with_colors()
-            |> display()
-
-            0
-
-          count > 1 ->
-            result =
-              select(
-                "Multiple entries saved for #{acc}. Choose one",
-                Enum.map(res, & &1.username)
-              )
-
-            handle_find_password_with_username(res, result)
-        end
-    end
-  end
-
   defp parse_argv(argv) do
     argv
     |> OptionParser.parse_head(
@@ -266,54 +185,21 @@ defmodule Genex.CLI do
     |> parse_opts()
   end
 
-  defp build_opts(opts) do
-    OptionParser.parse(opts,
-      strict: [
-        help: :boolean,
-        version: :boolean,
-        find: :string,
-        create_certs: :boolean,
-        add_remote: :boolean,
-        list_remotes: :boolean,
-        push_remotes: :boolean,
-        pull_remotes: :boolean,
-        delete_remote: :string,
-        list_peers: :boolean,
-        sync_peers: :boolean
-      ],
-      aliases: [h: :help, v: :version, f: :find, c: :create_certs]
-    )
-  end
-
   defp parse_opts({[help: true], _, _}), do: :help
   defp parse_opts({[version: true], _, _}), do: :version
-  defp parse_opts({[find: acc], _, _}), do: {:find, acc}
-  defp parse_opts({[create_certs: true], _, _}), do: :create_certs
-  defp parse_opts({[add_remote: true], _, _}), do: :add_remote
-  defp parse_opts({[list_remotes: true], _, _}), do: :list_remotes
-  defp parse_opts({[push_remotes: true], _, _}), do: :push_remotes
-  defp parse_opts({[pull_remotes: true], _, _}), do: :pull_remotes
-  defp parse_opts({[delete_remote: remote], _, _}), do: {:delete_remote, remote}
-  defp parse_opts({[list_peers: true], _, _}), do: :list_peers
-  defp parse_opts({[sync_peers: true], _, _}), do: :sync_peers
-  defp parse_opts({[], ["generate" | rest], invalid}), do: Genex.CLI.Generate.init(rest)
-  defp parse_opts({[], ["list" | rest], invalid}), do: Genex.CLI.ListAccounts.init(rest)
+
+  # defp parse_opts({[add_remote: true], _, _}), do: :add_remote
+  # defp parse_opts({[list_remotes: true], _, _}), do: :list_remotes
+  # defp parse_opts({[push_remotes: true], _, _}), do: :push_remotes
+  # defp parse_opts({[pull_remotes: true], _, _}), do: :pull_remotes
+  # defp parse_opts({[delete_remote: remote], _, _}), do: {:delete_remote, remote}
+  # defp parse_opts({[list_peers: true], _, _}), do: :list_peers
+  # defp parse_opts({[sync_peers: true], _, _}), do: :sync_peers
+
+  defp parse_opts({[], ["generate" | rest], _invalid}), do: Genex.CLI.Generate.init(rest)
+  defp parse_opts({[], ["list" | rest], _invalid}), do: Genex.CLI.ListAccounts.init(rest)
+  defp parse_opts({[], ["show" | rest], _invalid}), do: Genex.CLI.Show.init(rest)
+  defp parse_opts({[], ["certs" | rest], _invalid}), do: Genex.CLI.Certificates.init(rest)
+
   defp parse_opts(_), do: :help
-
-  defp handle_find_password_with_username(credentials, username) do
-    credentials
-    |> Enum.find(fn x -> x.username == username end)
-    |> case do
-      nil ->
-        display("error ", error: true)
-        1
-
-      res ->
-        res.passphrase
-        |> Diceware.with_colors()
-        |> display()
-
-        0
-    end
-  end
 end
