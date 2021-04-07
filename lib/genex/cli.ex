@@ -6,13 +6,14 @@ defmodule Genex.CLI do
     list                List all accounts that have saved passwords
     show <account_name> Show password for account
     certs               Generate public and private key certificates
+    remote              Add, list and delete trusted remotes
+
+    push
+    pull
 
     --help, -h          Prints help message
     --version, -v       Prints the version
 
-    --add-remote        Add a remote filesystem to share passwords - supports local filesystem or ssh
-    --list-remotes      List configured remotes and their status
-    --delete-remote     Delete an already configured remote
     --push-remotes      Push passwords to peers for a remote
     --pull-remotes      Pull passwords from peers for a remote
 
@@ -20,8 +21,7 @@ defmodule Genex.CLI do
     --list-peers        List trusted peers and which remote they belong to
   """
   import Prompt
-  alias Genex.Data.Credentials
-  alias Genex.{Passwords, Remote}
+  alias Genex.Remote
 
   @spec main(list) :: 0 | 1
   def main(argv) do
@@ -42,59 +42,6 @@ defmodule Genex.CLI do
     {:ok, vsn} = :application.get_key(:genex, :vsn)
     _ = display("genex - #{List.to_string(vsn)}")
     0
-  end
-
-  defp process(:add_remote) do
-    res =
-      select(
-        "Choose a protocol",
-        ["file://", "ssh://"]
-      )
-
-    case res do
-      "file://" ->
-        display(
-          [
-            "",
-            "Enter the absolute path to the folder you want to use",
-            "i.e /home/user/mnt/passwords\n"
-          ],
-          color: IO.ANSI.green()
-        )
-
-      "ssh://" ->
-        display("Enter the path as user@host:/path", color: IO.ANSI.green())
-    end
-
-    path = text("Enter the path")
-
-    display("Enter a name to use when referencing the remote\n",
-      color: IO.ANSI.green()
-    )
-
-    name = text("Enter a name")
-
-    case Remote.add(name, res <> path) do
-      {:ok, remote} ->
-        add_peers(remote)
-        0
-
-      _err ->
-        display("Something went wrong.", color: IO.ANSI.red())
-        1
-    end
-  end
-
-  defp process(:list_remotes) do
-    case Remote.list_remotes() do
-      [] ->
-        display("No remotes configured")
-        0
-
-      remotes ->
-        display(format_remotes(remotes))
-        0
-    end
   end
 
   defp process(:push_remotes) do
@@ -130,8 +77,6 @@ defmodule Genex.CLI do
     0
   end
 
-  defp process({:delete_remote, remote}), do: Remote.delete(remote)
-
   defp process(:list_peers) do
     peers = Remote.list_local_peers()
     peers = Enum.map(peers, &"#{&1.id} - #{&1.host} - #{&1.remote.name}")
@@ -161,12 +106,6 @@ defmodule Genex.CLI do
     end
   end
 
-  defp format_remotes(remotes) do
-    Enum.map(remotes, fn r ->
-      IO.ANSI.bright() <> "  * #{r.name}" <> IO.ANSI.normal() <> " " <> r.path
-    end)
-  end
-
   defp add_peers(remote) do
     # add peers from remote just added
     remote_peers = Remote.list_remote_peers(remote.name)
@@ -192,7 +131,6 @@ defmodule Genex.CLI do
   # defp parse_opts({[list_remotes: true], _, _}), do: :list_remotes
   # defp parse_opts({[push_remotes: true], _, _}), do: :push_remotes
   # defp parse_opts({[pull_remotes: true], _, _}), do: :pull_remotes
-  # defp parse_opts({[delete_remote: remote], _, _}), do: {:delete_remote, remote}
   # defp parse_opts({[list_peers: true], _, _}), do: :list_peers
   # defp parse_opts({[sync_peers: true], _, _}), do: :sync_peers
 
@@ -200,6 +138,7 @@ defmodule Genex.CLI do
   defp parse_opts({[], ["list" | rest], _invalid}), do: Genex.CLI.ListAccounts.init(rest)
   defp parse_opts({[], ["show" | rest], _invalid}), do: Genex.CLI.Show.init(rest)
   defp parse_opts({[], ["certs" | rest], _invalid}), do: Genex.CLI.Certificates.init(rest)
+  defp parse_opts({[], ["remote" | rest], _invalid}), do: Genex.CLI.Remote.init(rest)
 
   defp parse_opts(_), do: :help
 end

@@ -62,7 +62,7 @@ defmodule Genex.Passwords do
     |> Enum.map(&sort_accounts/1)
   rescue
     _e in RuntimeError -> {:error, :password}
-    e -> {:error, :password}
+    _e -> {:error, :password}
   end
 
   @doc "Get all accounts out of the store"
@@ -82,7 +82,7 @@ defmodule Genex.Passwords do
      |> Enum.map(&to_credentials/1)}
   rescue
     _e in RuntimeError -> {:error, :password}
-    e -> {:error, :password}
+    _e -> {:error, :password}
   end
 
   def all(password, _opts) do

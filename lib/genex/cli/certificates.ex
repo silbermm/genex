@@ -8,7 +8,6 @@ defmodule Genex.CLI.Certificates do
   """
 
   alias __MODULE__
-  alias Genex.Passwords
   import Prompt
 
   @type t :: %Certificates{help: boolean(), print: boolean()}
