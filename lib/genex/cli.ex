@@ -8,14 +8,12 @@ defmodule Genex.CLI do
     show <account_name> Show password for account
     certs               Generate public and private key certificates
     remote              Add, list and delete trusted remotes
-
-    push
-    pull
+    push                Push local passphrases to a trusted remote
+    pull                Pull remote passphrases to local store
 
     --help, -h          Prints help message
     --version, -v       Prints the version
 
-    --pull-remotes      Pull passwords from peers for a remote
 
     --sync-peers        Pull in new peers from a remote
     --list-peers        List trusted peers and which remote they belong to
@@ -42,23 +40,6 @@ defmodule Genex.CLI do
   defp process(:version) do
     {:ok, vsn} = :application.get_key(:genex, :vsn)
     _ = display("genex - #{List.to_string(vsn)}")
-    0
-  end
-
-  defp process(:pull_remotes) do
-    # pull remotes passwords into our db password
-    remotes = Remote.list_remotes()
-
-    res =
-      select(
-        "Choose a remote to pull from",
-        Enum.map(remotes, fn r ->
-          {IO.ANSI.bright() <> "  * #{r.name}" <> IO.ANSI.normal() <> " " <> r.path, r}
-        end)
-      )
-
-    password = password("Private key password")
-    Remote.pull(res, password)
     0
   end
 
@@ -112,9 +93,6 @@ defmodule Genex.CLI do
   defp parse_opts({[help: true], _, _}), do: :help
   defp parse_opts({[version: true], _, _}), do: :version
 
-  # defp parse_opts({[add_remote: true], _, _}), do: :add_remote
-  # defp parse_opts({[list_remotes: true], _, _}), do: :list_remotes
-  # defp parse_opts({[pull_remotes: true], _, _}), do: :pull_remotes
   # defp parse_opts({[list_peers: true], _, _}), do: :list_peers
   # defp parse_opts({[sync_peers: true], _, _}), do: :sync_peers
 
@@ -124,6 +102,7 @@ defmodule Genex.CLI do
   defp parse_opts({[], ["certs" | rest], _invalid}), do: Genex.CLI.Certificates.init(rest)
   defp parse_opts({[], ["remote" | rest], _invalid}), do: Genex.CLI.Remote.init(rest)
   defp parse_opts({[], ["push" | rest], _invalid}), do: Genex.CLI.PushCommand.init(rest)
+  defp parse_opts({[], ["pull" | rest], _invalid}), do: Genex.CLI.PullCommand.init(rest)
 
   defp parse_opts(_), do: :help
 end
