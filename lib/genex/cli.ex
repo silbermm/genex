@@ -15,10 +15,8 @@ defmodule Genex.CLI do
     --help, -h          Prints help message
     --version, -v       Prints the version
 
-    --sync-peers        Pull in new peers from a remote
   """
   import Prompt
-  alias Genex.Remote
 
   @spec main(list) :: 0 | 1
   def main(argv) do
