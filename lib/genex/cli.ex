@@ -10,14 +10,12 @@ defmodule Genex.CLI do
     remote              Add, list and delete trusted remotes
     push                Push local passphrases to a trusted remote
     pull                Pull remote passphrases to local store
+    peers               View and manage peers
 
     --help, -h          Prints help message
     --version, -v       Prints the version
 
-
     --sync-peers        Pull in new peers from a remote
-    --list-peers        List trusted peers and which remote they belong to
-
   """
   import Prompt
   alias Genex.Remote
@@ -43,44 +41,6 @@ defmodule Genex.CLI do
     0
   end
 
-  defp process(:list_peers) do
-    peers = Remote.list_local_peers()
-    peers = Enum.map(peers, &"#{&1.id} - #{&1.host} - #{&1.remote.name}")
-    display(peers, color: IO.ANSI.green())
-    0
-  end
-
-  defp process(:sync_peers) do
-    remotes = Remote.list_remotes()
-
-    res =
-      select(
-        "Choose a remote to sync with",
-        Enum.map(remotes, fn r ->
-          {IO.ANSI.bright() <> "  * #{r.name}" <> IO.ANSI.normal() <> " " <> r.path, r}
-        end)
-      )
-
-    case Remote.add(res.name, res.path) do
-      {:ok, remote} ->
-        add_peers(remote)
-        0
-
-      _err ->
-        display("Something went wrong.", color: IO.ANSI.red())
-        1
-    end
-  end
-
-  defp add_peers(remote) do
-    # add peers from remote just added
-    remote_peers = Remote.list_remote_peers(remote.name)
-
-    for peer <- remote_peers do
-      Remote.add_peer(peer, remote)
-    end
-  end
-
   defp parse_argv(argv) do
     argv
     |> OptionParser.parse_head(
@@ -93,9 +53,6 @@ defmodule Genex.CLI do
   defp parse_opts({[help: true], _, _}), do: :help
   defp parse_opts({[version: true], _, _}), do: :version
 
-  # defp parse_opts({[list_peers: true], _, _}), do: :list_peers
-  # defp parse_opts({[sync_peers: true], _, _}), do: :sync_peers
-
   defp parse_opts({[], ["generate" | rest], _invalid}), do: Genex.CLI.Generate.init(rest)
   defp parse_opts({[], ["list" | rest], _invalid}), do: Genex.CLI.ListAccounts.init(rest)
   defp parse_opts({[], ["show" | rest], _invalid}), do: Genex.CLI.Show.init(rest)
@@ -103,6 +60,7 @@ defmodule Genex.CLI do
   defp parse_opts({[], ["remote" | rest], _invalid}), do: Genex.CLI.Remote.init(rest)
   defp parse_opts({[], ["push" | rest], _invalid}), do: Genex.CLI.PushCommand.init(rest)
   defp parse_opts({[], ["pull" | rest], _invalid}), do: Genex.CLI.PullCommand.init(rest)
+  defp parse_opts({[], ["peers" | rest], _invalid}), do: Genex.CLI.PeerCommand.init(rest)
 
   defp parse_opts(_), do: :help
 end
