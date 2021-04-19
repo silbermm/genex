@@ -11,7 +11,7 @@ Grab the latest release from the [release](https://github.com/silbermm/genex/rel
 Create a new rsa public/private keypair (requires openssl is installed on your system)
 
 ```
-genex --create-certs
+genex certs
 ```
 
 This creates two  files in a new folder in your home directory named `.genex/` (notice the `.` in the folder name). genex will use these files to encrypt and decrypt your passwords.
@@ -20,13 +20,13 @@ This creates two  files in a new folder in your home directory named `.genex/` (
 
 ## Usage
 
-`genex --generate` will display a generated password on the screen. Continue to run it until you get one you can remember.
+`genex generate` will display a generated password on the screen. Continue to run it until you get one you can remember.
 
 ![Image of --generate](./docs/generate.png)
 
 Once you agree that you want to save the password and enter an account to associate the password to, genex will add it to a file stored by default at `~/.genex/passwords`.
 
-You can view your previously saved passwords using `genex --find account_name` where `acccount_name` is the account you saved your password under.
+You can view your previously saved passwords using `genex show account_name` where `account_name` is the account you saved your password under.
 
 ## Syncing passwords
 

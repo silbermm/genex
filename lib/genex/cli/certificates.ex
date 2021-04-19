@@ -9,6 +9,7 @@ defmodule Genex.CLI.Certificates do
 
   alias __MODULE__
   import Prompt
+  @encryption Application.compile_env!(:genex, :encryption_module)
 
   @type t :: %Certificates{help: boolean(), print: boolean()}
   defstruct(help: false, print: false)
@@ -24,8 +25,8 @@ defmodule Genex.CLI.Certificates do
   def process(%Certificates{help: true}), do: display(@moduledoc)
 
   def process(%Certificates{print: true}) do
-    # TODO: get the cert and display it
-    display("NOT IMPLEMENTED")
+    public_key = @encryption.local_public_key()
+    display(public_key)
   end
 
   def process(%Certificates{}) do
