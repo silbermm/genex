@@ -38,6 +38,17 @@ defmodule Genex.PasswordsTest do
     test "find credentials unable to decrypt private key" do
       assert Passwords.find("gmail", "incorrectpassword") === {:error, :password}
     end
+
+    test "list accounts" do
+      accounts = Passwords.list_accounts()
+      assert accounts == ["gmail"]
+    end
+
+    test "all credentials", %{used_creds: gmail} do
+      {:ok, [res]} = Passwords.all("password")
+      assert res.account == gmail.account
+      assert res.passphrase == gmail.passphrase
+    end
   end
 
   describe "no file" do
@@ -46,23 +57,35 @@ defmodule Genex.PasswordsTest do
     end
   end
 
-  test "generates random password" do
-    password = Passwords.generate()
-    assert Enum.count(password.words) == 6
-    assert Enum.all?(password.words, fn p -> String.length(p) > 0 end)
-    assert password.words == Enum.uniq(password.words)
+  describe "generate" do
+    test "random password" do
+      password = Passwords.generate()
+      assert Enum.count(password.words) == 6
+      assert Enum.all?(password.words, fn p -> String.length(p) > 0 end)
+      assert password.words == Enum.uniq(password.words)
+    end
+
+    test "random password - custom number of words" do
+      password = Passwords.generate(8)
+      assert password.count == 8
+      assert Enum.all?(password.words, fn p -> String.length(p) > 0 end)
+      assert password.words == Enum.uniq(password.words)
+    end
+
+    test "2 random passwords - not equal" do
+      password = Passwords.generate()
+      password2 = Passwords.generate()
+      assert password != password2
+    end
   end
 
-  test "generates random password - custom number of words" do
-    password = Passwords.generate(8)
-    assert password.count == 8
-    assert Enum.all?(password.words, fn p -> String.length(p) > 0 end)
-    assert password.words == Enum.uniq(password.words)
+  test "list accounts - empty file" do
+    accounts = Passwords.list_accounts()
+    assert accounts == []
   end
 
-  test "generates 2 random passwords - not equal" do
-    password = Passwords.generate()
-    password2 = Passwords.generate()
-    assert password != password2
+  test "all credentials - empty file" do
+    all = Passwords.all("password")
+    assert all == {:ok, []}
   end
 end

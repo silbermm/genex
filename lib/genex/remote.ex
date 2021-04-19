@@ -42,7 +42,7 @@ defmodule Genex.Remote do
       RemoteSystem.delete(remote_system.name)
       Manifest.Supervisor.remove_node(remote_system.path, local)
     else
-      {:error, reason, _} -> :error
+      {:error, _reason, _} -> :error
       true -> :noexist
       _ -> :error
     end
@@ -101,24 +101,6 @@ defmodule Genex.Remote do
   @spec build_push_tasks(Genex.Data.Manifest.t(), list(Credentials.t())) :: Task.t()
   defp build_push_tasks(peer, creds),
     do: Task.async(fn -> Genex.Passwords.save_for_peer(creds, peer, public_key_path(peer.id)) end)
-
-  @spec build_pull_tasks(Genex.Data.Manifest.t(), binary() | nil) :: Task.t()
-  defp build_pull_tasks(peer, password) do
-    Task.async(fn ->
-      password
-      |> Genex.Passwords.all(peer)
-      |> Enum.map(&Genex.Passwords.save/1)
-    end)
-  end
-
-  @spec map_creds(binary() | :error) :: nil | Credentials.t()
-  defp map_creds(:error), do: nil
-
-  defp map_creds(creds) do
-    creds
-    |> Jason.decode!()
-    |> Credentials.new()
-  end
 
   @spec copy_public_key(RemoteSystem.t(), Genex.Data.Manifest.t()) :: :ok | {:error, atom()}
   defp copy_public_key(remote, local_node) do

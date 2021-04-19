@@ -62,12 +62,15 @@ defmodule Genex.Passwords do
     |> Enum.map(&sort_accounts/1)
   rescue
     _e in RuntimeError -> {:error, :password}
-    e -> {:error, :password}
+    _e -> {:error, :password}
   end
 
   @doc "Get all accounts out of the store"
   @spec all(binary(), keyword()) ::
           {:ok, list(Credentials.t())} | {:error, :password}
+
+  def all(password, opts \\ [])
+
   def all(password, remote: remote, id: id) do
     Genex.Passwords.Supervisor.load_password_store(remote, id)
     creds = Genex.Passwords.Supervisor.all_credentials(remote, id)
@@ -79,10 +82,10 @@ defmodule Genex.Passwords do
      |> Enum.map(&to_credentials/1)}
   rescue
     _e in RuntimeError -> {:error, :password}
-    e -> {:error, :password}
+    _e -> {:error, :password}
   end
 
-  def all(password, _opts \\ []) do
+  def all(password, _opts) do
     {:ok,
      Store.all()
      |> Enum.map(&decrypt_credentials(&1, password))

@@ -7,11 +7,10 @@ defmodule GenexCli.MixProject do
     [
       app: @app,
       version: "0.0.2-alpha",
-      elixir: "~> 1.8",
+      elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
-      escript: escript(),
       preferred_cli_env: [release: :prod],
       releases: [
         genex: [
@@ -24,7 +23,6 @@ defmodule GenexCli.MixProject do
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     if Mix.env() == :test || Mix.env() == :dev do
       [
@@ -46,15 +44,10 @@ defmodule GenexCli.MixProject do
       {:elixir_uuid, "~> 1.2"},
       {:diceware, "~> 0.2.5"},
       {:prompt, "~> 0.4.1"},
-      {:progress_bar, "~> 2.0"},
       {:dialyxir, "~> 1.0.0-rc.4", only: [:dev], runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:mix_test_watch, "~> 0.8", only: :dev, runtime: false},
       {:mox, "~> 0.5", only: :test}
     ]
-  end
-
-  defp escript do
-    [main_module: Genex.CLI]
   end
 end
