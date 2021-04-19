@@ -36,8 +36,12 @@ defmodule Genex.CLI.Remote do
 
   def process(%Remote{list: true}) do
     case Genex.Remote.list_remotes() do
-      [] -> display("No remotes configured")
-      remotes -> display(format_remotes(remotes))
+      [] ->
+        display("No remotes configured")
+
+      remotes ->
+        display(format_remotes(remotes))
+        :ok
     end
   end
 
