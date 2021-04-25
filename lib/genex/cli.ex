@@ -51,7 +51,7 @@ defmodule Genex.CLI do
   defp parse_opts({[help: true], _, _}), do: :help
   defp parse_opts({[version: true], _, _}), do: :version
 
-  defp parse_opts({[], ["generate" | rest], _invalid}), do: Genex.CLI.Generate.init(rest)
+  defp parse_opts({[], ["generate" | rest], _invalid}), do: Genex.CLI.GenerateCommand.init(rest)
   defp parse_opts({[], ["list" | rest], _invalid}), do: Genex.CLI.ListAccounts.init(rest)
   defp parse_opts({[], ["show" | rest], _invalid}), do: Genex.CLI.Show.init(rest)
   defp parse_opts({[], ["certs" | rest], _invalid}), do: Genex.CLI.Certificates.init(rest)
