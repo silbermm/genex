@@ -2,9 +2,9 @@ defmodule Genex.Application do
   @moduledoc false
   use Bakeware.Script
 
-  @impl true
+  @impl Bakeware.Script
   def main(args) do
-    application()
+    _ = application()
     Genex.CLI.main(args)
   end
 

@@ -2,7 +2,7 @@ defmodule Genex.CLI.GenerateCommand do
   @moduledoc """
   genex generate generates a random passphrase
     --help, -h        Prints this help message
-    --length <length> Sets the amount of words to use for the passphrase - Defaults to 6
+    --length <length> Sets the number of words for the passphrase (defaults to 6)
     --save, -s        Save the passphrase for retrieval later
   """
 
@@ -52,25 +52,26 @@ defmodule Genex.CLI.GenerateCommand do
     length
     |> Passwords.generate()
     |> Diceware.with_colors()
-    |> display(hide_lines_on_enter: 1)
+    |> display(mask_line: true)
   end
 
-  defp process(%GenerateCommand{save: true, length: length}) do
+  defp process(%GenerateCommand{save: true, length: length} = command) do
     passphrase = Passwords.generate(length)
     display(Diceware.with_colors(passphrase))
 
-    "Save this password?"
-    |> confirm()
-    |> handle_save(passphrase)
+    "Save this password or regenerate:"
+    |> choice([yes: "s", regenerate: "r"], color: IO.ANSI.green())
+    |> handle_save(passphrase, command)
   end
 
-  @spec handle_save(:yes | :no | :error, Diceware.Passphrase.t()) :: :ok | {:error, any()}
-  defp handle_save(:no, _password) do
-    confirm("Generate a different password")
-    :ok
+  @spec handle_save(:yes | :regenerate | :error, Diceware.Passphrase.t(), GenerateCommand.t()) ::
+          :ok | {:error, any()}
+  defp handle_save(:regenerate, _password, command) do
+    # TODO: wipe out password and generate a new one
+    process(command)
   end
 
-  defp handle_save(:yes, password) do
+  defp handle_save(:yes, password, _command) do
     account_name = text("Enter an account name that this password belongs to")
     username = text("Enter a username for this account/password")
 
@@ -79,5 +80,5 @@ defmodule Genex.CLI.GenerateCommand do
     |> Passwords.save()
   end
 
-  defp handle_save(:error, _passphrase), do: display("Error", error: true)
+  defp handle_save(:error, _passphrase, _command), do: display("Error", error: true)
 end

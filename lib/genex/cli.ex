@@ -53,7 +53,7 @@ defmodule Genex.CLI do
 
   defp parse_opts({[], ["generate" | rest], _invalid}), do: Genex.CLI.GenerateCommand.init(rest)
   defp parse_opts({[], ["list" | rest], _invalid}), do: Genex.CLI.ListAccounts.init(rest)
-  defp parse_opts({[], ["show" | rest], _invalid}), do: Genex.CLI.Show.init(rest)
+  defp parse_opts({[], ["show" | rest], _invalid}), do: Genex.CLI.ShowCommand.init(rest)
   defp parse_opts({[], ["certs" | rest], _invalid}), do: Genex.CLI.Certificates.init(rest)
   defp parse_opts({[], ["remote" | rest], _invalid}), do: Genex.CLI.Remote.init(rest)
   defp parse_opts({[], ["push" | rest], _invalid}), do: Genex.CLI.PushCommand.init(rest)

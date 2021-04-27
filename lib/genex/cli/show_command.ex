@@ -1,19 +1,22 @@
-defmodule Genex.CLI.Show do
+defmodule Genex.CLI.ShowCommand do
   @moduledoc """
-  #{IO.ANSI.green()}genex show <account_name>#{IO.ANSI.reset()}
+  #{IO.ANSI.green()}genex ShowCommand <account_name>#{IO.ANSI.reset()}
+
   Shows saved password for an account
 
     --help, -h   Prints this help message
   """
 
+  @behaviour Genex.CLI.Command
+
   alias __MODULE__
   alias Genex.Passwords
   import Prompt
 
-  @type t :: %Show{help: boolean(), account: String.t()}
+  @type t :: %ShowCommand{help: boolean(), account: String.t()}
   defstruct help: false, account: nil
 
-  @doc "init the show command"
+  @doc "init the Show command"
   @spec init(list(String.t())) :: :ok | {:error, binary()}
   def init(argv) do
     argv
@@ -21,22 +24,23 @@ defmodule Genex.CLI.Show do
     |> process()
   end
 
+  @impl true
   @doc "process the command"
-  @spec process(Show.t()) :: :ok | {:error, binary()}
-  def process(%Show{help: true}), do: display(@moduledoc)
-  def process(%Show{account: account}), do: search_for(account, nil)
+  def process(%ShowCommand{help: true}), do: display(@moduledoc)
+  def process(%ShowCommand{account: account}), do: search_for(account, nil)
 
-  @spec parse(list(String.t())) :: Show.t()
-  defp parse(argv) do
+  @impl true
+  @spec parse(list(String.t())) :: ShowCommand.t()
+  def parse(argv) do
     argv
     |> OptionParser.parse(strict: [help: :boolean], aliases: [h: :help])
     |> _parse()
   end
 
-  @spec _parse({list(), list(), list()}) :: Show.t()
-  defp _parse({_opts, [], _}), do: %Show{help: true}
-  defp _parse({[help: true], _, _}), do: %Show{help: true}
-  defp _parse({_, [account_name | _], _}), do: %Show{help: false, account: account_name}
+  @spec _parse({list(), list(), list()}) :: ShowCommand.t()
+  defp _parse({_opts, [], _}), do: %ShowCommand{help: true}
+  defp _parse({[help: true], _, _}), do: %ShowCommand{help: true}
+  defp _parse({_, [account_name | _], _}), do: %ShowCommand{help: false, account: account_name}
 
   defp search_for(acc, password) do
     case Passwords.find(acc, password) do
@@ -56,7 +60,7 @@ defmodule Genex.CLI.Show do
 
             creds.passphrase
             |> Diceware.with_colors()
-            |> display()
+            |> display(mask_line: true)
 
           count > 1 ->
             result =
@@ -80,7 +84,7 @@ defmodule Genex.CLI.Show do
       res ->
         res.passphrase
         |> Diceware.with_colors()
-        |> display()
+        |> display(mask_line: true)
     end
   end
 end
