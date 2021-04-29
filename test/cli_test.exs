@@ -31,8 +31,8 @@ defmodule GenexTest.CLI do
   end
 
   test "generates random password" do
-    assert capture_io("n\n", fn -> CLI.main(["generate", "-s"]) end) =~
-             "Save this password? (Y/n)"
+    assert capture_io("r\n", fn -> CLI.main(["generate", "-s"]) end) =~
+             "Save this password or regenerate: (S/r)"
   end
 
   test "does not find a password" do

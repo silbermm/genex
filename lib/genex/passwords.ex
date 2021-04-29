@@ -100,6 +100,7 @@ defmodule Genex.Passwords do
   @spec to_credentials(binary()) :: Credentials.t()
   defp to_credentials(raw_creds) do
     raw_creds
+    |> IO.inspect()
     |> Jason.decode!()
     |> Credentials.new()
   end

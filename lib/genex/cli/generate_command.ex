@@ -66,12 +66,14 @@ defmodule Genex.CLI.GenerateCommand do
 
   @spec handle_save(:yes | :regenerate | :error, Diceware.Passphrase.t(), GenerateCommand.t()) ::
           :ok | {:error, any()}
+
   defp handle_save(:regenerate, _password, command) do
-    # TODO: wipe out password and generate a new one
+    :ok = Prompt.Position.clear_lines(2)
     process(command)
   end
 
   defp handle_save(:yes, password, _command) do
+    :ok = Prompt.Position.mask_line(2)
     account_name = text("Enter an account name that this password belongs to")
     username = text("Enter a username for this account/password")
 
