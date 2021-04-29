@@ -6,7 +6,7 @@ defmodule GenexCli.MixProject do
   def project do
     [
       app: @app,
-      version: "0.0.2-alpha",
+      version: "0.0.3-alpha",
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),

@@ -20,13 +20,12 @@ This creates two  files in a new folder in your home directory named `.genex/` (
 
 ## Usage
 
-`genex generate` will display a generated password on the screen. Continue to run it until you get one you can remember.
-
-![Image of --generate](./docs/generate.png)
+`genex generate` will display a generated password on the screen
+`genex generage -s` will generate a password and allow you to save it
 
 Once you agree that you want to save the password and enter an account to associate the password to, genex will add it to a file stored by default at `~/.genex/passwords`.
 
-You can view your previously saved passwords using `genex show account_name` where `account_name` is the account you saved your password under.
+You can view your previously saved passwords using `genex show <account_name>` where `account_name` is the account you saved your password under.
 
 ## Syncing passwords
 
