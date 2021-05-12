@@ -5,8 +5,8 @@ defmodule Genex.CLI.GenerateCommand do
     --length <length> Sets the number of words for the passphrase (defaults to 6)
     --save, -s        Save the passphrase for retrieval later
   """
+  use Prompt.Command
 
-  import Prompt
   alias __MODULE__
   alias Genex.Passwords
   alias Genex.Data.Credentials
@@ -18,17 +18,11 @@ defmodule Genex.CLI.GenerateCommand do
         }
   defstruct length: 6, help: false, save: false
 
-  @doc "init the generate command"
-  @spec init(list(String.t())) :: :ok | {:error, any()}
-  def init(argv) do
-    argv
-    |> parse()
-    |> process()
-  end
+  @impl true
+  def init(argv), do: parse(argv)
 
-  @doc "parse the command line arguments for the generate command"
   @spec parse(list(String.t())) :: GenerateCommand.t()
-  def parse(argv) do
+  defp parse(argv) do
     argv
     |> OptionParser.parse(
       strict: [help: :boolean, length: :integer, save: :boolean],
@@ -45,17 +39,17 @@ defmodule Genex.CLI.GenerateCommand do
     %GenerateCommand{help: help, save: save, length: length}
   end
 
-  @spec process(GenerateCommand.t()) :: :ok | {:error, any()}
-  defp process(%GenerateCommand{help: true}), do: display(@moduledoc)
+  @impl true
+  def process(%GenerateCommand{help: true}), do: help()
 
-  defp process(%GenerateCommand{save: false, length: length}) do
+  def process(%GenerateCommand{save: false, length: length}) do
     length
     |> Passwords.generate()
     |> Diceware.with_colors()
     |> display(mask_line: true)
   end
 
-  defp process(%GenerateCommand{save: true, length: length} = command) do
+  def process(%GenerateCommand{save: true, length: length} = command) do
     passphrase = Passwords.generate(length)
     display(Diceware.with_colors(passphrase))
 

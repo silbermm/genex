@@ -11,27 +11,22 @@ defmodule Genex.CLI.ShowCommand do
 
   alias __MODULE__
   alias Genex.Passwords
-  import Prompt
+  use Prompt.Command
 
   @type t :: %ShowCommand{help: boolean(), account: String.t()}
   defstruct help: false, account: nil
 
   @doc "init the Show command"
-  @spec init(list(String.t())) :: :ok | {:error, binary()}
-  def init(argv) do
-    argv
-    |> parse()
-    |> process()
-  end
+  @impl true
+  def init(argv), do: parse(argv)
 
   @impl true
   @doc "process the command"
   def process(%ShowCommand{help: true}), do: display(@moduledoc)
   def process(%ShowCommand{account: account}), do: search_for(account, nil)
 
-  @impl true
   @spec parse(list(String.t())) :: ShowCommand.t()
-  def parse(argv) do
+  defp parse(argv) do
     argv
     |> OptionParser.parse(strict: [help: :boolean], aliases: [h: :help])
     |> _parse()
