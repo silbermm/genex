@@ -6,7 +6,9 @@ defmodule Genex.Manifest.Store do
     * the other nodes that are trusted partners
 
   If called with a path argument, we assume this is a store for remote manifests
-  A remote manifest holds information about a remote node.
+
+  A remote manifest holds information about all of the nodes that are trusted peers
+  of that particular remote
   """
   use GenServer, restart: :temporary
   import Genex.Data.Manifest
@@ -25,10 +27,11 @@ defmodule Genex.Manifest.Store do
     Process.flag(:trap_exit, true)
     filename = Application.get_env(:genex, :genex_home) <> "/manifest"
     tablename = :manifest
+
     {:ok, %{filename: filename, tablename: tablename, remote: false}, {:continue, :init}}
   end
 
-  def init({:remote, <<"file:" <> path>>}) do
+  def init({:remote, path}) do
     Process.flag(:trap_exit, true)
     tablename = :remote_manifest
 
@@ -51,7 +54,7 @@ defmodule Genex.Manifest.Store do
   def get_peers(), do: GenServer.call(:manifest, :get_peers)
 
   @impl true
-  def handle_call(:save, _from, %{filename: filename, tablename: tablename} = state) do
+  def handle_call(:save, _from, %{filename: filename, tablename: tablename, proto: proto} = state) do
     res = save_table(tablename, filename)
     {:reply, res, state}
   end
@@ -97,9 +100,9 @@ defmodule Genex.Manifest.Store do
         _from,
         %{tablename: tablename, filename: filename, remote: true} = state
       ) do
-    res = :ets.delete(tablename, manifest.id)
+    :ets.delete(tablename, manifest.id)
     save_table(tablename, filename)
-    {:stop, :normal, res, state}
+    {:stop, :normal, :ok, state}
   end
 
   @impl true
@@ -122,7 +125,7 @@ defmodule Genex.Manifest.Store do
 
   @impl true
   def handle_continue(:init, %{tablename: tablename, filename: filename} = state) do
-    if File.exists?(filename) do
+    if Genex.Remote.FileSystem.file_exists?(filename) do
       path = String.to_charlist(filename)
 
       case :ets.file2tab(path) do
@@ -161,8 +164,13 @@ defmodule Genex.Manifest.Store do
   end
 
   defp save_table(tablename, filename) do
-    path = String.to_charlist(filename)
-    _ = :ets.tab2file(tablename, path)
+    # filesystem save table
+    # String.to_charlist(filename)
+    path = Genex.Remote.FileSystem.path_to_charlist(filename)
+    IO.inspect("saving")
+    IO.inspect(path)
+    res = :ets.tab2file(tablename, path)
+    IO.inspect(res)
   end
 
   defp initialize_manifest(tablename, filename) do

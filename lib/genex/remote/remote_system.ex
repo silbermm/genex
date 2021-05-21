@@ -24,6 +24,10 @@ defmodule Genex.Remote.RemoteSystem do
     %RemoteSystem{name: name, path: path, protocol: :file}
   end
 
+  def new(name, <<"ssh:" <> _>> = path) do
+    %RemoteSystem{name: name, path: path, protocol: :ssh}
+  end
+
   def new(_, _), do: %RemoteSystem{error: "Unsupported Protocol"}
 
   @spec new(String.t(), :file | :ssh, String.t()) :: t()

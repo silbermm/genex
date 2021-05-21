@@ -9,19 +9,17 @@ defmodule Genex.CLI.PeerCommand do
 
   """
 
+  use Prompt.Command
   alias __MODULE__
   alias Genex.Remote
-  import Prompt
 
   @type t :: %PeerCommand{help: boolean(), sync: boolean()}
   defstruct(help: false, sync: false)
 
-  @spec init(list(String.t())) :: :ok | {:error, binary()}
-  def init(argv) do
-    argv |> parse() |> process()
-  end
+  @impl true
+  def init(argv), do: parse(argv)
 
-  @spec process(PeerCommand.t()) :: :ok | {:error, any()}
+  @impl true
   def process(%PeerCommand{help: true}), do: display(@moduledoc)
 
   def process(%PeerCommand{sync: true}) do

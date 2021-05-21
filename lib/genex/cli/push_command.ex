@@ -9,9 +9,9 @@ defmodule Genex.CLI.PushCommand do
 
   """
 
+  use Prompt.Command
   alias __MODULE__
   alias Genex.Remote
-  import Prompt
 
   @type t :: %PushCommand{
           help: boolean(),
@@ -19,13 +19,11 @@ defmodule Genex.CLI.PushCommand do
         }
   defstruct(help: false, remote_name: "")
 
-  @spec init(list(String.t())) :: :ok | {:error, binary()}
-  def init(argv) do
-    argv |> parse() |> process()
-  end
+  @impl true
+  def init(argv), do: parse(argv)
 
-  @spec process(PushCommand.t()) :: :ok | {:error, any()}
-  def process(%PushCommand{help: true}), do: display(@moduledoc)
+  @impl true
+  def process(%PushCommand{help: true}), do: help()
 
   def process(%PushCommand{}) do
     remotes = Remote.list_remotes()

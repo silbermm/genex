@@ -9,9 +9,9 @@ defmodule Genex.CLI.PullCommand do
 
   """
 
+  use Prompt.Command
   alias __MODULE__
   alias Genex.Remote
-  import Prompt
 
   @type t :: %PullCommand{
           help: boolean(),
@@ -19,12 +19,10 @@ defmodule Genex.CLI.PullCommand do
         }
   defstruct(help: false, remote_name: "")
 
-  @spec init(list(String.t())) :: :ok | {:error, binary()}
-  def init(argv) do
-    argv |> parse() |> process()
-  end
+  @impl true
+  def init(argv), do: parse(argv)
 
-  @spec process(PullCommand.t()) :: :ok | {:error, any()}
+  @impl true
   def process(%PullCommand{help: true}), do: display(@moduledoc)
 
   def process(%PullCommand{}) do

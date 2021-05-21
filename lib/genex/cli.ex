@@ -25,9 +25,6 @@ defmodule Genex.CLI do
     |> process()
   end
 
-  defp process(:ok), do: 0
-  defp process({:error, _}), do: 1
-
   defp process(:help) do
     _ = display(@moduledoc)
     0
@@ -59,11 +56,11 @@ defmodule Genex.CLI do
   defp parse_opts({[], ["generate" | rest], _invalid}), do: {Genex.CLI.GenerateCommand, rest}
   defp parse_opts({[], ["list" | rest], _invalid}), do: {Genex.CLI.ListAccountsCommand, rest}
   defp parse_opts({[], ["show" | rest], _invalid}), do: {Genex.CLI.ShowCommand, rest}
-  #  defp parse_opts({[], ["certs" | rest], _invalid}), do: Genex.CLI.Certificates.init(rest)
-  #  defp parse_opts({[], ["remote" | rest], _invalid}), do: Genex.CLI.Remote.init(rest)
-  #  defp parse_opts({[], ["push" | rest], _invalid}), do: Genex.CLI.PushCommand.init(rest)
-  #  defp parse_opts({[], ["pull" | rest], _invalid}), do: Genex.CLI.PullCommand.init(rest)
-  #  defp parse_opts({[], ["peers" | rest], _invalid}), do: Genex.CLI.PeerCommand.init(rest)
+  defp parse_opts({[], ["certs" | rest], _invalid}), do: {Genex.CLI.CertificatesCommand, rest}
+  defp parse_opts({[], ["remote" | rest], _invalid}), do: {Genex.CLI.RemoteCommand, rest}
+  defp parse_opts({[], ["push" | rest], _invalid}), do: {Genex.CLI.PushCommand, rest}
+  defp parse_opts({[], ["pull" | rest], _invalid}), do: {Genex.CLI.PullCommand, rest}
+  defp parse_opts({[], ["peers" | rest], _invalid}), do: {Genex.CLI.PeerCommand, rest}
 
   defp parse_opts(_), do: :help
 end

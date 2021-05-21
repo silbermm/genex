@@ -7,8 +7,6 @@ defmodule Genex.CLI.ShowCommand do
     --help, -h   Prints this help message
   """
 
-  @behaviour Genex.CLI.Command
-
   alias __MODULE__
   alias Genex.Passwords
   use Prompt.Command

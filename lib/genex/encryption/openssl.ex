@@ -51,13 +51,4 @@ defmodule Genex.Encryption.OpenSSL do
       {_, code} -> {:error, :public_key, code}
     end
   end
-
-  defp has_openssl() do
-    res = @system.cmd("openssl", ["version"])
-
-    case res do
-      {_, 0} -> true
-      _ -> false
-    end
-  end
 end

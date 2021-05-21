@@ -10,6 +10,7 @@ defmodule Genex.CLI.GenerateCommand do
   alias __MODULE__
   alias Genex.Passwords
   alias Genex.Data.Credentials
+  import Genex.Gettext
 
   @type t :: %GenerateCommand{
           length: number(),
@@ -76,5 +77,5 @@ defmodule Genex.CLI.GenerateCommand do
     |> Passwords.save()
   end
 
-  defp handle_save(:error, _passphrase, _command), do: display("Error", error: true)
+  defp handle_save(:error, _passphrase, _command), do: display(gettext("Error"), error: true)
 end
