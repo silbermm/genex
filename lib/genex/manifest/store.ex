@@ -168,7 +168,6 @@ defmodule Genex.Manifest.Store do
     # String.to_charlist(filename)
     path = Genex.Remote.FileSystem.path_to_charlist(filename)
     IO.inspect("saving")
-    IO.inspect(path)
     res = :ets.tab2file(tablename, path)
     IO.inspect(res)
   end
