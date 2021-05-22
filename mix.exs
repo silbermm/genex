@@ -41,11 +41,11 @@ defmodule GenexCli.MixProject do
     [
       {:jason, "~> 1.1"},
       {:gettext, ">= 0.0.0"},
-      {:bakeware, "~> 0.2.0"},
       {:elixir_uuid, "~> 1.2"},
-      {:sshex, "2.2.1"},
+      {:sshkit, "~> 0.3"},
       {:diceware, "~> 0.2.8"},
       {:prompt, "~> 0.5.6"},
+      {:bakeware, "~> 0.2.0", runtime: false},
       {:dialyxir, "~> 1.1", only: [:dev], runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:mix_test_watch, "~> 0.8", only: :dev, runtime: false},

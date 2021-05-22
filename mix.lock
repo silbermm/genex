@@ -18,5 +18,6 @@
   "prompt": {:hex, :prompt, "0.5.6", "8417a686277ddc509d951c5710901300d910e6b5c0cc6a95ab77f8c8c7cd0169", [:mix], [], "hexpm", "d2490ab50a59bd166fd675c27ce096a2ed834630e5b9fa60904b38ed4477ef30"},
   "ranch": {:hex, :ranch, "1.7.1", "6b1fab51b49196860b733a49c07604465a47bdb78aa10c1c16a3d199f7f8c881", [:rebar3], [], "hexpm"},
   "sshex": {:hex, :sshex, "2.2.1", "e1270b8345ea2a66a11c2bb7aed22c93e3bc7bc813486f4ffd0a980e4a898160", [:mix], [], "hexpm", "45b2caa5011dc850e70a2d77e3b62678a3e8bcb903eab6f3e7afb2ea897b13db"},
+  "sshkit": {:hex, :sshkit, "0.3.0", "4c100e3c3ebd261b6b7de811ade713f425fb06eb730a96d583da18d29a6fca26", [:mix], [], "hexpm", "f5dba2ee21e2ddc7c1432e3329ecf7316a1032e9ce911597e1e56823ee10285c"},
   "toml": {:hex, :toml, "0.5.2", "e471388a8726d1ce51a6b32f864b8228a1eb8edc907a0edf2bb50eab9321b526", [:mix], [], "hexpm", "f1e3dabef71fb510d015fad18c0e05e7c57281001141504c6b69d94e99750a07"},
 }

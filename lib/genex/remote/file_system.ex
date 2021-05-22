@@ -22,54 +22,84 @@ defmodule Genex.Remote.FileSystem do
     host_path = Path.join(host_path, peer_id)
     remote_public_key_file = Path.join(host_path, "public_key.pem")
 
-    case SSHEx.connect(ip: host, user: user) do
-      {:ok, conn} ->
-        with {:ok, _, _} <- SSHEx.run(conn, 'mkdir -p #{host_path}'),
-             {:ok, _, _} <-
-               SSHEx.run(conn, 'echo \"#{raw_public_key}\" > #{remote_public_key_file}') do
-          :ok
-        else
-          err -> err
-        end
+    context =
+      SSHKit.context([host])
+      |> SSHKit.path(Path.dirname(host_path))
+      |> SSHKit.user(user)
 
-      err ->
-        err
-    end
+    SSHKit.run(context, "mkdir -p #{host_path}")
+    SSHKit.run(context, "echo \"#{raw_public_key}\" > #{remote_public_key_file}")
+    :ok
   end
 
   def copy_public_key(_, _), do: {:error, :invalid_protocol}
 
   def path_to_charlist(<<"file://" <> path>>), do: String.to_charlist(path)
 
-  def path_to_charlist(<<"ssh://" <> path>>) do
-    # path to tmpfile
-    [tmp_filename, _] = String.split(path, ":")
-    String.to_charlist(Path.join("/tmp", tmp_filename))
+  def path_to_charlist(<<"ssh://" <> _path>>) do
+    String.to_charlist("/tmp/manifest")
   end
 
   def path_to_charlist(path), do: String.to_charlist(path)
 
-  def file_exists?(<<"file://" <> path>>), do: File.exists?(path)
+  def save_remote_table(<<"ssh://" <> path>>, tmp_file) do
+    # copy tmp to path
 
-  def file_exists?(<<"ssh://" <> path>>) do
     [user, rest] = String.split(path, "@")
     [host, host_path] = String.split(rest, ":")
 
-    case SSHEx.connect(ip: host, user: user) do
-      {:ok, conn} ->
-        with {:ok, _, 0} <- SSHEx.run(conn, '[[ -f #{host_path} ]]') do
-          true
-        else
-          {:ok, _, 1} -> false
-          err -> false
+    res =
+      SSHKit.context([host])
+      |> SSHKit.path(Path.dirname(host_path))
+      |> SSHKit.user(user)
+      |> SSHKit.upload(tmp_file)
+
+    :ok
+  end
+
+  def save_remote_table(_, _), do: :ok
+
+  def file_path(<<"ssh://" <> path>>) do
+    [user, rest] = String.split(path, "@")
+    [host, host_path] = String.split(rest, ":")
+
+    tmp_file = "/tmp/manifest"
+
+    context =
+      SSHKit.context([host])
+      |> SSHKit.path(Path.dirname(host_path))
+      |> SSHKit.user(user)
+
+    case SSHKit.run(context, "[[ -f #{host_path} ]]") do
+      [{:ok, _, 0}] ->
+        case SSHKit.SCP.download(context, host_path, as: tmp_file) do
+          [:ok] -> {:ok, String.to_charlist(tmp_file)}
+          _ -> {:error, :scp_error}
         end
+
+      [{:ok, _, 1}] ->
+        {:error, :enoexist}
 
       err ->
         err
     end
   end
 
-  def file_exists?(path), do: File.exists?(path)
+  def file_path(<<"file://" <> path>>) do
+    if File.exists?(path) do
+      {:ok, String.to_charlist(path)}
+    else
+      {:error, :enoexists}
+    end
+  end
+
+  def file_path(path) do
+    if File.exists?(path) do
+      {:ok, String.to_charlist(path)}
+    else
+      {:error, :enoexists}
+    end
+  end
 
   @doc "Delete the public key of a specific peer"
   @spec delete_public_key(binary(), binary()) :: :ok | {:error, binary()}

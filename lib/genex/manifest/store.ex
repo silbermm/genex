@@ -125,21 +125,23 @@ defmodule Genex.Manifest.Store do
 
   @impl true
   def handle_continue(:init, %{tablename: tablename, filename: filename} = state) do
-    if Genex.Remote.FileSystem.file_exists?(filename) do
-      path = String.to_charlist(filename)
+    case Genex.Remote.FileSystem.file_path(filename) do
+      {:ok, path} ->
+        IO.inspect(path)
 
-      case :ets.file2tab(path) do
-        {:ok, _} -> {:noreply, state}
-        {:error, reason} -> {:stop, reason, state}
-      end
-    else
-      _ = :ets.new(tablename, [:set, :protected, :named_table])
+        case :ets.file2tab(path) do
+          {:ok, _} -> {:noreply, state}
+          {:error, reason} -> {:stop, reason, state}
+        end
 
-      if !state.remote do
-        initialize_manifest(tablename, filename)
-      end
+      {:error, err} ->
+        _ = :ets.new(tablename, [:set, :protected, :named_table])
 
-      {:noreply, state}
+        if !state.remote do
+          initialize_manifest(tablename, filename)
+        end
+
+        {:noreply, state}
     end
   rescue
     _err ->
@@ -164,12 +166,16 @@ defmodule Genex.Manifest.Store do
   end
 
   defp save_table(tablename, filename) do
-    # filesystem save table
-    # String.to_charlist(filename)
     path = Genex.Remote.FileSystem.path_to_charlist(filename)
-    IO.inspect("saving")
-    res = :ets.tab2file(tablename, path)
-    IO.inspect(res)
+
+    case :ets.tab2file(tablename, path) do
+      :ok ->
+        # save back to remote filesystem~
+        Genex.Remote.FileSystem.save_remote_table(filename, path)
+
+      _ ->
+        :error
+    end
   end
 
   defp initialize_manifest(tablename, filename) do
@@ -177,7 +183,8 @@ defmodule Genex.Manifest.Store do
     {:ok, host} = :inet.gethostname()
     is_local = true
     unique_id = UUID.uuid4()
-    :ets.insert(tablename, {unique_id, to_string(host), os, is_local, nil})
+    res = :ets.insert(tablename, {unique_id, to_string(host), os, is_local, nil})
+    IO.inspect(res)
     save_table(tablename, filename)
   end
 end
