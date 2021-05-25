@@ -25,6 +25,9 @@ defmodule Genex.CLI.RemoteCommand do
   def init(argv), do: parse(argv)
 
   @impl true
+  def help(), do: display(@moduledoc)
+
+  @impl true
   def process(%RemoteCommand{help: true}), do: help()
   def process(%RemoteCommand{add: true}), do: add_remote()
 

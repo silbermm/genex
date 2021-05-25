@@ -14,13 +14,15 @@ defmodule Genex.CLI.ShowCommand do
   @type t :: %ShowCommand{help: boolean(), account: String.t()}
   defstruct help: false, account: nil
 
-  @doc "init the Show command"
   @impl true
   def init(argv), do: parse(argv)
 
   @impl true
+  def help(), do: display(@moduledoc)
+
+  @impl true
   @doc "process the command"
-  def process(%ShowCommand{help: true}), do: display(@moduledoc)
+  def process(%ShowCommand{help: true}), do: help()
   def process(%ShowCommand{account: account}), do: search_for(account, nil)
 
   @spec parse(list(String.t())) :: ShowCommand.t()

@@ -24,7 +24,7 @@ defmodule Genex.Remote do
     with false <- RemoteSystem.has_error?(remote),
          :ok <- RemoteSystem.add(remote),
          :ok <- copy_public_key(remote, local),
-         :ok <- Manifest.Supervisor.add_node(path, local) do
+         :ok <- Manifest.Supervisor.add_node(remote, local) do
       {:ok, remote}
     else
       true -> {:error, remote.error}
@@ -40,7 +40,7 @@ defmodule Genex.Remote do
          local <- Manifest.Store.get_local_info(),
          :ok <- Genex.Remote.FileSystem.delete_public_key(remote_system.path, local.id) do
       RemoteSystem.delete(remote_system.name)
-      Manifest.Supervisor.remove_node(remote_system.path, local)
+      Manifest.Supervisor.remove_node(remote_system, local)
     else
       {:error, _reason, _} -> :error
       true -> :noexist
@@ -60,7 +60,7 @@ defmodule Genex.Remote do
     if Genex.Remote.RemoteSystem.has_error?(configured_remote) do
       :error
     else
-      configured_remote.path
+      configured_remote
       |> Genex.Manifest.Supervisor.list_nodes()
       |> reject_local_node()
     end

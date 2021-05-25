@@ -11,32 +11,45 @@ defmodule Genex.Remote.RemoteSystem do
           name: String.t() | nil,
           path: String.t() | nil,
           protocol: :file | nil,
-          error: binary() | nil
+          error: binary() | nil,
+          strategy: module()
         }
 
-  defstruct [:name, :path, :protocol, :error]
+  defstruct [:name, :path, :protocol, :error, :strategy]
 
   @doc """
   Create a new RemoteSystem from name and path
   """
   @spec new(String.t(), String.t()) :: t()
   def new(name, <<"file:" <> _>> = path) do
-    %RemoteSystem{name: name, path: path, protocol: :file}
+    %RemoteSystem{
+      name: name,
+      path: path,
+      protocol: :file,
+      strategy: Genex.Remote.LocalFileStrategy
+    }
   end
 
   def new(name, <<"ssh:" <> _>> = path) do
-    %RemoteSystem{name: name, path: path, protocol: :ssh}
+    %RemoteSystem{
+      name: name,
+      path: path,
+      protocol: :ssh,
+      strategy: Genex.Remote.SSHStrategy
+    }
   end
 
   def new(_, _), do: %RemoteSystem{error: "Unsupported Protocol"}
 
   @spec new(String.t(), :file | :ssh, String.t()) :: t()
   def new(name, path, protocol) do
-    %RemoteSystem{name: name, path: path, protocol: protocol}
+    strategy = if protocol == :file do Genex.Remote.LocalFileStrategy else Genex.Remote.SSHStrategy
+    %RemoteSystem{name: name, path: path, protocol: protocol, strategy: strategy}
   end
 
   def new({name, path, protocol}) do
-    %RemoteSystem{name: name, path: path, protocol: protocol}
+    strategy = if protocol == :file do Genex.Remote.LocalFileStrategy else Genex.Remote.SSHStrategy
+    %RemoteSystem{name: name, path: path, protocol: protocol, strategy: strategy}
   end
 
   def has_error?(%RemoteSystem{error: error}), do: !is_nil(error)

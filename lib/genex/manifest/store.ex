@@ -3,7 +3,7 @@ defmodule Genex.Manifest.Store do
   The manifest store holds all the metadata about the node.
   Most notably: 
     * the unique id and name for the local node
-    * the other nodes that are trusted partners
+    * the other nodes that are trusted peers
 
   If called with a path argument, we assume this is a store for remote manifests
 
@@ -14,8 +14,8 @@ defmodule Genex.Manifest.Store do
   import Genex.Data.Manifest
   alias Genex.Data.Manifest
 
-  def start_link(path: path) do
-    GenServer.start_link(__MODULE__, {:remote, path}, name: :remote_manifest)
+  def start_link(remote: remote) do
+    GenServer.start_link(__MODULE__, {:remote, remote}, name: :remote_manifest)
   end
 
   def start_link(_) do
@@ -28,15 +28,26 @@ defmodule Genex.Manifest.Store do
     filename = Application.get_env(:genex, :genex_home) <> "/manifest"
     tablename = :manifest
 
-    {:ok, %{filename: filename, tablename: tablename, remote: false}, {:continue, :init}}
+    {:ok,
+     %{
+       filename: filename,
+       tablename: tablename,
+       remote: false,
+       strategy: Genex.Remote.LocalFileStrategy
+     }, {:continue, :init}}
   end
 
   def init({:remote, path}) do
     Process.flag(:trap_exit, true)
     tablename = :remote_manifest
 
-    {:ok, %{filename: Path.join(path, "manifest"), tablename: tablename, remote: true},
-     {:continue, :init}}
+    {:ok,
+     %{
+       strategy: remote.strategy,
+       filename: Path.join(remote.path, "manifest"),
+       tablename: tablename,
+       remote: true
+     }, {:continue, :init}}
   end
 
   @doc """
@@ -124,11 +135,12 @@ defmodule Genex.Manifest.Store do
   end
 
   @impl true
-  def handle_continue(:init, %{tablename: tablename, filename: filename} = state) do
-    case Genex.Remote.FileSystem.file_path(filename) do
+  def handle_continue(
+        :init,
+        %{tablename: tablename, filename: filename, strategy: strategy} = state
+      ) do
+    case strategy.filepath(filename) do
       {:ok, path} ->
-        IO.inspect(path)
-
         case :ets.file2tab(path) do
           {:ok, _} -> {:noreply, state}
           {:error, reason} -> {:stop, reason, state}
@@ -138,7 +150,7 @@ defmodule Genex.Manifest.Store do
         _ = :ets.new(tablename, [:set, :protected, :named_table])
 
         if !state.remote do
-          initialize_manifest(tablename, filename)
+          initialize_manifest(tablename, filename, strategy)
         end
 
         {:noreply, state}
@@ -155,36 +167,36 @@ defmodule Genex.Manifest.Store do
   end
 
   @impl true
-  def handle_info(_, %{tablename: tablename, filename: filename} = state) do
-    save_table(tablename, filename)
+  def handle_info(_, %{tablename: tablename, filename: filename, strategy: strategy} = state) do
+    save_table(tablename, filename, strategy)
     {:noreply, state}
   end
 
   @impl true
-  def terminate(_reason, %{tablename: tablename, filename: filename}) do
-    save_table(tablename, filename)
+  def terminate(_reason, %{tablename: tablename, filename: filename, strategy: strategy}) do
+    save_table(tablename, filename, strategy)
   end
 
-  defp save_table(tablename, filename) do
-    path = Genex.Remote.FileSystem.path_to_charlist(filename)
+  defp save_table(tablename, filename, strategy) do
+    path = strategy.charlist_from_path(filename)
 
     case :ets.tab2file(tablename, path) do
       :ok ->
         # save back to remote filesystem~
-        Genex.Remote.FileSystem.save_remote_table(filename, path)
+        strategy.post_save(filename, path)
 
       _ ->
         :error
     end
   end
 
-  defp initialize_manifest(tablename, filename) do
+  defp initialize_manifest(tablename, filename, strategy) do
     {_, os} = :os.type()
     {:ok, host} = :inet.gethostname()
     is_local = true
     unique_id = UUID.uuid4()
     res = :ets.insert(tablename, {unique_id, to_string(host), os, is_local, nil})
     IO.inspect(res)
-    save_table(tablename, filename)
+    save_table(tablename, filename, strategy)
   end
 end

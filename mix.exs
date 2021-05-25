@@ -44,7 +44,7 @@ defmodule GenexCli.MixProject do
       {:elixir_uuid, "~> 1.2"},
       {:sshkit, "~> 0.3"},
       {:diceware, "~> 0.2.8"},
-      {:prompt, "~> 0.5.6"},
+      {:prompt, path: "../prompt"},
       {:bakeware, "~> 0.2.0", runtime: false},
       {:dialyxir, "~> 1.1", only: [:dev], runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
