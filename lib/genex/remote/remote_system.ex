@@ -43,12 +43,24 @@ defmodule Genex.Remote.RemoteSystem do
 
   @spec new(String.t(), :file | :ssh, String.t()) :: t()
   def new(name, path, protocol) do
-    strategy = if protocol == :file do Genex.Remote.LocalFileStrategy else Genex.Remote.SSHStrategy
+    strategy =
+      if protocol == :file do
+        Genex.Remote.LocalFileStrategy
+      else
+        Genex.Remote.SSHStrategy
+      end
+
     %RemoteSystem{name: name, path: path, protocol: protocol, strategy: strategy}
   end
 
   def new({name, path, protocol}) do
-    strategy = if protocol == :file do Genex.Remote.LocalFileStrategy else Genex.Remote.SSHStrategy
+    strategy =
+      if protocol == :file do
+        Genex.Remote.LocalFileStrategy
+      else
+        Genex.Remote.SSHStrategy
+      end
+
     %RemoteSystem{name: name, path: path, protocol: protocol, strategy: strategy}
   end
 

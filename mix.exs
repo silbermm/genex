@@ -7,7 +7,7 @@ defmodule GenexCli.MixProject do
     [
       app: @app,
       version: "0.0.3-alpha",
-      elixir: "~> 1.11",
+      elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -44,7 +44,8 @@ defmodule GenexCli.MixProject do
       {:elixir_uuid, "~> 1.2"},
       {:sshkit, "~> 0.3"},
       {:diceware, "~> 0.2.8"},
-      {:prompt, path: "../prompt"},
+      {:prompt, "~> 0.5.7"},
+      # {:prompt, path: "../prompt"},
       {:bakeware, "~> 0.2.0", runtime: false},
       {:dialyxir, "~> 1.1", only: [:dev], runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},

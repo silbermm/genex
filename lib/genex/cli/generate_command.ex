@@ -64,7 +64,6 @@ defmodule Genex.CLI.GenerateCommand do
 
   @spec handle_save(:yes | :regenerate | :error, Diceware.Passphrase.t(), GenerateCommand.t()) ::
           :ok | {:error, any()}
-
   defp handle_save(:regenerate, _password, command) do
     :ok = Prompt.Position.clear_lines(2)
     process(command)

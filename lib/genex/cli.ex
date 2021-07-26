@@ -21,7 +21,11 @@ defmodule Genex.CLI do
   @spec main(list) :: 0 | 1
   def main(argv) do
     argv
-    |> parse_argv()
+    |> OptionParser.parse_head(
+      strict: [help: :boolean, version: :boolean],
+      aliases: [h: :help, v: :version]
+    )
+    |> parse_opts()
     |> process()
   end
 
@@ -39,15 +43,6 @@ defmodule Genex.CLI do
   defp process({module, opts}) do
     cmd = apply(module, :init, [opts])
     apply(module, :process, [cmd])
-  end
-
-  defp parse_argv(argv) do
-    argv
-    |> OptionParser.parse_head(
-      strict: [help: :boolean, version: :boolean],
-      aliases: [h: :help, v: :version]
-    )
-    |> parse_opts()
   end
 
   defp parse_opts({[help: true], _, _}), do: :help

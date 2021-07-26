@@ -1,18 +1,20 @@
 defmodule Genex.CLI.ShowCommand do
   @moduledoc """
-  #{IO.ANSI.green()}genex ShowCommand <account_name>#{IO.ANSI.reset()}
+  #{IO.ANSI.green()}genex show <account_name>#{IO.ANSI.reset()}
 
-  Shows saved password for an account
+  Show and manipulate saved passwords
 
-    --help, -h   Prints this help message
+    --delete, -d   Deletes the specified accounts passwords
+    --help,   -h   Prints this help message
+
   """
 
   alias __MODULE__
   alias Genex.Passwords
   use Prompt.Command
 
-  @type t :: %ShowCommand{help: boolean(), account: String.t()}
-  defstruct help: false, account: nil
+  @type t :: %ShowCommand{help: boolean(), account: String.t(), delete: boolean()}
+  defstruct help: false, account: nil, delete: false
 
   @impl true
   def init(argv), do: parse(argv)
@@ -23,49 +25,89 @@ defmodule Genex.CLI.ShowCommand do
   @impl true
   @doc "process the command"
   def process(%ShowCommand{help: true}), do: help()
-  def process(%ShowCommand{account: account}), do: search_for(account, nil)
+
+  def process(%ShowCommand{account: account, delete: delete}) do
+    search_for(account, nil, delete: delete)
+  end
 
   @spec parse(list(String.t())) :: ShowCommand.t()
   defp parse(argv) do
     argv
-    |> OptionParser.parse(strict: [help: :boolean], aliases: [h: :help])
+    |> OptionParser.parse(
+      strict: [help: :boolean, delete: :boolean],
+      aliases: [h: :help, d: :delete]
+    )
     |> _parse()
   end
 
   @spec _parse({list(), list(), list()}) :: ShowCommand.t()
   defp _parse({_opts, [], _}), do: %ShowCommand{help: true}
   defp _parse({[help: true], _, _}), do: %ShowCommand{help: true}
-  defp _parse({_, [account_name | _], _}), do: %ShowCommand{help: false, account: account_name}
 
-  defp search_for(acc, password) do
-    case Passwords.find(acc, password) do
+  defp _parse({[delete: true], [account_name | _], _}),
+    do: %ShowCommand{delete: true, account: account_name}
+
+  defp _parse({_, [account_name | _], _}), do: %ShowCommand{account: account_name}
+
+  defp search_for(account, password, opts) do
+    case Passwords.find(account, password) do
       {:error, :password} ->
         password = password("Enter private key password")
-        search_for(acc, password)
+        search_for(account, password, opts)
 
       res ->
-        count = Enum.count(res)
+        handle_found_account(account, res, opts)
+    end
+  end
 
-        cond do
-          count == 0 ->
-            display("Unable to find a password with that account name", error: true)
+  defp handle_found_account(account, res, opts) do
+    delete? = Keyword.get(opts, :delete)
+    count = Enum.count(res)
 
-          count == 1 ->
-            creds = res |> List.first()
+    cond do
+      count == 0 ->
+        display("Unable to find a password with that account name", error: true)
 
-            creds.passphrase
-            |> Diceware.with_colors()
-            |> display(mask_line: true)
+      delete? ->
+        res
+        |> List.first()
+        |> handle_delete
 
-          count > 1 ->
-            result =
-              select(
-                "Multiple entries saved for #{acc}. Choose one",
-                Enum.map(res, & &1.username)
-              )
+      count == 1 ->
+        creds = res |> List.first()
 
-            handle_find_password_with_username(res, result)
+        creds.passphrase
+        |> Diceware.with_colors()
+        |> display(mask_line: true)
+
+      count > 1 ->
+        result =
+          select(
+            "Multiple entries saved for #{account}. Choose one",
+            Enum.map(res, & &1.usernme)
+          )
+
+        handle_find_password_with_username(res, result)
+    end
+  end
+
+  defp handle_delete(credentials) do
+    answer =
+      confirm("Are you sure you want to delete all passwords saved for this account?",
+        default_answer: :no
+      )
+
+    case answer do
+      :yes ->
+        if Passwords.delete(credentials) do
+          :ok
+        else
+          display("Unable to delete credentials", error: true)
+          :ok
         end
+
+      :no ->
+        display("Deletion cancelled")
     end
   end
 

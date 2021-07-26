@@ -37,7 +37,7 @@ defmodule Genex.Manifest.Store do
      }, {:continue, :init}}
   end
 
-  def init({:remote, path}) do
+  def init({:remote, remote}) do
     Process.flag(:trap_exit, true)
     tablename = :remote_manifest
 
@@ -65,8 +65,12 @@ defmodule Genex.Manifest.Store do
   def get_peers(), do: GenServer.call(:manifest, :get_peers)
 
   @impl true
-  def handle_call(:save, _from, %{filename: filename, tablename: tablename, proto: proto} = state) do
-    res = save_table(tablename, filename)
+  def handle_call(
+        :save,
+        _from,
+        %{filename: filename, tablename: tablename, proto: proto, strategy: strategy} = state
+      ) do
+    res = save_table(tablename, filename, strategy)
     {:reply, res, state}
   end
 
@@ -83,14 +87,14 @@ defmodule Genex.Manifest.Store do
   def handle_call(
         {:add_peer, peer_manifest},
         _from,
-        %{filename: filename, tablename: tablename} = state
+        %{filename: filename, tablename: tablename, strategy: strategy} = state
       ) do
     :ets.insert(
       tablename,
       {peer_manifest.id, peer_manifest.host, peer_manifest.os, false, peer_manifest.remote}
     )
 
-    save_table(tablename, filename)
+    save_table(tablename, filename, strategy)
     {:reply, :ok, state}
   end
 
@@ -98,10 +102,10 @@ defmodule Genex.Manifest.Store do
   def handle_call(
         {:add_remote_manifest, manifest},
         _from,
-        %{filename: filename, tablename: tablename, remote: true} = state
+        %{filename: filename, tablename: tablename, remote: true, strategy: strategy} = state
       ) do
     :ets.insert(tablename, {manifest.id, manifest.host, manifest.os, false})
-    save_table(tablename, filename)
+    save_table(tablename, filename, strategy)
     {:stop, :normal, :ok, state}
   end
 
@@ -109,10 +113,10 @@ defmodule Genex.Manifest.Store do
   def handle_call(
         {:remove_remote_manifest, manifest},
         _from,
-        %{tablename: tablename, filename: filename, remote: true} = state
+        %{tablename: tablename, filename: filename, remote: true, strategy: strategy} = state
       ) do
     :ets.delete(tablename, manifest.id)
-    save_table(tablename, filename)
+    save_table(tablename, filename, strategy)
     {:stop, :normal, :ok, state}
   end
 

@@ -31,6 +31,8 @@ defmodule Genex.Passwords.Store do
 
   def find_account(account), do: GenServer.call(:passwords, {:find, account})
 
+  def delete(account), do: GenServer.call(:passwords, {:delete, account})
+
   def list_accounts(), do: GenServer.call(:passwords, :list)
 
   def all(), do: GenServer.call(:passwords, :all)
@@ -43,6 +45,12 @@ defmodule Genex.Passwords.Store do
 
   def handle_call({:find, account}, _from, %{table: table} = state) do
     res = :ets.match_object(table, {account, :_, :_, :_})
+    {:reply, res, state}
+  end
+
+  def handle_call({:delete, account}, _from, %{table: table} = state) do
+    # res = :ets.match_object(table, {account, :_, :_, :_})
+    res = :ets.delete(table, account)
     {:reply, res, state}
   end
 

@@ -2,9 +2,16 @@
 
 Build a password from readable words using the [Diceware](http://world.std.com/~reinhold/diceware.html) word list.
 
+## Goals
+* Provide a simple, intuitive mechanism to generate secure readable passwords on a users computer
+* Securely save passwords on the users system
+* Securly share the passwords using public/private keys
+* Use as few dependencies as possible
+
 ## Installation
 
-Grab the latest release from the [release](https://github.com/silbermm/genex/releases) page, and add it to your path
+Grab the latest release from the [release](https://github.com/silbermm/genex/releases) page, and add it to your path.
+You'll also need a openssl installed on your system and available in the `PATH`.
 
 ## Setup
 
@@ -35,7 +42,7 @@ There are currently two mechanisms to share passwords with other systems.
   * local file storage i.e a flash drive or hard drive
   * ssh (not yet implemented)
 
-Both ways require other the other systems to have genex installed as well.
+Both ways require the other systems to have genex installed as well.
 
 ### Local file storage
 

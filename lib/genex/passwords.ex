@@ -10,9 +10,7 @@ defmodule Genex.Passwords do
 
   @doc "Generate a password using the Dicware library"
   @spec generate(number()) :: Diceware.Passphrase.t()
-  def generate(num \\ 6) do
-    Diceware.generate(count: num)
-  end
+  def generate(num \\ 6), do: Diceware.generate(count: num)
 
   @doc "Saves the provided credentials"
   @spec save(Credentials.t()) :: :ok | {:error, atom()}
@@ -63,6 +61,12 @@ defmodule Genex.Passwords do
   rescue
     _e in RuntimeError -> {:error, :password}
     _e -> {:error, :password}
+  end
+
+  @doc "Delete credentials from the store"
+  @spec delete(Credentials.t()) :: boolean()
+  def delete(credentials) do
+    Store.delete(credentials.account)
   end
 
   @doc "Get all accounts out of the store"

@@ -44,15 +44,11 @@ defmodule Genex.CLI.RemoteCommand do
         display("No remotes configured")
 
       remotes ->
-        display(format_remotes(remotes))
-        :ok
+        remotes
+        |> Enum.map(&[&1.name, &1.path])
+        |> List.insert_at(0, ["Name", "Path"])
+        |> table(header: true)
     end
-  end
-
-  defp format_remotes(remotes) do
-    Enum.map(remotes, fn r ->
-      IO.ANSI.bright() <> "  * #{r.name}" <> IO.ANSI.normal() <> " " <> r.path
-    end)
   end
 
   @spec parse(list(String.t())) :: RemoteCommand.t()
