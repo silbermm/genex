@@ -48,9 +48,9 @@ defmodule Genex.Passwords.Store do
     {:reply, res, state}
   end
 
-  def handle_call({:delete, account}, _from, %{table: table} = state) do
-    # res = :ets.match_object(table, {account, :_, :_, :_})
+  def handle_call({:delete, account}, _from, %{table: table, filename: filename} = state) do
     res = :ets.delete(table, account)
+    save_table(table, filename)
     {:reply, res, state}
   end
 
