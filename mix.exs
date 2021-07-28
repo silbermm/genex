@@ -14,7 +14,8 @@ defmodule GenexCli.MixProject do
       preferred_cli_env: [release: :prod],
       releases: [
         genex: [
-          steps: [:assemble, &Bakeware.assemble/1]
+          steps: [:assemble, &Bakeware.assemble/1],
+          strip_beams: [keep: ["Docs"]]
         ]
       ]
     ]
@@ -44,8 +45,8 @@ defmodule GenexCli.MixProject do
       {:elixir_uuid, "~> 1.2"},
       {:sshkit, "~> 0.3"},
       {:diceware, "~> 0.2.8"},
-      # {:prompt, "~> 0.5.7"},
-      {:prompt, path: "../prompt"},
+      {:prompt, "~> 0.5.8"},
+      # {:prompt, path: "../prompt"},
       {:bakeware, "~> 0.2.0", runtime: false},
       {:dialyxir, "~> 1.1", only: [:dev], runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
