@@ -5,7 +5,7 @@ defmodule Genex.CLI do
 
     generate            Generate a password and save it
     list                List all accounts that have saved passwords
-    show <account_name> Show password for account
+    find <account_name> find and manipulate accounts
     certs               Generate public and private key certificates
     remote              Add, list and delete trusted remotes
     push                Push local passphrases to a trusted remote
@@ -50,7 +50,7 @@ defmodule Genex.CLI do
 
   defp parse_opts({[], ["generate" | rest], _invalid}), do: {Genex.CLI.GenerateCommand, rest}
   defp parse_opts({[], ["list" | rest], _invalid}), do: {Genex.CLI.ListAccountsCommand, rest}
-  defp parse_opts({[], ["show" | rest], _invalid}), do: {Genex.CLI.ShowCommand, rest}
+  defp parse_opts({[], ["find" | rest], _invalid}), do: {Genex.CLI.FindCommand, rest}
   defp parse_opts({[], ["certs" | rest], _invalid}), do: {Genex.CLI.CertificatesCommand, rest}
   defp parse_opts({[], ["remote" | rest], _invalid}), do: {Genex.CLI.RemoteCommand, rest}
   defp parse_opts({[], ["push" | rest], _invalid}), do: {Genex.CLI.PushCommand, rest}

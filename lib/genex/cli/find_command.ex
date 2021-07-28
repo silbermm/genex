@@ -1,6 +1,6 @@
-defmodule Genex.CLI.ShowCommand do
+defmodule Genex.CLI.FindCommand do
   @moduledoc """
-  #{IO.ANSI.green()}genex show <account_name>#{IO.ANSI.reset()}
+  #{IO.ANSI.green()}genex find <account_name>#{IO.ANSI.reset()}
 
   Show and manipulate saved passwords
 
@@ -13,24 +13,21 @@ defmodule Genex.CLI.ShowCommand do
   alias Genex.Passwords
   use Prompt.Command
 
-  @type t :: %ShowCommand{help: boolean(), account: String.t(), delete: boolean()}
+  @type t :: %FindCommand{help: boolean(), account: String.t(), delete: boolean()}
   defstruct help: false, account: nil, delete: false
 
   @impl true
   def init(argv), do: parse(argv)
 
   @impl true
-  def help(), do: display(@moduledoc)
-
-  @impl true
   @doc "process the command"
-  def process(%ShowCommand{help: true}), do: help()
+  def process(%FindCommand{help: true}), do: help()
 
-  def process(%ShowCommand{account: account, delete: delete}) do
+  def process(%FindCommand{account: account, delete: delete}) do
     search_for(account, nil, delete: delete)
   end
 
-  @spec parse(list(String.t())) :: ShowCommand.t()
+  @spec parse(list(String.t())) :: FindCommand.t()
   defp parse(argv) do
     argv
     |> OptionParser.parse(
@@ -40,14 +37,14 @@ defmodule Genex.CLI.ShowCommand do
     |> _parse()
   end
 
-  @spec _parse({list(), list(), list()}) :: ShowCommand.t()
-  defp _parse({_opts, [], _}), do: %ShowCommand{help: true}
-  defp _parse({[help: true], _, _}), do: %ShowCommand{help: true}
+  @spec _parse({list(), list(), list()}) :: FindCommand.t()
+  defp _parse({_opts, [], _}), do: %FindCommand{help: true}
+  defp _parse({[help: true], _, _}), do: %FindCommand{help: true}
 
   defp _parse({[delete: true], [account_name | _], _}),
-    do: %ShowCommand{delete: true, account: account_name}
+    do: %FindCommand{delete: true, account: account_name}
 
-  defp _parse({_, [account_name | _], _}), do: %ShowCommand{account: account_name}
+  defp _parse({_, [account_name | _], _}), do: %FindCommand{account: account_name}
 
   defp search_for(account, password, opts) do
     case Passwords.find(account, password) do
