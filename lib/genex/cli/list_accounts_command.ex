@@ -32,7 +32,7 @@ defmodule Genex.CLI.ListAccountsCommand do
     %ListAccountsCommand{help: help}
   end
 
-  def process(%ListAccountsCommand{help: true}), do: display(@moduledoc)
+  def process(%ListAccountsCommand{help: true}), do: help()
 
   def process(%ListAccountsCommand{} = _) do
     Passwords.list_accounts()

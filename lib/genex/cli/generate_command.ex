@@ -22,9 +22,6 @@ defmodule Genex.CLI.GenerateCommand do
   @impl true
   def init(argv), do: parse(argv)
 
-  @impl true
-  def help(), do: display(@moduledoc)
-
   @spec parse(list(String.t())) :: GenerateCommand.t()
   defp parse(argv) do
     argv

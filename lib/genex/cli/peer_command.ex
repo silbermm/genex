@@ -20,9 +20,6 @@ defmodule Genex.CLI.PeerCommand do
   def init(argv), do: parse(argv)
 
   @impl true
-  def help(), do: display(@moduledoc)
-
-  @impl true
   def process(%PeerCommand{help: true}), do: help()
 
   def process(%PeerCommand{sync: true}) do

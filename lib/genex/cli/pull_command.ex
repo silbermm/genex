@@ -23,7 +23,7 @@ defmodule Genex.CLI.PullCommand do
   def init(argv), do: parse(argv)
 
   @impl true
-  def process(%PullCommand{help: true}), do: display(@moduledoc)
+  def process(%PullCommand{help: true}), do: help()
 
   def process(%PullCommand{}) do
     # pull remotes passwords into our db password

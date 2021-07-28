@@ -23,9 +23,6 @@ defmodule Genex.CLI.PushCommand do
   def init(argv), do: parse(argv)
 
   @impl true
-  def help(), do: display(@moduledoc)
-
-  @impl true
   def process(%PushCommand{help: true}), do: help()
 
   def process(%PushCommand{}) do

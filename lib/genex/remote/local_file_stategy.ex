@@ -55,6 +55,7 @@ defmodule Genex.Remote.LocalFileStrategy do
     end
   end
 
+  @impl true
   @doc "Anything that needs to happen after a successful save"
   def post_save(_, _), do: :ok
 end

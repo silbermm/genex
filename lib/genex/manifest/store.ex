@@ -68,7 +68,7 @@ defmodule Genex.Manifest.Store do
   def handle_call(
         :save,
         _from,
-        %{filename: filename, tablename: tablename, proto: proto, strategy: strategy} = state
+        %{filename: filename, tablename: tablename, proto: _proto, strategy: strategy} = state
       ) do
     res = save_table(tablename, filename, strategy)
     {:reply, res, state}
@@ -150,7 +150,7 @@ defmodule Genex.Manifest.Store do
           {:error, reason} -> {:stop, reason, state}
         end
 
-      {:error, err} ->
+      {:error, _err} ->
         _ = :ets.new(tablename, [:set, :protected, :named_table])
 
         if !state.remote do

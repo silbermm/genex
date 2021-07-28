@@ -48,11 +48,10 @@ defmodule Genex.Remote.FileSystem do
     [user, rest] = String.split(path, "@")
     [host, host_path] = String.split(rest, ":")
 
-    res =
-      SSHKit.context([host])
-      |> SSHKit.path(Path.dirname(host_path))
-      |> SSHKit.user(user)
-      |> SSHKit.upload(tmp_file)
+    SSHKit.context([host])
+    |> SSHKit.path(Path.dirname(host_path))
+    |> SSHKit.user(user)
+    |> SSHKit.upload(tmp_file)
 
     :ok
   end
