@@ -160,7 +160,7 @@ defmodule Genex.Manifest.Store do
         {:noreply, state}
     end
   rescue
-    _err ->
+    err ->
       _ = :ets.new(tablename, [:set, :protected, :named_table])
       {:noreply, state}
   end
@@ -200,7 +200,6 @@ defmodule Genex.Manifest.Store do
     is_local = true
     unique_id = UUID.uuid4()
     res = :ets.insert(tablename, {unique_id, to_string(host), os, is_local, nil})
-    IO.inspect(res)
     save_table(tablename, filename, strategy)
   end
 end

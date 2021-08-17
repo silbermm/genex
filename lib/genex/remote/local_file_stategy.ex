@@ -55,6 +55,14 @@ defmodule Genex.Remote.LocalFileStrategy do
     end
   end
 
+  def filepath(path) do
+    if File.exists?(path) do
+      {:ok, String.to_charlist(path)}
+    else
+      {:error, :enoexists}
+    end
+  end
+
   @impl true
   @doc "Anything that needs to happen after a successful save"
   def post_save(_, _), do: :ok

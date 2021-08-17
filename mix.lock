@@ -15,7 +15,7 @@
   "mix_test_watch": {:hex, :mix_test_watch, "0.9.0", "c72132a6071261893518fa08e121e911c9358713f62794a90c95db59042af375", [:mix], [{:file_system, "~> 0.2.1 or ~> 0.3", [hex: :file_system, repo: "hexpm", optional: false]}], "hexpm", "817dec4a7f6edf260258002f99ac8ffaf7a8f395b27bf2d13ec24018beecec8a"},
   "mox": {:hex, :mox, "0.5.2", "55a0a5ba9ccc671518d068c8dddd20eeb436909ea79d1799e2209df7eaa98b6c", [:mix], [], "hexpm", "df4310628cd628ee181df93f50ddfd07be3e5ecc30232d3b6aadf30bdfe6092b"},
   "progress_bar": {:hex, :progress_bar, "2.0.0", "447285f533b4b8717881fdb7160c7360c2f2ab57276f8904ce6d40482857e573", [:mix], [{:decimal, "~> 1.0", [hex: :decimal, repo: "hexpm", optional: false]}], "hexpm", "9d8b879f322fd5563e8e7ec39f1d02a9da3ffc36019f05287788744e88260fde"},
-  "prompt": {:hex, :prompt, "0.5.8", "c67e6e3ee8903ab4b55782a7210a8f526179bf93d33d6f25209647306e472e7a", [:mix], [], "hexpm", "c2928dd9d959e3379ede6594f0cdc1ee530889eccc60ed593b2bbd2d4ed8acd3"},
+  "prompt": {:hex, :prompt, "0.5.12", "5aa4d9f15005aa2aceb2d50bb2551f80870c7575622ac9b82626b169b2cf5f1e", [:mix], [], "hexpm", "538142ac0d21766703e692a551c9da094d2a44a2d5eece57d24881944b01b407"},
   "ranch": {:hex, :ranch, "1.7.1", "6b1fab51b49196860b733a49c07604465a47bdb78aa10c1c16a3d199f7f8c881", [:rebar3], [], "hexpm"},
   "sshex": {:hex, :sshex, "2.2.1", "e1270b8345ea2a66a11c2bb7aed22c93e3bc7bc813486f4ffd0a980e4a898160", [:mix], [], "hexpm", "45b2caa5011dc850e70a2d77e3b62678a3e8bcb903eab6f3e7afb2ea897b13db"},
   "sshkit": {:hex, :sshkit, "0.3.0", "4c100e3c3ebd261b6b7de811ade713f425fb06eb730a96d583da18d29a6fca26", [:mix], [], "hexpm", "f5dba2ee21e2ddc7c1432e3329ecf7316a1032e9ce911597e1e56823ee10285c"},

@@ -5,6 +5,7 @@ defmodule Genex.CLI.FindCommand do
   Show and manipulate saved passwords
 
     --delete, -d   Deletes the specified accounts passwords
+    --copy,   -c   Copy to system clipboard
     --help,   -h   Prints this help message
 
   """
@@ -13,8 +14,13 @@ defmodule Genex.CLI.FindCommand do
   alias Genex.Passwords
   use Prompt.Command
 
-  @type t :: %FindCommand{help: boolean(), account: String.t(), delete: boolean()}
-  defstruct help: false, account: nil, delete: false
+  @type t :: %FindCommand{
+          help: boolean(),
+          account: String.t(),
+          delete: boolean(),
+          copy: boolean()
+        }
+  defstruct help: false, account: nil, delete: false, copy: false
 
   @impl true
   def init(argv), do: parse(argv)
@@ -23,16 +29,16 @@ defmodule Genex.CLI.FindCommand do
   @doc "process the command"
   def process(%FindCommand{help: true}), do: help()
 
-  def process(%FindCommand{account: account, delete: delete}) do
-    search_for(account, nil, delete: delete)
+  def process(%FindCommand{account: account, delete: delete, copy: copy}) do
+    search_for(account, nil, delete: delete, copy: copy)
   end
 
   @spec parse(list(String.t())) :: FindCommand.t()
   defp parse(argv) do
     argv
     |> OptionParser.parse(
-      strict: [help: :boolean, delete: :boolean],
-      aliases: [h: :help, d: :delete]
+      strict: [help: :boolean, delete: :boolean, copy: :boolean],
+      aliases: [h: :help, d: :delete, c: :copy]
     )
     |> _parse()
   end
@@ -43,6 +49,9 @@ defmodule Genex.CLI.FindCommand do
 
   defp _parse({[delete: true], [account_name | _], _}),
     do: %FindCommand{delete: true, account: account_name}
+
+  defp _parse({[copy: true], [account_name | _], _}),
+    do: %FindCommand{copy: true, account: account_name}
 
   defp _parse({_, [account_name | _], _}), do: %FindCommand{account: account_name}
 
@@ -59,6 +68,7 @@ defmodule Genex.CLI.FindCommand do
 
   defp handle_found_account(account, res, opts) do
     delete? = Keyword.get(opts, :delete)
+    copy? = Keyword.get(opts, :copy)
     count = Enum.count(res)
 
     cond do
@@ -73,6 +83,10 @@ defmodule Genex.CLI.FindCommand do
       count == 1 ->
         creds = res |> List.first()
 
+        if copy? do
+          Genex.System.Copy.copy(creds.passphrase.phrase)
+        end
+
         creds.passphrase
         |> Diceware.with_colors()
         |> display(mask_line: true)
@@ -84,7 +98,7 @@ defmodule Genex.CLI.FindCommand do
             Enum.map(res, & &1.usernme)
           )
 
-        handle_find_password_with_username(res, result)
+        handle_find_password_with_username(res, result, copy?)
     end
   end
 
@@ -108,7 +122,11 @@ defmodule Genex.CLI.FindCommand do
     end
   end
 
-  defp handle_find_password_with_username(credentials, username) do
+  defp handle_find_password_with_username(credentials, username, copy?) do
+    if copy? do
+      Genex.System.Copy.copy(credentials.passphrase.phrase)
+    end
+
     credentials
     |> Enum.find(fn x -> x.username == username end)
     |> case do
