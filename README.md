@@ -1,6 +1,6 @@
-<p align="center">
- <img width="353" height="294" src="https://user-images.githubusercontent.com/42816/132131780-15c288c4-f2af-44b5-9a9f-2994d463f222.png">
-</p>
+
+![genex](https://user-images.githubusercontent.com/42816/132131966-027141db-2d3e-4971-986e-0098c4d83543.png)
+
 
 # Genex
 
