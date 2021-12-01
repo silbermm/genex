@@ -89,13 +89,20 @@ defmodule Genex.CLI.FindCommand do
 
         creds.passphrase
         |> Diceware.with_colors()
-        |> display(mask_line: true)
+        |> Kernel.<>(" #{IO.ANSI.reset()} Edit?")
+        |> confirm(mask_line: true, default_answer: :no)
+        |> case do
+          # edit password flow
+          :yes -> :yes
+          # finish
+          :no -> :no
+        end
 
       count > 1 ->
         result =
           select(
             "Multiple entries saved for #{account}. Choose one",
-            Enum.map(res, & &1.usernme)
+            Enum.map(res, & &1.username)
           )
 
         handle_find_password_with_username(res, result, copy?)
@@ -123,10 +130,6 @@ defmodule Genex.CLI.FindCommand do
   end
 
   defp handle_find_password_with_username(credentials, username, copy?) do
-    if copy? do
-      Genex.System.Copy.copy(credentials.passphrase.phrase)
-    end
-
     credentials
     |> Enum.find(fn x -> x.username == username end)
     |> case do
@@ -134,6 +137,10 @@ defmodule Genex.CLI.FindCommand do
         display("error ", error: true)
 
       res ->
+        if copy? do
+          Genex.System.Copy.copy(res.passphrase.phrase)
+        end
+
         res.passphrase
         |> Diceware.with_colors()
         |> display(mask_line: true)

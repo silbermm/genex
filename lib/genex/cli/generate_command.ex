@@ -11,18 +11,40 @@ defmodule Genex.CLI.GenerateCommand do
   alias Genex.Passwords
   alias Genex.Data.Credentials
   import Genex.Gettext
+  import Genex.CLI.Data
+  require EEx
+
+  @template ~s"""
+    <%= if get(data, :help) do %>
+      <%= help() %>
+    <% end %>
+
+    <%= if get(data, :password) do %>
+      <%= display(get(data, :password))  %>
+      <%= if get(data, :save) do %>
+        <%=
+          "Save this password or regenerate:"
+          |> choice([yes: "s", regenerate: "r"], color: :green)
+          |> handle_save(get(data, :passphrase), data)
+        %>
+      <% end %>
+    <% end %>
+  """
+
+  EEx.function_from_string(:def, :render, @template, [:data])
 
   @type t :: %GenerateCommand{
           length: number(),
           help: boolean(),
-          save: boolean()
+          save: boolean(),
+          cli: Keyword.t()
         }
-  defstruct length: 6, help: false, save: false
+  defstruct length: 6, help: false, save: false, cli: []
 
   @impl true
   def init(argv), do: parse(argv)
 
-  @spec parse(list(String.t())) :: GenerateCommand.t()
+  @spec parse(list(String.t())) :: Keyword.t()
   defp parse(argv) do
     argv
     |> OptionParser.parse(
@@ -32,31 +54,31 @@ defmodule Genex.CLI.GenerateCommand do
     |> _parse()
   end
 
-  @spec _parse({list(), list(), list()}) :: GenerateCommand.t()
+  @spec _parse({list(), list(), list()}) :: Keyword.t()
   defp _parse({opts, _, _}) do
-    help = Keyword.get(opts, :help, false)
-    save = Keyword.get(opts, :save, false)
-    length = Keyword.get(opts, :length, 6)
-    %GenerateCommand{help: help, save: save, length: length}
+    Genex.CLI.Data.new()
+    |> Genex.CLI.Data.put(:help, Keyword.get(opts, :help, false))
+    |> Genex.CLI.Data.put(:save, Keyword.get(opts, :save, false))
+    |> Genex.CLI.Data.put(:length, Keyword.get(opts, :length, 6))
   end
 
   @impl true
-  def process(%GenerateCommand{help: true}), do: help()
+  def process([data: [help: true]] = cli), do: render(cli)
 
-  def process(%GenerateCommand{save: false, length: length}) do
-    length
-    |> Passwords.generate()
-    |> Diceware.with_colors()
-    |> display(mask_line: true)
-  end
+  def process(cli) do
+    if Genex.CLI.Data.get(cli, :help) do
+      render(cli)
+    else
+      passphrase =
+        cli
+        |> Genex.CLI.Data.get(:length)
+        |> Passwords.generate()
 
-  def process(%GenerateCommand{save: true, length: length} = command) do
-    passphrase = Passwords.generate(length)
-    display(Diceware.with_colors(passphrase))
-
-    "Save this password or regenerate:"
-    |> choice([yes: "s", regenerate: "r"], color: IO.ANSI.green())
-    |> handle_save(passphrase, command)
+      cli
+      |> Genex.CLI.Data.put(:password, Diceware.with_colors(passphrase))
+      |> Genex.CLI.Data.put(:passphrase, passphrase)
+      |> render()
+    end
   end
 
   @spec handle_save(:yes | :regenerate | :error, Diceware.Passphrase.t(), GenerateCommand.t()) ::
