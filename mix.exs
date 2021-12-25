@@ -13,9 +13,16 @@ defmodule GenexCli.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       preferred_cli_env: [release: :prod],
       releases: [
+        # genex: [
+        #   steps: [:assemble, &Bakeware.assemble/1],
+        #   strip_beams: [keep: ["Docs"]]
+        # ],
         genex: [
-          steps: [:assemble, &Bakeware.assemble/1],
-          strip_beams: [keep: ["Docs"]]
+          steps: [:assemble, &Burrito.wrap/1],
+          strip_beams: [keep: ["Docs"]],
+          burrito: [
+            targets: [:linux]
+          ]
         ]
       ]
     ]
@@ -47,7 +54,8 @@ defmodule GenexCli.MixProject do
       {:diceware, "~> 0.2.8"},
       {:prompt, "~> 0.6"},
       # {:prompt, path: "../prompt"},
-      {:bakeware, "~> 0.2.0", runtime: false},
+      # {:bakeware, "~> 0.2.0", runtime: false},
+      {:burrito, github: "burrito-elixir/burrito"},
       {:dialyxir, "~> 1.1", only: [:dev], runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:mix_test_watch, "~> 0.8", only: :dev, runtime: false},

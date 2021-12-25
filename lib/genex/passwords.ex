@@ -23,24 +23,6 @@ defmodule Genex.Passwords do
     end
   end
 
-  @doc "Saves the list of credentials for a configured peer"
-  @spec save_for_peer(list(Credentials.t()), Genex.Data.Manifest.t(), binary()) ::
-          :error | :ok | {:error, :not_found}
-  def save_for_peer(creds, peer, public_key_path) do
-    Genex.Passwords.Supervisor.load_password_store(peer)
-
-    for cred <- creds do
-      with {:ok, encoded} <- Jason.encode(cred),
-           {:ok, encrypted} <- @encryption.encrypt(encoded, public_key_path) do
-        Genex.Passwords.Supervisor.save_credentials(peer.id, cred, encrypted)
-      else
-        err -> err
-      end
-    end
-
-    Genex.Passwords.Supervisor.unload_password_store(peer)
-  end
-
   @doc "List all known accounts"
   @spec list_accounts() :: [String.t()]
   def list_accounts() do

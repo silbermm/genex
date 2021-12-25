@@ -1,23 +1,19 @@
 defmodule Genex.Application do
   @moduledoc false
-  use Bakeware.Script
+  use Application
 
-  @impl Bakeware.Script
-  def main(args) do
+  @impl true
+  def start(_, _) do
     _ = application()
-    Genex.CLI.main(args)
+    # this returns a list of strings
+    # args = Burrito.Util.Args.get_arguments()
+    # Genex.CLI.main(args)
   end
 
   def application() do
     opts = [strategy: :one_for_one, name: Genex.Supervisor]
 
-    children = [
-      {Genex.Passwords.Store, []},
-      {Genex.Passwords.Supervisor, []},
-      {Genex.Manifest.Store, []},
-      {Genex.Remote.RemoteSystem, []},
-      {Genex.Manifest.Supervisor, []}
-    ]
+    children = []
 
     Supervisor.start_link(children, opts)
   end
