@@ -28,8 +28,8 @@ This creates two  files in a new folder in your home directory named `.genex/` (
 
 ## Usage
 
-`genex generate` will display a generated password on the screen
-`genex generage -s` will generate a password and allow you to save it
+* `genex generate` will display a generated password on the screen
+* `genex generate -s` will generate a password and allow you to save it
 
 Once you agree that you want to save the password and enter an account to associate the password to, genex will add it to a file stored by default at `~/.genex/passwords`.
 
@@ -42,9 +42,18 @@ Genex doesn't use cloud storage or servers to synchronize your passwords. Instea
 There are currently two mechanisms to share passwords with other systems.
   * local file storage i.e a flash drive or hard drive
   * ssh (not yet implemented)
+  * IPFS (not yet implemented)
 
 Both ways require the other systems to have genex installed as well.
 
 ### Local file storage
+
+TODO
+
+### SSH
+
+TODO
+
+### IPFS
 
 TODO
