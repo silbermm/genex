@@ -54,8 +54,7 @@ defmodule Genex.CLI.GenerateCommand do
     end
   end
 
-  @typep save_opts :: :yes | :regenerate | :error
-  @spec handle_save(save_opts(), Diceware.Passphrase.t(), GenerateCommand.t()) ::
+  @spec handle_save(:yes | :regenerate | :error, Diceware.Passphrase.t(), GenerateCommand.t()) ::
           :ok | {:error, any()}
   defp handle_save(:regenerate, _password, command) do
     :ok = Prompt.Position.clear_lines(2)
@@ -63,14 +62,14 @@ defmodule Genex.CLI.GenerateCommand do
   end
 
   defp handle_save(:yes, password, _command) do
-    :ok = Prompt.Position.mask_line(2)
+    _ = Prompt.Position.mask_line(2)
+
     account_name = text("Enter an account name that this password belongs to", trim: true)
     username = text("Enter a username for this account/password", trim: true)
 
-    # account_name
-    # |> Credentials.new(username, password)
-    # |> Passwords.save()
-    :ok
+    account_name
+    |> Credentials.new(username, password)
+    |> Passwords.save()
   end
 
   defp handle_save(:error, _passphrase, _command), do: display("Error", error: true)
