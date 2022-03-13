@@ -13,14 +13,14 @@ defmodule Genex.MixProject do
 
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger, :iex]
     ]
   end
 
   defp deps do
     [
-      {:diceware, "~> 0.2.8"},
-      {:prompt, "~> 0.7.2"},
+      {:diceware, "~> 0.2.8"},      # my own library
+      {:prompt, path: "../prompt"}, # my own library
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
     ]
