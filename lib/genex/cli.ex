@@ -3,21 +3,41 @@ defmodule Genex.CLI do
 
   genex - generate unique, memorizable passphrases
 
-    --version, -v  prints the version of genex
-    --help, -h     prints help
+    SUB-COMMANDS
+    ------------
+      config check if the app is configured correctly
+      show   show all passwords
+
+
+    OPTIONS
+    -------
+      --length, -l   how many words to use in the passphrase
+                     defaults to 6
+      --save, -s     have the option to save
+                     the generated passphrase
+      --version, -v  prints the version of genex
+      --help, -h     prints help
   """
 
-  use Prompt, otp_app: :genex
+  use Prompt.Router, otp_app: :genex
 
   require Logger
 
-  alias Genex.Commands.DefaultCommand
 
-  @spec main(list(term)) :: no_return()
-  def main(argv) do
-    argv
-    |> process([], fallback: DefaultCommand)
-    |> handle_exit_value()
+  alias Genex.Commands.ConfigCommand
+  alias Genex.Commands.DefaultCommand
+  alias Genex.Commands.TestCommand
+
+  command :test, TestCommand do
+    arg(:help, :boolean)
+  end
+
+  command :config, ConfigCommand do
+    arg(:help, :boolean)
+  end
+
+  command "", DefaultCommand do
+    arg(:help, :boolean)
   end
 
   @spec handle_exit_value(any) :: no_return()
