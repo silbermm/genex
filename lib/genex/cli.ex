@@ -23,7 +23,6 @@ defmodule Genex.CLI do
 
   require Logger
 
-
   alias Genex.Commands.ConfigCommand
   alias Genex.Commands.DefaultCommand
   alias Genex.Commands.TestCommand
@@ -34,10 +33,13 @@ defmodule Genex.CLI do
 
   command :config, ConfigCommand do
     arg(:help, :boolean)
+    arg(:setup, :boolean)
   end
 
   command "", DefaultCommand do
     arg(:help, :boolean)
+    arg(:length, :integer, default: 6)
+    arg(:save, :boolean)
   end
 
   @spec handle_exit_value(any) :: no_return()

@@ -18,7 +18,9 @@ defmodule Genex.MixProject do
 
   def application do
     [
-      extra_applications: [:logger, :iex]
+      extra_applications: [:logger, :iex, :prompt],
+      included_applications: [:mnesia],
+      mod: {Genex.Application, []}
     ]
   end
 
@@ -28,6 +30,7 @@ defmodule Genex.MixProject do
       {:prompt, path: "../prompt"},
       {:ratatouille, "~> 0.5"},
       {:toml, "~> 0.6.2"},
+      {:jason, "~> 1.2"},
       {:gpgmex, github: "silbermm/gpgmex", submodules: true},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false}

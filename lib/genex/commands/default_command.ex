@@ -6,56 +6,63 @@ defmodule Genex.Commands.DefaultCommand do
   require Logger
 
   @impl true
-  def init(argv) do
-
-    argv
-    |> OptionParser.parse_head(
-      strict: [save: :boolean, length: :integer],
-      aliases: [s: :save, l: :length]
-    )
-    |> parse_opts()
-  end
-
-  @impl true
   def process(opts) do
-    # generate a password using diceware
     generated = Diceware.generate(count: opts.length)
 
     generated
-    |> Diceware.with_colors()
     |> maybe_show_choices(opts)
   end
 
   defp maybe_show_choices(passphrase, %{save: true} = opts) do
-    passphrase
-    |> choice(accept: "a", regenerate: "r")
-    |> case do
+    with :accept <- choice(Diceware.with_colors(passphrase), accept: "a", regenerate: "r"),
+         acct <- get_account_name("What account?"),
+         username <- get_username("What username?") do
+
+      psswd = Genex.Passwords.Password.new(acct, username)
+      Genex.Passwords.save(psswd, passphrase)
+    else
       :regenerate ->
-        # when regenerating, lets clear the previous password
-        # and replace it with a new one
         _ = Prompt.Position.clear_lines(1)
         process(opts)
 
-      :accept ->
-        # when accepted
-        #   * put in clipboard?
-        #   * mask the line?
-        :ok
-
       _ ->
-        {:error, :invalid}
+        display("Something when wrong, try again", error: true)
     end
   end
 
-  defp maybe_show_choices(passphrase, _) do
-    display(passphrase)
+  defp maybe_show_choices(passphrase, _), do: display(Diceware.with_colors(passphrase))
+
+  defp get_account_name(question) do
+    answer = text(question, trim: true, color: :green, min: 3)
+
+    case answer do
+      :error ->
+        display("Enter an account name longer that 3 charactors", color: :red)
+        get_account_name(question)
+
+      :error_min ->
+        display("Enter an account name longer than 3 charactors", color: :red)
+        get_account_name(question)
+
+      account_name ->
+        account_name
+    end
   end
 
-  defp parse_opts({[], _, _}), do: %{save: false, length: 6}
+  defp get_username(question) do
+    answer = text(question, trim: true, color: :green, min: 3)
 
-  defp parse_opts({opts, _, _}) do
-    save? = Keyword.get(opts, :save, false)
-    length = Keyword.get(opts, :length, 6)
-    %{save: save?, length: length}
+    case answer do
+      :error ->
+        display("Enter a username longer that 3 charactors", color: :red)
+        get_account_name(question)
+
+      :error_min ->
+        display("Enter a uasername longer than 3 charactors", color: :red)
+        get_account_name(question)
+
+      username ->
+        username
+    end
   end
 end

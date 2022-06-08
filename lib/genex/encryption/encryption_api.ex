@@ -7,8 +7,8 @@ defmodule Genex.EncryptionAPI do
   @type email :: String.t()
 
   @doc "Encrypt a diceware password"
-  @callback encrypt(email(), Diceware.t()) :: {:ok, binary()} | {:error, binary()}
+  @callback encrypt(email(), Diceware.Passphrase.t()) :: {:ok, binary()} | {:error, binary()}
 
   @doc "Decrypt a diceware password"
-  @callback decrypt(binary()) :: {:ok, Dicware.t()} | {:error, binary()}
+  @callback decrypt(binary()) :: {:ok, Diceware.Passphrase.t()} | {:error, binary()}
 end
