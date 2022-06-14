@@ -6,11 +6,17 @@ defmodule Genex.Passwords do
   alias Genex.AppConfig
   alias Genex.Passwords.Password
 
+  require Logger
+
+  @store Application.compile_env!(:genex, :store)
+
   @spec save(Password.t(), Diceware.Passphrase.t()) :: :ok | {:error, binary()}
   def save(%Password{} = password, %Diceware.Passphrase{} = passphrase) do
     # get config
     case Genex.AppConfig.read() do
       {:ok, %AppConfig{gpg_email: gpg_email}} when gpg_email != "" ->
+
+        Logger.debug("Encrypting password for #{gpg_email}")
 
         #encode the passphrase
         encoded = Jason.encode!(passphrase)
@@ -24,8 +30,7 @@ defmodule Genex.Passwords do
         IO.inspect password
 
         # save the password in storage
-
-        :ok
+        @store.save_password(password)
 
       {:ok, _} ->
         {:error, :no_gpg_email}
