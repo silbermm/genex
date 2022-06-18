@@ -7,6 +7,9 @@ defmodule Genex.MixProject do
       version: "0.0.1",
       elixir: "~> 1.13",
       escript: escript(),
+      dialyzer: [
+        plt_add_apps: [:mnesia]
+      ],
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]

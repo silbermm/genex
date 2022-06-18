@@ -6,6 +6,7 @@ defmodule Genex.Passwords.Password do
   alias __MODULE__
 
   @type t :: %Password{
+          id: integer() | nil,
           account: binary(),
           username: binary(),
           comment: binary() | nil,
@@ -14,7 +15,7 @@ defmodule Genex.Passwords.Password do
         }
 
   @derive Jason.Encoder
-  defstruct [:encrypted_passphrase, :account, :username, :timestamp, :comment]
+  defstruct [:id, :encrypted_passphrase, :account, :username, :timestamp, :comment]
 
   @doc """
   Create a new password
@@ -26,6 +27,26 @@ defmodule Genex.Passwords.Password do
       username: username,
       timestamp: DateTime.now!("Etc/UTC")
     }
+
+  def new({Passwords, id, account, username, encrypted_passphrase, created_at, _updated_at}) do
+    %Password{
+      id: id,
+      account: account,
+      username: username,
+      encrypted_passphrase: encrypted_passphrase,
+      timestamp: created_at
+    }
+  end
+
+  def new([id, account, username, encrypted_passphrase, created_at, _updated_at]) do
+    %Password{
+      id: id,
+      account: account,
+      username: username,
+      encrypted_passphrase: encrypted_passphrase,
+      timestamp: created_at
+    }
+  end
 
   @doc """
   Add an encrypted passphrase to a password

@@ -8,13 +8,9 @@ defmodule Genex.Store.Mnesia do
   require Logger
 
   @tables [
-    {TableIds, [:table_name, :last_id]},
-    {Passwords, [:id, :account, :username, :encrytped_password, :created_at, :updated_at]}
-  ]
-
-  @indexes [
-    {Passwords, :account},
-    {Passwords, :username}
+    {TableIds, [:table_name, :last_id], []},
+    {Passwords, [:id, :account, :username, :encrytped_password, :created_at, :updated_at],
+     [:account, :username]}
   ]
 
   @counters [Passwords]
@@ -27,9 +23,15 @@ defmodule Genex.Store.Mnesia do
     case :mnesia.system_info(:extra_db_nodes) do
       [] ->
         case :mnesia.create_schema([current_node]) do
-          :ok -> :mnesia.start()
-          {:error, {_, {:already_exists, _}}} -> :mnesia.start()
-          {:error, reason} -> {:error, reason}
+          :ok ->
+            :mnesia.start()
+
+          {:error, {_, {:already_exists, _}}} ->
+            Logger.debug("Already exists")
+            :mnesia.start()
+
+          {:error, reason} ->
+            {:error, reason}
         end
 
       [_ | _] ->
@@ -41,15 +43,36 @@ defmodule Genex.Store.Mnesia do
   def init_tables() do
     %MnesiaResults{}
     |> create_tables()
-    |> create_indexes()
     |> create_counters()
     |> check_errors()
+  end
+
+  @impl true
+  def all_passwords() do
+    Logger.debug("Get all passwords")
+
+    fun = fn ->
+      :mnesia.select(Passwords, [
+        {
+          {Passwords, :"$1", :"$2", :"$3", :"$4", :"$5", :"$6"},
+          [{:>, :"$1", 0}],
+          [:"$$"]
+        }
+      ])
+    end
+
+    case :mnesia.transaction(fun) do
+      {:atomic, res_list} -> 
+        {:ok, Enum.map(res_list, &Genex.Passwords.Password.new/1)}
+      err -> err
+    end
   end
 
   @impl true
   def save_password(password) do
     Logger.debug("Saving password")
 
+    # create a new id
     index = :mnesia.dirty_update_counter(TableIds, Passwords, 1)
 
     fun = fn ->
@@ -59,8 +82,28 @@ defmodule Genex.Store.Mnesia do
       )
     end
 
-    :mnesia.transaction(fun)
+    case :mnesia.transaction(fun) do
+      {:atomic, _} -> :ok
+      {:aborted, err} -> {:error, err}
+    end
   end
+
+  @impl true
+  def find_password_by(column, search_string) do
+    column
+    |> build_password_search_function(search_string)
+    |> :mnesia.transaction()
+    |> case do
+      {:atomic, res_list} -> {:ok, Enum.map(res_list, &Genex.Passwords.Password.new/1)}
+      err -> err
+    end
+  end
+
+  defp build_password_search_function(:account, search_string),
+    do: fn -> :mnesia.match_object({Passwords, :_, search_string, :_, :_, :_, :_}) end
+
+  defp build_password_search_function(:username, search_string),
+    do: fn -> :mnesia.match_object({Passwords, :_, :_, search_string, :_, :_, :_}) end
 
   defp check_errors(%{errors: errors}) when length(errors) > 0, do: {:error, errors}
   defp check_errors(_), do: :ok
@@ -68,9 +111,13 @@ defmodule Genex.Store.Mnesia do
   defp create_tables(mnesia_results) do
     Logger.debug("Creating and verifying tables")
 
-    for {table, attributes} <- @tables, reduce: mnesia_results do
+    for {table, attributes, indexes} <- @tables, reduce: mnesia_results do
       acc ->
-        case create_table(table, attributes: attributes) do
+        case create_table(table,
+               attributes: attributes,
+               disc_copies: [Node.self()],
+               index: indexes
+             ) do
           {:ok, table} -> MnesiaResults.add_success(acc, table)
           {:error, table, reason} -> MnesiaResults.add_error(acc, {table, reason})
         end
@@ -85,6 +132,7 @@ defmodule Genex.Store.Mnesia do
         {:ok, table}
 
       {:aborted, {:already_exists, _}} ->
+        Logger.debug("#{table} already exists")
         {:ok, table}
 
       {:aborted, reason} ->
@@ -93,44 +141,9 @@ defmodule Genex.Store.Mnesia do
     end
   end
 
-  defp create_indexes(%MnesiaResults{errors: errors} = results) when length(errors) > 0,
-    do: results
-
-  defp create_indexes(mnesia_results) do
-    Logger.debug("Creating and verifying indexes")
-
-    for {table, column} <- @indexes, reduce: mnesia_results do
-      acc ->
-        case create_index(table, column) do
-          {:ok, table, column} -> MnesiaResults.add_success(acc, {table, column})
-          {:error, table, column, reason} -> MnesiaResults.add_error(acc, {table, column, reason})
-        end
-    end
-  end
-
-  @spec create_index(module(), atom()) ::
-          {:ok, module(), atom()} | {:error, module(), atom(), any()}
-  defp create_index(table, column) do
-    Logger.debug("Creating index for #{column} on #{table}")
-
-    case :mnesia.add_table_index(table, column) do
-      {:atomic, :ok} ->
-        {:ok, table, column}
-
-      {:aborted, {:already_exists, _, _}} ->
-        {:ok, table, column}
-
-      {:aborted, reason} ->
-        Logger.error(
-          "Failed creating index on #{column} of table #{table} because: (#{inspect(reason)})"
-        )
-
-        {:error, table, column, reason}
-    end
-  end
-
   defp create_counters(mnesia_results) do
     Logger.debug("Creating counters")
+
     for table <- @counters, reduce: mnesia_results do
       acc ->
         case create_counter(table) do
@@ -146,18 +159,33 @@ defmodule Genex.Store.Mnesia do
   defp create_counter(table) do
     Logger.debug("Creating counter for #{table}")
 
-    fun = fn ->
-      :mnesia.write({TableIds, table, 100})
+    :mnesia.wait_for_tables([Passwords, TableIds], 10000)
+
+    find_fun = fn ->
+      :mnesia.read({TableIds, table})
     end
 
-    case :mnesia.transaction(fun) do
-      {:atomic, :ok} ->
+    case :mnesia.transaction(find_fun) do
+      {:atomic, [{_, _, _}]} ->
+        Logger.debug("Counter already exists")
         {:ok, :counter, table}
 
-      {:aborted, reason} ->
-        Logger.error("Failed creating counter for #{table} because: (#{inspect(reason)})")
+      _ ->
+        Logger.debug("Counter does not already exist")
 
-        {:error, :counter, table, reason}
+        fun = fn ->
+          :mnesia.write({TableIds, table, 100})
+        end
+
+        case :mnesia.transaction(fun) do
+          {:atomic, :ok} ->
+            {:ok, :counter, table}
+
+          {:aborted, reason} ->
+            Logger.error("Failed creating counter for #{table} because: (#{inspect(reason)})")
+
+            {:error, :counter, table, reason}
+        end
     end
   end
 end

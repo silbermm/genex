@@ -1,4 +1,4 @@
-defmodule Genex.CLI.Counter do
+defmodule Genex.Commands.Counter do
   @behaviour Ratatouille.App
 
   import Ratatouille.View

@@ -26,8 +26,13 @@ defmodule Genex.CLI do
   alias Genex.Commands.ConfigCommand
   alias Genex.Commands.DefaultCommand
   alias Genex.Commands.TestCommand
+  alias Genex.Commands.ShowCommand
 
   command :test, TestCommand do
+    arg(:help, :boolean)
+  end
+
+  command :show, ShowCommand do
     arg(:help, :boolean)
   end
 
