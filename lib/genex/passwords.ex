@@ -45,4 +45,18 @@ defmodule Genex.Passwords do
   """
   @spec all :: {:ok, [Genex.Passwords.Password.t()]} | {:error, binary()}
   def all(), do: @store.all_passwords()
+
+  @spec decrypt(Password.t()) :: {:ok, Diceware.Passphrase.t()} | {:error, binary()}
+  def decrypt(%Password{} = password) do
+    case GPG.decrypt(password.encrypted_passphrase) do
+      {:ok, password} ->
+        {:ok,
+         password
+         |> Jason.decode!()
+         |> Diceware.Passphrase.new()}
+
+      e ->
+        e
+    end
+  end
 end
