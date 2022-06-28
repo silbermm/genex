@@ -1,4 +1,8 @@
 defmodule Genex.Commands.ShowCommandAdvanced do
+  @moduledoc """
+  The full screen GUI for showing passwords
+  """
+
   @behaviour Ratatouille.App
 
   import Ratatouille.View
@@ -26,6 +30,11 @@ defmodule Genex.Commands.ShowCommandAdvanced do
 
   defp reset_show_password(model), do: %{model | show_password_for_current_row: false}
 
+  defp show_password(model) do
+    password = Enum.at(model.data, model.current_row)
+    Genex.Passwords.decrypt(password)
+  end
+
   @impl true
   def update(model, msg) do
     case msg do
@@ -34,12 +43,12 @@ defmodule Genex.Commands.ShowCommandAdvanced do
         |> move_up_a_row()
         |> reset_show_password
 
-      {:event, %{key: 65517}} ->
+      {:event, %{key: 65_517}} ->
         model
         |> move_up_a_row()
         |> reset_show_password
 
-      {:event, %{key: 65516}} ->
+      {:event, %{key: 65_516}} ->
         model
         |> move_down_a_row()
         |> reset_show_password
@@ -87,21 +96,44 @@ defmodule Genex.Commands.ShowCommandAdvanced do
             table_row options do
               table_cell(content: "#{pass.account}")
               table_cell(content: "#{pass.username}")
-              table_cell(content: maybe_show_password(model, row))
+              table_cell(content: "#{pass.passphrase}")
               table_cell(content: "#{pass.timestamp}")
             end
+          end
+        end
+      end
+
+      if model.show_password_for_current_row do
+        case show_password(model) do
+          {:ok, decrypted} ->
+            show_password_overlay(decrypted)
+
+          {:error, reason} ->
+            show_password_error(reason)
+        end
+      end
+    end
+  end
+
+  defp show_password_overlay(decrypted) do
+    overlay do
+      panel title: "ESC to close / C to copy" do
+        label(content: Diceware.with_colors(decrypted) <> IO.ANSI.reset())
+
+        row do
+          column size: 9 do
+            label(content: "more", color: color(:red))
           end
         end
       end
     end
   end
 
-  defp maybe_show_password(model, row) do
-    if model.show_password_for_current_row and row == model.current_row do
-      password = Enum.at(model.data, model.current_row, nil)
-      password.account
-    else
-      "*******"
+  defp show_password_error(reason) do
+    overlay padding: 1 do
+      panel do
+        label(content: reason, color: color(:red))
+      end
     end
   end
 

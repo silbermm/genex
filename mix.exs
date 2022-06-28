@@ -5,8 +5,8 @@ defmodule Genex.MixProject do
     [
       app: :genex,
       version: "0.0.1",
+      releases: releases(),
       elixir: "~> 1.13",
-      escript: escript(),
       dialyzer: [
         plt_add_apps: [:mnesia]
       ],
@@ -15,15 +15,25 @@ defmodule Genex.MixProject do
     ]
   end
 
-  defp escript do
-    [main_module: Genex.CLI, strip_beams: [keep: ["Docs"]]]
+  def releases do
+    [
+      genex: [
+        strip_beams: [keep: ["Docs"]],
+        steps: [:assemble, &copy_bin_files/1, :tar]
+      ]
+    ]
+  end
+
+  defp copy_bin_files(release) do
+    File.cp_r("rel/bin/", Path.join(release.path, "bin"))
+    release
   end
 
   def application do
     [
-      extra_applications: [:logger, :iex, :prompt],
+      extra_applications: [:logger, :iex, :prompt, :ex_termbox],
       included_applications: [:mnesia],
-      mod: {Genex.Application, []}
+      mod: {Genex.Application, env: Mix.env()}
     ]
   end
 

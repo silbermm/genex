@@ -11,11 +11,12 @@ defmodule Genex.Passwords.Password do
           username: binary(),
           comment: binary() | nil,
           encrypted_passphrase: String.t() | nil,
+          passphrase: String.t(),
           timestamp: DateTime.t()
         }
 
   @derive Jason.Encoder
-  defstruct [:id, :encrypted_passphrase, :account, :username, :timestamp, :comment]
+  defstruct [:id, :encrypted_passphrase, :passphrase, :account, :username, :timestamp, :comment]
 
   @doc """
   Create a new password
@@ -25,6 +26,7 @@ defmodule Genex.Passwords.Password do
     do: %Password{
       account: account,
       username: username,
+      passphrase: "********",
       timestamp: DateTime.now!("Etc/UTC")
     }
 
@@ -34,6 +36,7 @@ defmodule Genex.Passwords.Password do
       account: account,
       username: username,
       encrypted_passphrase: encrypted_passphrase,
+      passphrase: "********",
       timestamp: created_at
     }
   end
@@ -44,6 +47,7 @@ defmodule Genex.Passwords.Password do
       account: account,
       username: username,
       encrypted_passphrase: encrypted_passphrase,
+      passphrase: "********",
       timestamp: created_at
     }
   end
@@ -54,4 +58,12 @@ defmodule Genex.Passwords.Password do
   @spec add_passphrase(t(), binary()) :: t()
   def add_passphrase(%Password{} = password, encrypted_passphrase),
     do: %{password | encrypted_passphrase: encrypted_passphrase}
+
+  @doc """
+  Add a unencrypted passphrase to a password
+  """
+  @spec add_unencrypted_passphrase(t(), String.t()) :: t()
+  def add_unencrypted_passphrase(%Password{} = password, passphrase),
+    do: %{password | passphrase: passphrase}
+
 end

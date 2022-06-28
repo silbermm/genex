@@ -62,9 +62,11 @@ defmodule Genex.Store.Mnesia do
     end
 
     case :mnesia.transaction(fun) do
-      {:atomic, res_list} -> 
+      {:atomic, res_list} ->
         {:ok, Enum.map(res_list, &Genex.Passwords.Password.new/1)}
-      err -> err
+
+      {:aborted, err} ->
+        {:error, err}
     end
   end
 
@@ -95,7 +97,7 @@ defmodule Genex.Store.Mnesia do
     |> :mnesia.transaction()
     |> case do
       {:atomic, res_list} -> {:ok, Enum.map(res_list, &Genex.Passwords.Password.new/1)}
-      err -> err
+      {:aborted, err} -> {:error, err}
     end
   end
 
@@ -159,7 +161,7 @@ defmodule Genex.Store.Mnesia do
   defp create_counter(table) do
     Logger.debug("Creating counter for #{table}")
 
-    :mnesia.wait_for_tables([Passwords, TableIds], 10000)
+    :mnesia.wait_for_tables([Passwords, TableIds], 10_000)
 
     find_fun = fn ->
       :mnesia.read({TableIds, table})

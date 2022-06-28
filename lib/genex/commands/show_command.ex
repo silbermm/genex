@@ -17,10 +17,10 @@ defmodule Genex.Commands.ShowCommand do
   def process(_args) do
     case Genex.AppConfig.read() do
       {:ok, config} ->
+        #Ratatouille.Runtime.Supervisor.start_link(runtime: [app: Genex.Commands.ShowCommandAdvanced])
         Ratatouille.run(Genex.Commands.ShowCommandAdvanced, [config: config])
 
       {:error, _reason} ->
-        # TODO: give the option to create the config
         display("Unable to read config file", error: true, color: :red)
     end
   end

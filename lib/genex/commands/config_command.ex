@@ -26,7 +26,6 @@ defmodule Genex.Commands.ConfigCommand do
         table([["GPG Installed", "GPG Email"], ["yes", config.gpg_email]], header: true)
 
       {:error, _reason} ->
-        # TODO: give the option to create the config
         display("Unable to read config file", error: true, color: :red)
     end
   end

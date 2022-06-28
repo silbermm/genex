@@ -8,6 +8,6 @@ config :genex,
   store: Genex.Store.Mnesia
 
 config :logger, :console,
-  level: :debug,
+  level: :info,
   format: "$time $metadata[$level] $levelpad$message\n",
   metadata: [:module]
