@@ -1,37 +1,65 @@
 defmodule Genex.CLI do
   @moduledoc """
 
-  Passphrase generator and decentralized passphrase manager
+  genex - generate unique, memorizable passphrases
 
-    generate            Generate a password and save it
-    list                List all accounts that have saved passwords
-    find <account_name> find, view and manipulate passwords
-    certs               Generate public and private key certificates
-    remote              Add, list and delete trusted remotes
-    push                Push local passphrases to a trusted remote
-    pull                Pull remote passphrases to local store
-    peers               View and manage peers
+    SUB-COMMANDS
+    ------------
+      config check if the app is configured correctly
+      show   show all passwords
 
-    --help, -h          Prints help message
-    --version, -v       Prints the version
 
+    OPTIONS
+    -------
+      --length, -l   how many words to use in the passphrase
+                     defaults to 6
+      --save, -s     have the option to save
+                     the generated passphrase
+      --version, -v  prints the version of genex
+      --help, -h     prints help
   """
-  use Prompt, otp_app: :genex
 
-  @doc "Entry Point into the app"
-  @spec main(list) :: 0 | 1
-  def main(argv) do
-    commands = [
-      {"generate", Genex.CLI.GenerateCommand},
-      {"list", Genex.CLI.ListAccountsCommand},
-      {"find", Genex.CLI.FindCommand},
-      {"certs", Genex.CLI.CertificatesCommand},
-      {"remote", Genex.CLI.RemoteCommand},
-      {"push", Genex.CLI.PushCommand},
-      {"pull", Genex.CLI.PullCommand},
-      {"peers", Genex.CLI.PeerCommand}
-    ]
+  use Prompt.Router, otp_app: :genex
 
-    process(argv, commands)
+  require Logger
+
+  alias Genex.Commands.ConfigCommand
+  alias Genex.Commands.DefaultCommand
+  alias Genex.Commands.ShowCommand
+
+  command :show, ShowCommand do
+    arg(:help, :boolean)
+  end
+
+  command :config, ConfigCommand do
+    arg(:help, :boolean)
+    arg(:setup, :boolean)
+  end
+
+  command "", DefaultCommand do
+    arg(:help, :boolean)
+    arg(:length, :integer, default: 6)
+    arg(:save, :boolean)
+  end
+
+  @spec handle_exit_value(any) :: no_return()
+  defp handle_exit_value(:ok), do: handle_exit_value(0)
+
+  defp handle_exit_value({:error, _reason}) do
+    # TODO: better handle non :ok exit
+    handle_exit_value(1)
+  end
+
+  defp handle_exit_value(val) when is_integer(val) and val >= 0 do
+    Logger.debug("Exit Code: #{val}")
+    # Prevent exiting if running from an iex console.
+    unless Code.ensure_loaded?(IEx) and IEx.started?() do
+      System.halt(val)
+    end
+  end
+
+  defp handle_exit_value(anything_else) do
+    Logger.debug("Exit Value: #{inspect(anything_else)}")
+    handle_exit_value(2)
   end
 end

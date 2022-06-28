@@ -1,24 +1,40 @@
 defmodule Genex.Application do
-  @moduledoc false
-  use Bakeware.Script
+  @moduledoc """
+  Sets up the application by starting the 
+  databse and running any migrations needed
+  """
 
-  @impl Bakeware.Script
-  def main(args) do
-    _ = application()
-    Genex.CLI.main(args)
+  use Application
+
+  @store Application.compile_env!(:genex, :store)
+
+  @impl true
+  def start(_type, env: :prod) do
+    with :ok <- ensure_dir_exists(),
+         :ok <- @store.init(),
+         :ok <- @store.init_tables() do
+      children = []
+
+      Supervisor.start_link(children, strategy: :one_for_one)
+    else
+      {:error, error} -> {:error, error}
+    end
   end
 
-  def application() do
-    opts = [strategy: :one_for_one, name: Genex.Supervisor]
+  def start(_type, _args) do
+    with :ok <- ensure_dir_exists(),
+         :ok <- @store.init(),
+         :ok <- @store.init_tables() do
+      children = []
 
-    children = [
-      {Genex.Passwords.Store, []},
-      {Genex.Passwords.Supervisor, []},
-      {Genex.Manifest.Store, []},
-      {Genex.Remote.RemoteSystem, []},
-      {Genex.Manifest.Supervisor, []}
-    ]
+      Supervisor.start_link(children, strategy: :one_for_one)
+    else
+      {:error, error} -> {:error, error}
+    end
+  end
 
-    Supervisor.start_link(children, opts)
+  defp ensure_dir_exists() do
+    # TODO: make sure the genex directory exists
+    :ok
   end
 end

@@ -1,14 +1,23 @@
 defmodule Genex do
   @moduledoc """
-  # GENEX
+  Documentation for `Genex`.
 
-  Build a password from readable words using 
-  the [Diceware](http://world.std.com/~reinhold/diceware.html) word list
-  and save it to an encrypted file.
 
-  ## Secure
+  Here we will put all the docs
+  What is it?
+  Motivation?
 
-  ## Decentralized
+
+  ## Installation
+  TODO
+
+
+  ## Usage
+  TODO
+
+
+  ## Design
+  TODO
 
   """
 end

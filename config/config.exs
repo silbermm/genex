@@ -1,7 +1,13 @@
 import Config
 
-config :genex,
-  genex_home: Path.join(System.get_env("HOME"), ".genex"),
-  encryption_module: Genex.Encryption.RSA
+config :mnesia,
+dir: "HOME" |> System.get_env() |> Path.join(".genex") |> Path.join("db") |> String.to_charlist()
 
-import_config "#{Mix.env()}.exs"
+config :genex,
+  homedir: "HOME" |> System.get_env() |> Path.join(".genex"),
+  store: Genex.Store.Mnesia
+
+config :logger, :console,
+  level: :info,
+  format: "$time $metadata[$level] $levelpad$message\n",
+  metadata: [:module]

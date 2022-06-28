@@ -1,138 +1,62 @@
 defmodule Genex.Passwords do
   @moduledoc """
-  The core module for generating, finding, encrypting, decrypting and storing passwords
+  Handles encrypting, decrypting, reading and saving passwords
   """
 
-  alias Genex.Passwords.Store
-  alias Genex.Data.Credentials
+  alias Genex.AppConfig
+  alias Genex.Passwords.Password
 
-  @encryption Application.compile_env!(:genex, :encryption_module)
+  require Logger
 
-  @doc "Generate a password using the Dicware library"
-  @spec generate(number()) :: Diceware.Passphrase.t()
-  def generate(num \\ 6), do: Diceware.generate(count: num)
+  @store Application.compile_env!(:genex, :store)
 
-  @doc "Saves the provided credentials"
-  @spec save(Credentials.t()) :: :ok | {:error, atom()}
-  def save(credentials) do
-    with {:ok, encoded} <- Jason.encode(credentials),
-         {:ok, encrypted} <- @encryption.encrypt(encoded) do
-      Store.save_credentials(credentials, encrypted)
-    else
-      err -> err
+  @doc """
+  Encrypt a password and save it to the DB
+  """
+  @spec save(Password.t(), Diceware.Passphrase.t()) :: :ok | {:error, binary()}
+  def save(%Password{} = password, %Diceware.Passphrase{} = passphrase) do
+    # get config
+    case Genex.AppConfig.read() do
+      {:ok, %AppConfig{gpg_email: gpg_email}} when gpg_email != "" ->
+        Logger.debug("Encrypting password for #{gpg_email}")
+
+        # encode the passphrase
+        encoded = Jason.encode!(passphrase)
+
+        # encrypt passphrase
+        {:ok, encrypted} = GPG.encrypt(gpg_email, encoded)
+
+        # add the encrtyped passphrase to the password
+        password = Password.add_passphrase(password, encrypted)
+
+        # save the password in storage
+        @store.save_password(password)
+
+      {:ok, _} ->
+        {:error, :no_gpg_email}
+
+      err ->
+        err
     end
   end
 
-  @doc "Saves the list of credentials for a configured peer"
-  @spec save_for_peer(list(Credentials.t()), Genex.Data.Manifest.t(), binary()) ::
-          :error | :ok | {:error, :not_found}
-  def save_for_peer(creds, peer, public_key_path) do
-    Genex.Passwords.Supervisor.load_password_store(peer)
+  @doc """
+  Get all passwords
+  """
+  @spec all :: {:ok, [Genex.Passwords.Password.t()]} | {:error, binary()}
+  def all(), do: @store.all_passwords()
 
-    for cred <- creds do
-      with {:ok, encoded} <- Jason.encode(cred),
-           {:ok, encrypted} <- @encryption.encrypt(encoded, public_key_path) do
-        Genex.Passwords.Supervisor.save_credentials(peer.id, cred, encrypted)
-      else
-        err -> err
-      end
-    end
+  @spec decrypt(Password.t()) :: {:ok, Diceware.Passphrase.t()} | {:error, binary()}
+  def decrypt(%Password{} = password) do
+    case GPG.decrypt(password.encrypted_passphrase) do
+      {:ok, password} ->
+        {:ok,
+         password
+         |> Jason.decode!()
+         |> Diceware.Passphrase.new()}
 
-    Genex.Passwords.Supervisor.unload_password_store(peer)
-  end
-
-  @doc "List all known accounts"
-  @spec list_accounts() :: [String.t()]
-  def list_accounts() do
-    Store.list_accounts()
-    |> account_names()
-    |> unique()
-  end
-
-  @doc "Find credenials for a specific account"
-  @spec find(String.t(), String.t() | nil) :: [Credentials.t()] | {:error, :password} | :error
-  def find(account, password) do
-    account
-    |> Store.find_account()
-    |> Enum.map(&decrypt_credentials(&1, password))
-    |> Enum.map(&to_credentials/1)
-    |> Enum.group_by(&username/1)
-    |> Enum.map(&sort_accounts/1)
-  rescue
-    _e in RuntimeError -> {:error, :password}
-    _e -> {:error, :password}
-  end
-
-  @doc "Delete credentials from the store"
-  @spec delete(Credentials.t()) :: boolean()
-  def delete(credentials) do
-    Store.delete(credentials.account)
-  end
-
-  @doc "Get all accounts out of the store"
-  @spec all(binary(), keyword()) ::
-          {:ok, list(Credentials.t())} | {:error, :password}
-
-  def all(password, opts \\ [])
-
-  def all(password, remote: remote, id: id) do
-    Genex.Passwords.Supervisor.load_password_store(remote, id)
-    creds = Genex.Passwords.Supervisor.all_credentials(remote, id)
-    Genex.Passwords.Supervisor.unload_password_store(remote, id)
-
-    {:ok,
-     creds
-     |> Enum.map(&decrypt_credentials(&1, password))
-     |> Enum.map(&to_credentials/1)}
-  rescue
-    _e in RuntimeError -> {:error, :password}
-    _e -> {:error, :password}
-  end
-
-  def all(password, _opts) do
-    {:ok,
-     Store.all()
-     |> Enum.map(&decrypt_credentials(&1, password))
-     |> Enum.map(&to_credentials/1)}
-  rescue
-    _e in RuntimeError -> {:error, :password}
-  end
-
-  @spec decrypt_credentials(tuple(), String.t() | nil) :: binary()
-  defp decrypt_credentials({_, _, _, creds}, password), do: @encryption.decrypt(creds, password)
-
-  @spec to_credentials(binary()) :: Credentials.t()
-  defp to_credentials(raw_creds) do
-    raw_creds
-    |> Jason.decode!()
-    |> Credentials.new()
-  end
-
-  @spec username(%{username: String.t()}) :: String.t()
-  defp username(%{username: username}), do: username
-
-  @spec sort_accounts(tuple()) :: Credentials.t()
-  defp sort_accounts({_username, accounts}) do
-    accounts
-    |> Enum.sort(&compare_datetime/2)
-    |> List.last()
-  end
-
-  @spec compare_datetime(Credentials.t(), Credentials.t()) :: boolean
-  defp compare_datetime(first, second) do
-    case DateTime.compare(first.created_at, second.created_at) do
-      :gt -> false
-      :lt -> true
-      :eq -> true
+      e ->
+        e
     end
   end
-
-  @spec account_names(list(tuple())) :: list(String.t())
-  defp account_names(accounts), do: Enum.map(accounts, &account_name/1)
-
-  @spec account_name(tuple()) :: String.t()
-  defp account_name({account_name, _, _, _}), do: account_name
-
-  @spec unique(list(String.t())) :: list(String.t())
-  defp unique(accounts), do: Enum.uniq(accounts)
 end
