@@ -40,7 +40,8 @@ defmodule Genex.MixProject do
   defp deps do
     [
       {:diceware, "~> 0.2.8"},
-      {:prompt, path: "../prompt"},
+      #{:prompt, path: "../prompt"},
+      {:prompt, "~> 0.8"},
       {:ratatouille, "~> 0.5"},
       {:toml, "~> 0.6.2"},
       {:jason, "~> 1.2"},
