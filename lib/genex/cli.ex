@@ -33,7 +33,7 @@ defmodule Genex.CLI do
 
   command :config, ConfigCommand do
     arg(:help, :boolean)
-    arg(:setup, :boolean)
+    arg(:set, :string)
   end
 
   command "", DefaultCommand do

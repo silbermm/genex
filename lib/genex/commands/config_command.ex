@@ -10,8 +10,10 @@ defmodule Genex.Commands.ConfigCommand do
 
   OPTIONS
   -------
-    --setup   creates the default config file
-    --help    show this help
+    --set <property>          set a config property
+    --set <property>:<value>  set a config property to <value>
+
+    --help                    show this help
 
   """
 
@@ -19,6 +21,20 @@ defmodule Genex.Commands.ConfigCommand do
 
   @impl true
   def process(%{help: true}), do: help()
+
+  def process(%{set: key}) when key != "" do
+    # validate property is valid
+    with true <- Genex.AppConfig.valid_key?(key),
+         {:ok, config} <- Genex.AppConfig.read(),
+         value <- text("Set #{key} to", trim: true) do
+      # set the value in the config file 
+      config = Genex.AppConfig.update(config, key, value)
+      Genex.AppConfig.write(config)
+    else
+      false -> display("#{key} is not a valid config key", color: :red)
+      _e -> display("Unable to set the config value", color: :red)
+    end
+  end
 
   def process(_args) do
     case Genex.AppConfig.read() do
