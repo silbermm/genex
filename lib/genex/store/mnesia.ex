@@ -42,6 +42,9 @@ defmodule Genex.Store.Mnesia do
 
   @impl true
   def init_tables() do
+    :mnesia.set_debug_level(:verbose)
+    :mnesia.set_master_nodes([node()])
+
     %MnesiaResults{}
     |> create_tables()
     |> create_counters()
@@ -85,7 +88,7 @@ defmodule Genex.Store.Mnesia do
       )
     end
 
-    case :mnesia.sync_transaction(fun) do
+    case :mnesia.transaction(fun) do
       {:atomic, res} ->
         Logger.debug(inspect(res))
         :ok
@@ -128,7 +131,8 @@ defmodule Genex.Store.Mnesia do
         case create_table(table,
                attributes: attributes,
                disc_copies: [Node.self()],
-               index: indexes
+               index: indexes,
+               local_content: true
              ) do
           {:ok, table} -> MnesiaResults.add_success(acc, table)
           {:error, table, reason} -> MnesiaResults.add_error(acc, {table, reason})

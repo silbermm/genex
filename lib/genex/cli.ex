@@ -27,6 +27,8 @@ defmodule Genex.CLI do
   alias Genex.Commands.DefaultCommand
   alias Genex.Commands.ShowCommand
 
+  @halter_module Application.compile_env!(:genex, :halter)
+
   command :show, ShowCommand do
     arg(:help, :boolean)
     arg(:for, :string)
@@ -41,5 +43,10 @@ defmodule Genex.CLI do
     arg(:help, :boolean)
     arg(:length, :integer, default: 6)
     arg(:save, :boolean)
+  end
+
+  @impl true
+  def handle_exit_value(_) do
+    @halter_module.halt()
   end
 end

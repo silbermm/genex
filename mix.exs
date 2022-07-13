@@ -31,7 +31,7 @@ defmodule Genex.MixProject do
 
   def application do
     [
-      extra_applications: [:logger, :iex, :prompt, :ratatouille],
+      extra_applications: [:logger, :prompt, :ratatouille],
       included_applications: [:mnesia],
       mod: {Genex.Application, env: Mix.env()}
     ]
@@ -43,12 +43,12 @@ defmodule Genex.MixProject do
       {:prompt, path: "../prompt"},
       # {:prompt, "~> 0.8"},
       {:clipboard, "~> 0.2.1"},
-      # {:burrito, github: "burrito-elixir/burrito"},
       {:exqlite, "~> 0.11.2"},
       {:ratatouille, "~> 0.5"},
       {:toml, "~> 0.6.2"},
       {:jason, "~> 1.2"},
-      {:gpgmex, github: "silbermm/gpgmex"},
+      #{:gpgmex, github: "silbermm/gpgmex"},
+      {:gpgmex, path: "../gpgmex"},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
     ]
