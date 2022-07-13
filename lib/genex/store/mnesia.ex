@@ -31,6 +31,7 @@ defmodule Genex.Store.Mnesia do
             :mnesia.start()
 
           {:error, reason} ->
+            Logger.error("Unable to start mnesia: #{inspect(reason)}")
             {:error, reason}
         end
 
@@ -84,9 +85,13 @@ defmodule Genex.Store.Mnesia do
       )
     end
 
-    case :mnesia.transaction(fun) do
-      {:atomic, _} -> :ok
-      {:aborted, err} -> {:error, err}
+    case :mnesia.sync_transaction(fun) do
+      {:atomic, res} ->
+        Logger.debug(inspect(res))
+        :ok
+
+      {:aborted, err} ->
+        {:error, err}
     end
   end
 
@@ -108,7 +113,12 @@ defmodule Genex.Store.Mnesia do
     do: fn -> :mnesia.match_object({Passwords, :_, :_, search_string, :_, :_, :_}) end
 
   defp check_errors(%{errors: errors}) when length(errors) > 0, do: {:error, errors}
-  defp check_errors(_), do: :ok
+  defp check_errors(_) do
+    for {table, _, _} <- @tables do
+      table |> :mnesia.force_load_table() |> IO.inspect(label: "FORCE LOAD")
+    end
+    :ok
+  end
 
   defp create_tables(mnesia_results) do
     Logger.debug("Creating and verifying tables")

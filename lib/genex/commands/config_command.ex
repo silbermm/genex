@@ -19,17 +19,20 @@ defmodule Genex.Commands.ConfigCommand do
 
   use Prompt.Command
 
+  alias Genex.AppConfig
+
   @impl true
   def process(%{help: true}), do: help()
 
   def process(%{set: key}) when key != "" do
     # validate property is valid
-    with true <- Genex.AppConfig.valid_key?(key),
-         {:ok, config} <- Genex.AppConfig.read(),
+    with true <- AppConfig.valid_key?(key),
+         {:ok, config} <- AppConfig.read(),
          value <- text("Set #{key} to", trim: true) do
       # set the value in the config file 
-      config = Genex.AppConfig.update(config, key, value)
-      Genex.AppConfig.write(config)
+      config
+      |> AppConfig.update(key, value)
+      |> AppConfig.write()
     else
       false -> display("#{key} is not a valid config key", color: :red)
       _e -> display("Unable to set the config value", color: :red)

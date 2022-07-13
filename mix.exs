@@ -31,7 +31,7 @@ defmodule Genex.MixProject do
 
   def application do
     [
-      extra_applications: [:logger, :iex, :prompt, :ex_termbox],
+      extra_applications: [:logger, :iex, :prompt, :ratatouille],
       included_applications: [:mnesia],
       mod: {Genex.Application, env: Mix.env()}
     ]
@@ -40,8 +40,11 @@ defmodule Genex.MixProject do
   defp deps do
     [
       {:diceware, "~> 0.2.8"},
-      #{:prompt, path: "../prompt"},
-      {:prompt, "~> 0.8"},
+      {:prompt, path: "../prompt"},
+      # {:prompt, "~> 0.8"},
+      {:clipboard, "~> 0.2.1"},
+      # {:burrito, github: "burrito-elixir/burrito"},
+      {:exqlite, "~> 0.11.2"},
       {:ratatouille, "~> 0.5"},
       {:toml, "~> 0.6.2"},
       {:jason, "~> 1.2"},
