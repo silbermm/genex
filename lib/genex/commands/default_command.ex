@@ -20,6 +20,7 @@ defmodule Genex.Commands.DefaultCommand do
 
       psswd = Genex.Passwords.Password.new(acct, username)
       Genex.Passwords.save(psswd, passphrase)
+      :ok
     else
       :regenerate ->
         _ = Prompt.Position.clear_lines(1)

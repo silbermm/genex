@@ -8,12 +8,25 @@ defmodule Genex.Commands.ShowCommandAdvanced do
   import Ratatouille.View
   import Ratatouille.Constants
 
+  alias Genex.Commands.Show.New
+
   @impl true
   def init(_context) do
     # get all passwords from the database
     case Genex.Passwords.all() do
       {:ok, data} ->
-        %{data: data, current_row: -1, show_password_for_current_row: false}
+        %{
+          data: data,
+          current_row: -1,
+          show_password_for_current_row: false,
+          copied: "",
+          create_new: false,
+          new: %{
+            account: "",
+            username: "",
+            password: ""
+          }
+        }
 
       {:error, _reason} ->
         []
@@ -35,38 +48,61 @@ defmodule Genex.Commands.ShowCommandAdvanced do
     Genex.Passwords.decrypt(password)
   end
 
+  defp copy_password(model) do
+    password = Enum.at(model.data, model.current_row)
+
+    case Genex.Passwords.decrypt(password) do
+      {:ok, pass} ->
+        Clipboard.copy!(pass.phrase)
+        %{model | copied: password.account}
+
+      {:error, _} ->
+        model
+    end
+  end
+
   @impl true
   def update(model, msg) do
     case msg do
-      {:event, %{ch: ?k}} ->
+      {:event, %{ch: ?k}} when model.create_new == false ->
         model
         |> move_up_a_row()
         |> reset_show_password
 
-      {:event, %{key: 65_517}} ->
+      {:event, %{key: 65_517}} when model.create_new == false ->
         model
         |> move_up_a_row()
         |> reset_show_password
 
-      {:event, %{key: 65_516}} ->
+      {:event, %{key: 65_516}} when model.create_new == false ->
         model
         |> move_down_a_row()
         |> reset_show_password
 
-      {:event, %{ch: ?j}} ->
+      {:event, %{ch: ?j}} when model.create_new == false ->
         model
         |> move_down_a_row()
         |> reset_show_password
 
-      {:event, %{key: 32}} ->
+      {:event, %{ch: ?c}} when model.create_new == false ->
+        model
+        |> copy_password()
+
+      {:event, %{ch: ?n}} when model.create_new == false ->
+        %{model | create_new: true}
+
+      {:event, %{key: 32}} when model.create_new == false ->
         # space bar
         # toggle current row's password
         %{model | show_password_for_current_row: !model.show_password_for_current_row}
 
       {:event, %{key: 27}} ->
         # escape key
-        # hide the current row's password
-        %{model | show_password_for_current_row: false}
+        # hide the current row's password and other overlays
+        %{model | show_password_for_current_row: false, copied: "", create_new: false}
+
+      {:event, %{ch: ch}} when ch > 0 ->
+        %{model | new: %{model.new | account: model.new.account <> <<ch::utf8>>}}
 
       _ ->
         model
@@ -76,7 +112,7 @@ defmodule Genex.Commands.ShowCommandAdvanced do
   @impl true
   def render(%{data: data, current_row: current_row} = model) do
     view bottom_bar: bottom_bar() do
-      panel do
+      panel title: "GENEX" do
         table do
           table_row(background: color(:white), color: color(:black)) do
             table_cell(content: "ACCOUNT")
@@ -103,6 +139,10 @@ defmodule Genex.Commands.ShowCommandAdvanced do
         end
       end
 
+      if model.create_new do
+        New.render(model)
+      end
+
       if model.show_password_for_current_row do
         case show_password(model) do
           {:ok, decrypted} ->
@@ -111,6 +151,10 @@ defmodule Genex.Commands.ShowCommandAdvanced do
           {:error, reason} ->
             show_password_error(reason)
         end
+      end
+
+      if model.copied != "" do
+        show_copied_success_overlay(model.copied)
       end
     end
   end
@@ -129,6 +173,14 @@ defmodule Genex.Commands.ShowCommandAdvanced do
     end
   end
 
+  defp show_copied_success_overlay(account) do
+    overlay do
+      panel title: "ESC to close" do
+        label(content: "Successfully copied password for " <> account)
+      end
+    end
+  end
+
   defp show_password_error(reason) do
     overlay padding: 1 do
       panel do
@@ -139,7 +191,10 @@ defmodule Genex.Commands.ShowCommandAdvanced do
 
   defp bottom_bar() do
     bar do
-      label(content: "SHOW COMMANDS THAT CAN BE USED")
+      label(
+        content:
+          "[j/k or ↑/↓ to move] [space to show password] [c to copy password] [q to quit] [? for more help]"
+      )
     end
   end
 end

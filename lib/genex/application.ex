@@ -8,19 +8,6 @@ defmodule Genex.Application do
 
   @store Application.compile_env!(:genex, :store)
 
-  @impl true
-  def start(_type, env: :prod) do
-    with :ok <- ensure_dir_exists(),
-         :ok <- @store.init(),
-         :ok <- @store.init_tables() do
-      children = []
-
-      Supervisor.start_link(children, strategy: :one_for_one)
-    else
-      {:error, error} -> {:error, error}
-    end
-  end
-
   def start(_type, _args) do
     with :ok <- ensure_dir_exists(),
          :ok <- @store.init(),

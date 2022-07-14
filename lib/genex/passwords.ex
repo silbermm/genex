@@ -32,6 +32,8 @@ defmodule Genex.Passwords do
         # save the password in storage
         @store.save_password(password)
 
+        Logger.debug("Password saved")
+
       {:ok, _} ->
         {:error, :no_gpg_email}
 
@@ -43,8 +45,14 @@ defmodule Genex.Passwords do
   @doc """
   Get all passwords
   """
-  @spec all :: {:ok, [Genex.Passwords.Password.t()]} | {:error, binary()}
+  @spec all :: {:ok, [Password.t()]} | {:error, binary()}
   def all(), do: @store.all_passwords()
+
+  @doc """
+  Find a password by the account
+  """
+  @spec find_by_account(String.t()) :: {:ok, [Password.t()]} | {:error, binary()}
+  def find_by_account(account), do: @store.find_password_by(:account, account)
 
   @spec decrypt(Password.t()) :: {:ok, Diceware.Passphrase.t()} | {:error, binary()}
   def decrypt(%Password{} = password) do
