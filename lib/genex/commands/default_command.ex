@@ -20,7 +20,6 @@ defmodule Genex.Commands.DefaultCommand do
 
       psswd = Genex.Passwords.Password.new(acct, username)
       Genex.Passwords.save(psswd, passphrase)
-      :mnesia.system_info()
       :ok
     else
       :regenerate ->

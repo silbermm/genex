@@ -42,7 +42,6 @@ defmodule Genex.Store.Mnesia do
 
   @impl true
   def init_tables() do
-    :mnesia.set_debug_level(:verbose)
     :mnesia.set_master_nodes([node()])
 
     %MnesiaResults{}

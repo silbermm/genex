@@ -43,7 +43,6 @@ defmodule Genex.MixProject do
       {:prompt, path: "../prompt"},
       # {:prompt, "~> 0.8"},
       {:clipboard, "~> 0.2.1"},
-      {:exqlite, "~> 0.11.2"},
       {:ratatouille, "~> 0.5"},
       {:toml, "~> 0.6.2"},
       {:jason, "~> 1.2"},

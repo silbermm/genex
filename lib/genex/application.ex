@@ -14,7 +14,6 @@ defmodule Genex.Application do
          :ok <- @store.init_tables() do
       children = []
 
-      :mnesia.system_info()
       Supervisor.start_link(children, strategy: :one_for_one)
     else
       {:error, error} -> {:error, error}
