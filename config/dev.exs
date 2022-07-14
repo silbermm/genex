@@ -1,1 +1,4 @@
-use Mix.Config
+import Config
+
+config :genex,
+  halter: Genex.Utils.Halter.HalterDev
