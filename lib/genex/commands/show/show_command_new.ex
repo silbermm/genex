@@ -6,15 +6,87 @@ defmodule Genex.Commands.Show.New do
   import Ratatouille.View
   import Ratatouille.Constants
 
-  def render(model) do
+  alias __MODULE__
+
+  defstruct show: false, current_field: :account, account: "", username: "", password: ""
+
+  def render(new_model) do
     overlay do
-      panel title: "New Password - ESC to cancel" do
-        row do
-          column size: 9 do
-            label(content: model.new.account <> "▌")
+      panel title: "Create a New Password - ESC to cancel" do
+        panel title: title(new_model) do
+          row do
+            column size: 9 do
+              label(content: current_field(new_model) <> "▌")
+            end
           end
         end
       end
+    end
+  end
+
+  def default(), do: %New{}
+
+  def current_field(%New{current_field: :account, account: account}), do: account
+  def current_field(%New{current_field: :username, username: username}), do: username
+
+  def current_field(%New{current_field: :password, password: password}) do
+    password.phrase
+  end
+
+  def show(new_model) do
+    %{new_model | show: true}
+  end
+
+  def delete_character(%New{current_field: :account, account: account} = new_model) do
+    %{new_model | account: _delete(account)}
+  end
+
+  def delete_character(%New{current_field: :username, username: username} = new_model) do
+    %{new_model | username: _delete(username)}
+  end
+
+  defp _delete(value) do
+    size = String.length(value)
+    new_size = size - 1
+
+    less_one =
+      case value do
+        <<result::binary-size(new_size), _::binary>> -> result
+        _ -> value
+      end
+  end
+
+  def update(%New{current_field: :account} = new_model, value) do
+    %{new_model | account: new_model.account <> value}
+  end
+
+  def update(%New{current_field: :username} = new_model, value) do
+    %{new_model | username: new_model.username <> value}
+  end
+
+  def update(%New{current_field: :password} = new_model, _value) do
+    value = Diceware.generate()
+    %{new_model | password: value}
+  end
+
+  def next(%New{current_field: :account} = new_model), do: %{new_model | current_field: :username}
+
+  def next(%New{current_field: :username} = new_model) do
+    phrase = Diceware.generate()
+    %{new_model | current_field: :password, password: phrase}
+  end
+
+  def next(%New{current_field: :password} = new_model) do
+    # save the password
+    psswd = Genex.Passwords.Password.new(new_model.account, new_model.username)
+    _ = Genex.Passwords.save(psswd, new_model.password)
+    default()
+  end
+
+  defp title(new_model) do
+    case new_model.current_field do
+      :password -> "PASSWORD - [r to regenerate]"
+      field -> String.capitalize(to_string(field))
     end
   end
 end

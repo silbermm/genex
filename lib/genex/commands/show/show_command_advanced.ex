@@ -20,12 +20,7 @@ defmodule Genex.Commands.ShowCommandAdvanced do
           current_row: -1,
           show_password_for_current_row: false,
           copied: "",
-          create_new: false,
-          new: %{
-            account: "",
-            username: "",
-            password: ""
-          }
+          new_model: New.default()
         }
 
       {:error, _reason} ->
@@ -43,7 +38,7 @@ defmodule Genex.Commands.ShowCommandAdvanced do
 
   defp reset_show_password(model), do: %{model | show_password_for_current_row: false}
 
-  defp show_password(model) do
+  defp decrypt_current_row_password(model) do
     password = Enum.at(model.data, model.current_row)
     Genex.Passwords.decrypt(password)
   end
@@ -64,34 +59,34 @@ defmodule Genex.Commands.ShowCommandAdvanced do
   @impl true
   def update(model, msg) do
     case msg do
-      {:event, %{ch: ?k}} when model.create_new == false ->
+      {:event, %{ch: ?k}} when model.new_model.show == false ->
         model
         |> move_up_a_row()
         |> reset_show_password
 
-      {:event, %{key: 65_517}} when model.create_new == false ->
+      {:event, %{key: 65_517}} when model.new_model.show == false ->
         model
         |> move_up_a_row()
         |> reset_show_password
 
-      {:event, %{key: 65_516}} when model.create_new == false ->
+      {:event, %{key: 65_516}} when model.new_model.show == false ->
         model
         |> move_down_a_row()
         |> reset_show_password
 
-      {:event, %{ch: ?j}} when model.create_new == false ->
+      {:event, %{ch: ?j}} when model.new_model.show == false ->
         model
         |> move_down_a_row()
         |> reset_show_password
 
-      {:event, %{ch: ?c}} when model.create_new == false ->
+      {:event, %{ch: ?c}} when model.new_model.show == false ->
         model
         |> copy_password()
 
-      {:event, %{ch: ?n}} when model.create_new == false ->
-        %{model | create_new: true}
+      {:event, %{ch: ?n}} when model.new_model.show == false ->
+        %{model | new_model: New.show(model.new_model)}
 
-      {:event, %{key: 32}} when model.create_new == false ->
+      {:event, %{key: 32}} when model.new_model.show == false ->
         # space bar
         # toggle current row's password
         %{model | show_password_for_current_row: !model.show_password_for_current_row}
@@ -99,10 +94,36 @@ defmodule Genex.Commands.ShowCommandAdvanced do
       {:event, %{key: 27}} ->
         # escape key
         # hide the current row's password and other overlays
-        %{model | show_password_for_current_row: false, copied: "", create_new: false}
+        %{model | show_password_for_current_row: false, copied: "", new_model: New.default()}
+
+      {:event, %{key: 127}} when model.new_model.show == true ->
+        # backspace key
+        # delete whatever 
+        updated = New.delete_character(model.new_model)
+        %{model | new_model: updated}
+
+      {:event, %{key: 13}} when model.new_model.show == true ->
+        # enter key
+        # save the field
+        updated = New.next(model.new_model)
+
+        if updated.show == false do
+          case Genex.Passwords.all() do
+            {:ok, data} -> %{model | new_model: updated, data: data}
+            _ -> %{model | new_model: updated}
+          end
+        else
+          %{model | new_model: updated}
+        end
+
+      {:event, %{ch: ?r}} when model.new_model.current_field == :password ->
+        # when r is pressed on the password field, generate a password
+        updated = New.update(model.new_model, nil)
+        %{model | new_model: updated}
 
       {:event, %{ch: ch}} when ch > 0 ->
-        %{model | new: %{model.new | account: model.new.account <> <<ch::utf8>>}}
+        updated = New.update(model.new_model, <<ch::utf8>>)
+        %{model | new_model: updated}
 
       _ ->
         model
@@ -139,12 +160,12 @@ defmodule Genex.Commands.ShowCommandAdvanced do
         end
       end
 
-      if model.create_new do
-        New.render(model)
+      if model.new_model.show do
+        New.render(model.new_model)
       end
 
       if model.show_password_for_current_row do
-        case show_password(model) do
+        case decrypt_current_row_password(model) do
           {:ok, decrypted} ->
             show_password_overlay(decrypted)
 
