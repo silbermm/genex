@@ -24,15 +24,20 @@ defmodule Genex.Passwords do
         encoded = Jason.encode!(passphrase)
 
         # encrypt passphrase
-        {:ok, encrypted} = GPG.encrypt(gpg_email, encoded)
+        case GPG.encrypt(gpg_email, encoded) do
+          {:ok, encrypted} ->
+            # add the encrtyped passphrase to the password
+            password = Password.add_passphrase(password, encrypted)
 
-        # add the encrtyped passphrase to the password
-        password = Password.add_passphrase(password, encrypted)
+            # save the password in storage
+            @store.save_password(password)
 
-        # save the password in storage
-        @store.save_password(password)
+            Logger.debug("Password saved")
+            {:ok, password}
 
-        Logger.debug("Password saved")
+          err ->
+            err
+        end
 
       {:ok, _} ->
         {:error, :no_gpg_email}

@@ -102,19 +102,17 @@ defmodule Genex.Commands.ShowCommandAdvanced do
         updated = New.delete_character(model.new_model)
         %{model | new_model: updated}
 
+      {:event, %{key: 13}} when model.new_model.current_field == :password ->
+        # enter key
+        # save the password
+        {updated, psswd} = New.save(model.new_model)
+        %{model | new_model: updated, data: model.data ++ [psswd]}
+
       {:event, %{key: 13}} when model.new_model.show == true ->
         # enter key
         # save the field
         updated = New.next(model.new_model)
-
-        if updated.show == false do
-          case Genex.Passwords.all() do
-            {:ok, data} -> %{model | new_model: updated, data: data}
-            _ -> %{model | new_model: updated}
-          end
-        else
-          %{model | new_model: updated}
-        end
+        %{model | new_model: updated}
 
       {:event, %{ch: ?r}} when model.new_model.current_field == :password ->
         # when r is pressed on the password field, generate a password

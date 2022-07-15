@@ -83,6 +83,15 @@ defmodule Genex.Commands.Show.New do
     default()
   end
 
+  def save(new_model) do
+    psswd = Genex.Passwords.Password.new(new_model.account, new_model.username)
+
+    case Genex.Passwords.save(psswd, new_model.password) do
+      {:ok, saved} -> {default(), saved}
+      {:error, _} -> save(new_model)
+    end
+  end
+
   defp title(new_model) do
     case new_model.current_field do
       :password -> "PASSWORD - [r to regenerate]"
