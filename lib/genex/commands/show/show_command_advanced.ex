@@ -43,6 +43,11 @@ defmodule Genex.Commands.ShowCommandAdvanced do
     Genex.Passwords.decrypt(password)
   end
 
+  defp delete_previous_charactor(model) do
+    updated = New.delete_character(model.new_model)
+    %{model | new_model: updated}
+  end
+
   defp copy_password(model) do
     password = Enum.at(model.data, model.current_row)
 
@@ -61,34 +66,33 @@ defmodule Genex.Commands.ShowCommandAdvanced do
     case msg do
       {:event, %{ch: ?k}} when model.new_model.show == false ->
         model
-        |> move_up_a_row()
+        |> move_up_a_row
         |> reset_show_password
 
       {:event, %{key: 65_517}} when model.new_model.show == false ->
         model
-        |> move_up_a_row()
+        |> move_up_a_row
         |> reset_show_password
 
       {:event, %{key: 65_516}} when model.new_model.show == false ->
         model
-        |> move_down_a_row()
+        |> move_down_a_row
         |> reset_show_password
 
       {:event, %{ch: ?j}} when model.new_model.show == false ->
         model
-        |> move_down_a_row()
+        |> move_down_a_row
         |> reset_show_password
 
       {:event, %{ch: ?c}} when model.new_model.show == false ->
-        model
-        |> copy_password()
+        copy_password(model)
 
       {:event, %{ch: ?n}} when model.new_model.show == false ->
         %{model | new_model: New.show(model.new_model)}
 
       {:event, %{key: 32}} when model.new_model.show == false ->
         # space bar
-        # toggle current row's password
+        # toggle current row's password when we are not showing the new password modal
         %{model | show_password_for_current_row: !model.show_password_for_current_row}
 
       {:event, %{key: 27}} ->
@@ -98,9 +102,8 @@ defmodule Genex.Commands.ShowCommandAdvanced do
 
       {:event, %{key: 127}} when model.new_model.show == true ->
         # backspace key
-        # delete whatever 
-        updated = New.delete_character(model.new_model)
-        %{model | new_model: updated}
+        # delete the previous charactor when we are showing the new password modal
+        delete_previous_charactor(model) 
 
       {:event, %{key: 13}} when model.new_model.current_field == :password ->
         # enter key

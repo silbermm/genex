@@ -4,22 +4,23 @@ defmodule Genex.Commands.Show.New do
   """
 
   import Ratatouille.View
-  import Ratatouille.Constants
 
   alias __MODULE__
 
-  defstruct show: false, current_field: :account, account: "", username: "", password: ""
+  @type t :: %New{
+          show: boolean(),
+          current_field: :account | :password | :username,
+          account: String.t(),
+          username: String.t(),
+          password: Diceware.Passphrase.t() | nil
+        }
+
+  defstruct show: false, current_field: :account, account: "", username: "", password: nil
 
   def render(new_model) do
     overlay do
       panel title: "Create a New Password - ESC to cancel" do
-        panel title: title(new_model) do
-          row do
-            column size: 9 do
-              label(content: current_field(new_model) <> "▌")
-            end
-          end
-        end
+        label(content: title(new_model) <> ": " <> current_field(new_model) <> "▌")
       end
     end
   end
@@ -49,11 +50,10 @@ defmodule Genex.Commands.Show.New do
     size = String.length(value)
     new_size = size - 1
 
-    less_one =
-      case value do
-        <<result::binary-size(new_size), _::binary>> -> result
-        _ -> value
-      end
+    case value do
+      <<result::binary-size(new_size), _::binary>> -> result
+      _ -> value
+    end
   end
 
   def update(%New{current_field: :account} = new_model, value) do
