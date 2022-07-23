@@ -8,6 +8,7 @@ defmodule Genex.Commands.Show.New do
   alias __MODULE__
 
   @type t :: %New{
+          error: nil | String.t(),
           show: boolean(),
           current_field: :account | :password | :username,
           account: String.t(),
@@ -15,7 +16,12 @@ defmodule Genex.Commands.Show.New do
           password: Diceware.Passphrase.t() | nil
         }
 
-  defstruct show: false, current_field: :account, account: "", username: "", password: nil
+  defstruct show: false,
+            current_field: :account,
+            account: "",
+            username: "",
+            password: nil,
+            error: nil
 
   def render(new_model) do
     overlay do
@@ -79,8 +85,11 @@ defmodule Genex.Commands.Show.New do
   def next(%New{current_field: :password} = new_model) do
     # save the password
     psswd = Genex.Passwords.Password.new(new_model.account, new_model.username)
-    _ = Genex.Passwords.save(psswd, new_model.password)
-    default()
+
+    case Genex.Passwords.save(psswd, new_model.password) do
+      :ok -> default()
+      {:error, reason} -> new_model
+    end
   end
 
   def save(new_model) do

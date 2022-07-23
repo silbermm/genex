@@ -18,7 +18,8 @@ defmodule Genex.Commands.ShowCommandAdvanced do
         %{
           data: data,
           current_row: -1,
-          show_password_for_current_row: false,
+          show_password_for_current_row: "",
+          show_password_error_for_current_row: "",
           copied: "",
           new_model: New.default()
         }
@@ -36,11 +37,18 @@ defmodule Genex.Commands.ShowCommandAdvanced do
 
   defp move_down_a_row(model), do: %{model | current_row: model.current_row + 1}
 
-  defp reset_show_password(model), do: %{model | show_password_for_current_row: false}
+  defp reset_show_password(model), do: %{model | show_password_for_current_row: ""}
 
   defp decrypt_current_row_password(model) do
     password = Enum.at(model.data, model.current_row)
-    Genex.Passwords.decrypt(password)
+
+    case Genex.Passwords.decrypt(password) do
+      {:ok, decrypted} ->
+        %{model | show_password_for_current_row: decrypted}
+
+      {:error, reason} ->
+        %{model | show_password_error_for_current_row: reason}
+    end
   end
 
   defp delete_previous_charactor(model) do
@@ -93,17 +101,23 @@ defmodule Genex.Commands.ShowCommandAdvanced do
       {:event, %{key: 32}} when model.new_model.show == false ->
         # space bar
         # toggle current row's password when we are not showing the new password modal
-        %{model | show_password_for_current_row: !model.show_password_for_current_row}
+        decrypt_current_row_password(model)
 
       {:event, %{key: 27}} ->
         # escape key
         # hide the current row's password and other overlays
-        %{model | show_password_for_current_row: false, copied: "", new_model: New.default()}
+        %{
+          model
+          | show_password_for_current_row: "",
+            show_password_error_for_current_row: "",
+            copied: "",
+            new_model: New.default()
+        }
 
       {:event, %{key: 127}} when model.new_model.show == true ->
         # backspace key
         # delete the previous charactor when we are showing the new password modal
-        delete_previous_charactor(model) 
+        delete_previous_charactor(model)
 
       {:event, %{key: 13}} when model.new_model.current_field == :password ->
         # enter key
@@ -134,6 +148,7 @@ defmodule Genex.Commands.ShowCommandAdvanced do
   @impl true
   def render(%{data: data, current_row: current_row} = model) do
     view bottom_bar: bottom_bar() do
+      # TODO: top panel to show help and other commands
       panel title: "GENEX" do
         table do
           table_row(background: color(:white), color: color(:black)) do
@@ -155,7 +170,7 @@ defmodule Genex.Commands.ShowCommandAdvanced do
               table_cell(content: "#{pass.account}")
               table_cell(content: "#{pass.username}")
               table_cell(content: "#{pass.passphrase}")
-              table_cell(content: "#{pass.timestamp}")
+              table_cell(content: "#{format_timestamp(pass.timestamp)}")
             end
           end
         end
@@ -165,14 +180,12 @@ defmodule Genex.Commands.ShowCommandAdvanced do
         New.render(model.new_model)
       end
 
-      if model.show_password_for_current_row do
-        case decrypt_current_row_password(model) do
-          {:ok, decrypted} ->
-            show_password_overlay(decrypted)
+      if model.show_password_for_current_row != "" do
+        show_password_overlay(model.show_password_for_current_row)
+      end
 
-          {:error, reason} ->
-            show_password_error(reason)
-        end
+      if model.show_password_error_for_current_row != "" do
+        show_password_error(model.show_password_error_for_current_row)
       end
 
       if model.copied != "" do
@@ -180,6 +193,14 @@ defmodule Genex.Commands.ShowCommandAdvanced do
       end
     end
   end
+
+  defp format_timestamp(%DateTime{day: d, month: m, year: y, hour: hh, minute: mm}) do
+    "#{prefix_with_zero(m)}/#{prefix_with_zero(d)}/#{y} #{prefix_with_zero(hh)}:#{prefix_with_zero(mm)}"
+  end
+
+  defp prefix_with_zero(<<number::binary-size(1), _::binary>>), do: "0#{number}"
+  defp prefix_with_zero(number) when number < 10, do: "0#{number}"
+  defp prefix_with_zero(number), do: number
 
   defp show_password_overlay(decrypted) do
     overlay do
@@ -215,7 +236,7 @@ defmodule Genex.Commands.ShowCommandAdvanced do
     bar do
       label(
         content:
-          "[j/k or ↑/↓ to move] [space to show password] [c to copy password] [q to quit] [? for more help]"
+          "[j/k or ↑/↓ to move] [space to show] [c to copy] [q to quit] [? for more help]"
       )
     end
   end
