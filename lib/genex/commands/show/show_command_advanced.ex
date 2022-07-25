@@ -8,24 +8,30 @@ defmodule Genex.Commands.ShowCommandAdvanced do
   import Ratatouille.View
   import Ratatouille.Constants
 
+  alias Ratatouille.Runtime.Command
   alias Genex.Commands.Show.New
+  alias Genex.Commands.Show.HelperPanel
 
   @impl true
-  def init(_context) do
+  def init(context) do
+    # read the config async
+    get_config = Command.new(fn -> Genex.AppConfig.read() end, :fetch_config)
+
     # get all passwords from the database
     case Genex.Passwords.all() do
       {:ok, data} ->
-        %{
-          data: data,
-          current_row: -1,
-          show_password_for_current_row: "",
-          show_password_error_for_current_row: "",
-          copied: "",
-          new_model: New.default()
-        }
+        {%{
+           data: data,
+           current_row: -1,
+           show_password_for_current_row: "",
+           show_password_error_for_current_row: "",
+           copied: "",
+           new_model: New.default(),
+           helper_panel: nil
+         }, get_config}
 
       {:error, _reason} ->
-        []
+        %{}
     end
   end
 
@@ -140,7 +146,11 @@ defmodule Genex.Commands.ShowCommandAdvanced do
         updated = New.update(model.new_model, <<ch::utf8>>)
         %{model | new_model: updated}
 
-      _ ->
+      {:fetch_config, {:ok, config}} ->
+        %{model | helper_panel: HelperPanel.default(config)}
+
+      other ->
+        IO.inspect model
         model
     end
   end
@@ -149,6 +159,10 @@ defmodule Genex.Commands.ShowCommandAdvanced do
   def render(%{data: data, current_row: current_row} = model) do
     view bottom_bar: bottom_bar() do
       # TODO: top panel to show help and other commands
+      if model.helper_panel != nil do
+        HelperPanel.render(model.helper_panel)
+      end
+
       panel title: "GENEX" do
         table do
           table_row(background: color(:white), color: color(:black)) do
@@ -205,7 +219,7 @@ defmodule Genex.Commands.ShowCommandAdvanced do
   defp show_password_overlay(decrypted) do
     overlay do
       panel title: "ESC to close / C to copy" do
-        label(content: Diceware.with_colors(decrypted) <> IO.ANSI.reset())
+        label(content: Diceware.with_colors(decrypted) <> IO.ANSI.default_color())
 
         row do
           column size: 9 do
@@ -235,8 +249,7 @@ defmodule Genex.Commands.ShowCommandAdvanced do
   defp bottom_bar() do
     bar do
       label(
-        content:
-          "[j/k or ↑/↓ to move] [space to show] [c to copy] [q to quit] [? for more help]"
+        content: "[j/k or ↑/↓ to move] [space to show] [c to copy] [q to quit] [? for more help]"
       )
     end
   end

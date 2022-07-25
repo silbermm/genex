@@ -31,14 +31,8 @@ defmodule Genex.Commands.ShowCommand do
 
   def process(_args) do
     # by default show a table of accounts/usernames
-    case Genex.AppConfig.read() do
-      {:ok, config} ->
-        # Ratatouille.Runtime.Supervisor.start_link(runtime: [app: Genex.Commands.ShowCommandAdvanced])
-        Ratatouille.run(Genex.Commands.ShowCommandAdvanced, config: config)
-
-      {:error, _reason} ->
-        display("Unable to read config file", error: true, color: :red)
-    end
+    # Ratatouille.Runtime.Supervisor.start_link(runtime: [app: Genex.Commands.ShowCommandAdvanced], config: config)
+    Ratatouille.run(Genex.Commands.ShowCommandAdvanced)
   end
 
   defp show_password([]), do: display("account not found", color: :yellow)
