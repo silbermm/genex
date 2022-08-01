@@ -27,6 +27,10 @@ defmodule Genex.Commands.Show.New do
     overlay do
       panel title: "Create a New Password - ESC to cancel" do
         label(content: title(new_model) <> ": " <> current_field(new_model) <> "▌")
+
+        if new_model.current_field == :password do
+          label(content: "[r to regenerate] [e to edit] [enter to accept]", attributes: [:bold])
+        end
       end
     end
   end
@@ -102,9 +106,6 @@ defmodule Genex.Commands.Show.New do
   end
 
   defp title(new_model) do
-    case new_model.current_field do
-      :password -> "PASSWORD - [r to regenerate]"
-      field -> String.capitalize(to_string(field))
-    end
+    String.capitalize(to_string(new_model.current_field))
   end
 end

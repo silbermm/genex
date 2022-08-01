@@ -104,6 +104,9 @@ defmodule Genex.Commands.ShowCommandAdvanced do
       {:event, %{ch: ?n}} when model.new_model.show == false ->
         %{model | new_model: New.show(model.new_model)}
 
+      {:event, %{ch: ?+}} when model.new_model.show == false ->
+        %{model | new_model: New.show(model.new_model)}
+
       {:event, %{key: 32}} when model.new_model.show == false ->
         # space bar
         # toggle current row's password when we are not showing the new password modal
@@ -142,7 +145,12 @@ defmodule Genex.Commands.ShowCommandAdvanced do
         updated = New.update(model.new_model, nil)
         %{model | new_model: updated}
 
-      {:event, %{ch: ch}} when ch > 0 ->
+      {:event, %{ch: ?e}} when model.new_model.current_field == :password ->
+        # @TODO when e is pressed on the password field, allow the user to edit the passphrase
+        updated = New.update(model.new_model, nil)
+        %{model | new_model: updated}
+
+      {:event, %{ch: ch}} when ch > 0 and model.new_model.current_field != :password ->
         updated = New.update(model.new_model, <<ch::utf8>>)
         %{model | new_model: updated}
 
@@ -150,7 +158,6 @@ defmodule Genex.Commands.ShowCommandAdvanced do
         %{model | helper_panel: HelperPanel.default(config)}
 
       other ->
-        IO.inspect model
         model
     end
   end
@@ -163,7 +170,7 @@ defmodule Genex.Commands.ShowCommandAdvanced do
         HelperPanel.render(model.helper_panel)
       end
 
-      panel title: "GENEX" do
+      panel title: "GENEX", height: :fill do
         table do
           table_row(background: color(:white), color: color(:black)) do
             table_cell(content: "ACCOUNT")
@@ -219,7 +226,7 @@ defmodule Genex.Commands.ShowCommandAdvanced do
   defp show_password_overlay(decrypted) do
     overlay do
       panel title: "ESC to close / C to copy" do
-        label(content: Diceware.with_colors(decrypted) <> IO.ANSI.default_color())
+        label(content: Diceware.with_colors(decrypted) <> IO.ANSI.reset())
 
         row do
           column size: 9 do
