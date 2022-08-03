@@ -12,27 +12,27 @@ defmodule Genex.Commands.ShowCommandAdvanced do
   alias Genex.Commands.Show.New
   alias Genex.Commands.Show.HelperPanel
 
+  @colors [color(:red), color(:blue), color(:green), color(:yellow)]
+
   @impl true
   def init(context) do
     # read the config async
     get_config = Command.new(fn -> Genex.AppConfig.read() end, :fetch_config)
 
-    # get all passwords from the database
-    case Genex.Passwords.all() do
-      {:ok, data} ->
-        {%{
-           data: data,
-           current_row: -1,
-           show_password_for_current_row: "",
-           show_password_error_for_current_row: "",
-           copied: "",
-           new_model: New.default(),
-           helper_panel: nil
-         }, get_config}
+    # get the passwords async
+    get_passwords = Command.new(fn -> Genex.Passwords.all() end, :fetch_passwords)
 
-      {:error, _reason} ->
-        %{}
-    end
+    {%{
+       data: [],
+       current_row: -1,
+       show_password_for_current_row: "",
+       delete_password_for_current_row: false,
+       show_password_error_for_current_row: "",
+       copied: "",
+       new_model: New.default(),
+       helper_panel: nil,
+       config: nil
+     }, Command.batch([get_config, get_passwords])}
   end
 
   defp move_up_a_row(%{current_row: 0} = model), do: model
@@ -75,6 +75,8 @@ defmodule Genex.Commands.ShowCommandAdvanced do
     end
   end
 
+  defguardp has_passwords(model) when length(model.data) > 0
+
   @impl true
   def update(model, msg) do
     case msg do
@@ -98,27 +100,50 @@ defmodule Genex.Commands.ShowCommandAdvanced do
         |> move_down_a_row
         |> reset_show_password
 
-      {:event, %{ch: ?c}} when model.new_model.show == false ->
+      # copy a password
+      {:event, %{ch: ?c}} when model.new_model.show == false and has_passwords(model) ->
         copy_password(model)
 
+      # create a password
       {:event, %{ch: ?n}} when model.new_model.show == false ->
         %{model | new_model: New.show(model.new_model)}
 
+      # create a password
       {:event, %{ch: ?+}} when model.new_model.show == false ->
         %{model | new_model: New.show(model.new_model)}
 
-      {:event, %{key: 32}} when model.new_model.show == false ->
+      # delete a password
+      {:event, %{ch: ?d}} when model.new_model.show == false and has_passwords(model) ->
+        %{model | delete_password_for_current_row: true}
+
+      # yes, delete password
+      {:event, %{key: 13}}
+      when model.new_model.show == false and model.delete_password_for_current_row == true ->
+        # enter key
+        delete_password =
+          Command.new(
+            fn ->
+              password = Enum.at(model.data, model.current_row)
+              Genex.Passwords.delete(password)
+            end,
+            :delete_password
+          )
+
+        {%{model | delete_password_for_current_row: false}, delete_password}
+
+      # toggle current row's password when we are not showing the new password modal
+      {:event, %{key: 32}} when model.new_model.show == false and has_passwords(model) ->
         # space bar
-        # toggle current row's password when we are not showing the new password modal
         decrypt_current_row_password(model)
 
+      # hide the current row's password and other overlays
       {:event, %{key: 27}} ->
         # escape key
-        # hide the current row's password and other overlays
         %{
           model
           | show_password_for_current_row: "",
             show_password_error_for_current_row: "",
+            delete_password_for_current_row: false,
             copied: "",
             new_model: New.default()
         }
@@ -137,12 +162,12 @@ defmodule Genex.Commands.ShowCommandAdvanced do
       {:event, %{key: 13}} when model.new_model.show == true ->
         # enter key
         # save the field
-        updated = New.next(model.new_model)
+        updated = New.next(model.new_model, password_length: model.config.password_length)
         %{model | new_model: updated}
 
       {:event, %{ch: ?r}} when model.new_model.current_field == :password ->
         # when r is pressed on the password field, generate a password
-        updated = New.update(model.new_model, nil)
+        updated = New.update(model.new_model, nil, password_length: model.config.password_length)
         %{model | new_model: updated}
 
       {:event, %{ch: ?e}} when model.new_model.current_field == :password ->
@@ -155,7 +180,14 @@ defmodule Genex.Commands.ShowCommandAdvanced do
         %{model | new_model: updated}
 
       {:fetch_config, {:ok, config}} ->
-        %{model | helper_panel: HelperPanel.default(config)}
+        %{model | config: config, helper_panel: HelperPanel.default(config)}
+
+      {:fetch_passwords, {:ok, data}} ->
+        %{model | data: data}
+
+      {:delete_password, {:ok, password_id}} ->
+        data = Enum.reject(model.data, fn d -> d.id == password_id end)
+        %{model | data: data}
 
       other ->
         model
@@ -201,6 +233,22 @@ defmodule Genex.Commands.ShowCommandAdvanced do
         New.render(model.new_model)
       end
 
+      if model.delete_password_for_current_row do
+        current_password = password = Enum.at(model.data, model.current_row)
+
+        overlay do
+          panel title: "ESC to cancel", height: :fill do
+            label do
+              text(content: "This will delete the password for #{current_password.account}.")
+            end
+
+            label do
+              text(content: "Are you sure? [Enter to delete / ESC to cancel] ", color: color(:red))
+            end
+          end
+        end
+      end
+
       if model.show_password_for_current_row != "" do
         show_password_overlay(model.show_password_for_current_row)
       end
@@ -225,13 +273,9 @@ defmodule Genex.Commands.ShowCommandAdvanced do
 
   defp show_password_overlay(decrypted) do
     overlay do
-      panel title: "ESC to close / C to copy" do
-        label(content: Diceware.with_colors(decrypted) <> IO.ANSI.reset())
-
-        row do
-          column size: 9 do
-            label(content: "more", color: color(:red))
-          end
+      panel title: "ESC to close / C to copy", height: :fill do
+        label do
+          Genex.Commands.Show.ColorizedPassphrase.render(decrypted)
         end
       end
     end
@@ -239,7 +283,7 @@ defmodule Genex.Commands.ShowCommandAdvanced do
 
   defp show_copied_success_overlay(account) do
     overlay do
-      panel title: "ESC to close" do
+      panel title: "ESC to close", height: :fill do
         label(content: "Successfully copied password for " <> account)
       end
     end
@@ -259,5 +303,21 @@ defmodule Genex.Commands.ShowCommandAdvanced do
         content: "[j/k or ↑/↓ to move] [space to show] [c to copy] [q to quit] [? for more help]"
       )
     end
+  end
+
+  defp colorized_password(pass) do
+    number_of_color_lists = div(pass.count, Enum.count(@colors))
+    extra_colors = rem(pass.count, Enum.count(@colors))
+
+    colors =
+      Enum.reduce(0..number_of_color_lists, [], fn _x, acc ->
+        acc ++ @colors
+      end)
+
+    color_list = colors ++ Enum.take(@colors, extra_colors)
+
+    Enum.with_index(pass.words, fn element, index ->
+      text(content: element, color: Enum.at(color_list, index))
+    end)
   end
 end

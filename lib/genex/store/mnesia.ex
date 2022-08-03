@@ -74,6 +74,24 @@ defmodule Genex.Store.Mnesia do
   end
 
   @impl true
+  def delete_password(password) do
+    Logger.debug("Deleting password")
+    Logger.info("delete password #{inspect(password)}")
+
+    fun = fn ->
+      :mnesia.delete({Passwords, password.id})
+    end
+
+    case :mnesia.transaction(fun) do
+      {:atomic, _res} ->
+        :ok
+
+      {:aborted, err} ->
+        {:error, err}
+    end
+  end
+
+  @impl true
   def save_password(password) do
     Logger.debug("Saving password")
 
@@ -88,8 +106,7 @@ defmodule Genex.Store.Mnesia do
     end
 
     case :mnesia.transaction(fun) do
-      {:atomic, res} ->
-        Logger.debug(inspect(res))
+      {:atomic, _res} ->
         :ok
 
       {:aborted, err} ->

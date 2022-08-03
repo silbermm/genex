@@ -25,7 +25,7 @@ defmodule Genex.Commands.Show.New do
 
   def render(new_model) do
     overlay do
-      panel title: "Create a New Password - ESC to cancel" do
+      panel title: "Create a New Password - ESC to cancel", height: :fill do
         label(content: title(new_model) <> ": " <> current_field(new_model) <> "▌")
 
         if new_model.current_field == :password do
@@ -66,27 +66,32 @@ defmodule Genex.Commands.Show.New do
     end
   end
 
-  def update(%New{current_field: :account} = new_model, value) do
+  def update(new_model, value, opts \\ [])
+
+  def update(%New{current_field: :account} = new_model, value, _opts) do
     %{new_model | account: new_model.account <> value}
   end
 
-  def update(%New{current_field: :username} = new_model, value) do
+  def update(%New{current_field: :username} = new_model, value, _opts) do
     %{new_model | username: new_model.username <> value}
   end
 
-  def update(%New{current_field: :password} = new_model, _value) do
-    value = Diceware.generate()
+  def update(%New{current_field: :password} = new_model, _value, opts) do
+    pass_length = Keyword.get(opts, :password_length, 8)
+    value = Diceware.generate(count: pass_length)
     %{new_model | password: value}
   end
 
-  def next(%New{current_field: :account} = new_model), do: %{new_model | current_field: :username}
+  def next(model, opts \\ [])
+  def next(%New{current_field: :account} = new_model, _), do: %{new_model | current_field: :username}
 
-  def next(%New{current_field: :username} = new_model) do
-    phrase = Diceware.generate()
+  def next(%New{current_field: :username} = new_model, opts) do
+    pass_length = Keyword.get(opts, :password_length, 8)
+    phrase = Diceware.generate(count: pass_length)
     %{new_model | current_field: :password, password: phrase}
   end
 
-  def next(%New{current_field: :password} = new_model) do
+  def next(%New{current_field: :password} = new_model, _) do
     # save the password
     psswd = Genex.Passwords.Password.new(new_model.account, new_model.username)
 

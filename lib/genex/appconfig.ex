@@ -8,10 +8,11 @@ defmodule Genex.AppConfig do
   @config_filename "config.toml"
 
   @type t :: %__MODULE__{
-          gpg_email: String.t() | nil
+          gpg_email: String.t() | nil,
+          password_length: number()
         }
 
-  defstruct [:gpg_email]
+  defstruct [:gpg_email, :password_length]
 
   defp homedir(), do: Application.fetch_env!(:genex, :homedir)
 
@@ -61,10 +62,21 @@ defmodule Genex.AppConfig do
   end
 
   def update(config, key, value) do
-    Map.put(config, key, value) 
+    Map.put(config, key, value)
   end
 
   defp decode(toml) do
-    {:ok, %AppConfig{gpg_email: get_in(toml, ["gpg", "email"])}}
+    {:ok,
+     %AppConfig{
+       gpg_email: get_in(toml, ["gpg", "email"]),
+       password_length: get_password_length(toml)
+     }}
+  end
+
+  defp get_password_length(toml) do
+    case get_in(toml, ["defaults", "password_length"]) do
+      nil -> 8
+      num -> num
+    end
   end
 end

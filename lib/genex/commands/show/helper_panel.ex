@@ -25,9 +25,21 @@ defmodule Genex.Commands.Show.HelperPanel do
             attributes: [:bold]
           )
         end
+
+        label(content: "")
+
+        label(content: "DEFAULT PASSWORD LENGTH", attributes: [:bold, :underline])
+
+        label do
+          text(
+            content: "#{panel.config.password_length}",
+            color: :blue,
+            attributes: [:bold]
+          )
+        end
       end
 
-      column size: 8 do
+      column size: 4 do
         label(content: "COMMANDS", attributes: [:bold, :underline])
 
         table do
@@ -38,6 +50,9 @@ defmodule Genex.Commands.Show.HelperPanel do
             end
           end
         end
+      end
+
+      column size: 4 do
       end
 
       column size: 2 do
@@ -58,9 +73,10 @@ defmodule Genex.Commands.Show.HelperPanel do
   def default(config) do
     default_help = [
       {"move", "j/k"},
-      {"show password", "space"},
-      {"copy password", "c"},
-      {"create password", "n/+"},
+      {"reveal", "space"},
+      {"copy", "c"},
+      {"new", "n/+"},
+      {"delete", "d/-"},
       {"quit", "q"}
     ]
 
