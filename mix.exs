@@ -46,8 +46,8 @@ defmodule Genex.MixProject do
       {:ratatouille, "~> 0.5"},
       {:toml, "~> 0.6.2"},
       {:jason, "~> 1.2"},
-      #{:gpgmex, github: "silbermm/gpgmex"},
-      {:gpgmex, path: "../gpgmex"},
+      {:gpgmex, "~> 0.0.1"},
+      #{:gpgmex, path: "../gpgmex"},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
     ]
