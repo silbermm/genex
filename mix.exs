@@ -4,7 +4,7 @@ defmodule Genex.MixProject do
   def project do
     [
       app: :genex,
-      version: "0.0.1",
+      version: "0.0.3-alpha",
       releases: releases(),
       elixir: "~> 1.13",
       dialyzer: [
