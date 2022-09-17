@@ -1,4 +1,4 @@
-defmodule Genex.Commands.Show.ColorizedPassphrase do
+defmodule Genex.Commands.UI.ColorizedPassphrase do
   @moduledoc """
   Render the passphrase with colors
   """

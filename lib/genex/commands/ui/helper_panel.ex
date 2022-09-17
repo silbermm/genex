@@ -1,10 +1,9 @@
-defmodule Genex.Commands.Show.HelperPanel do
+defmodule Genex.Commands.UI.HelperPanel do
   @moduledoc """
   The top panel showing the context and contextual help
   """
 
   import Ratatouille.View
-  import Ratatouille.Constants
 
   alias __MODULE__
 
@@ -28,7 +27,7 @@ defmodule Genex.Commands.Show.HelperPanel do
 
         label(content: "")
 
-        label(content: "DEFAULT PASSWORD LENGTH", attributes: [:bold, :underline])
+        label(content: "PASSWORD LENGTH", attributes: [:bold, :underline])
 
         label do
           text(

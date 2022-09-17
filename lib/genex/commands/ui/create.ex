@@ -1,13 +1,11 @@
-defmodule Genex.Commands.Show.New do
+defmodule Genex.Commands.UI.Create do
   @moduledoc """
   Rendering for creating a new password in the TUI
   """
 
   import Ratatouille.View
 
-  alias __MODULE__
-
-  @type t :: %New{
+  @type t :: %__MODULE__{
           error: nil | String.t(),
           show: boolean(),
           current_field: :account | :password | :username,
@@ -35,12 +33,12 @@ defmodule Genex.Commands.Show.New do
     end
   end
 
-  def default(), do: %New{}
+  def default(), do: %__MODULE__{}
 
-  def current_field(%New{current_field: :account, account: account}), do: account
-  def current_field(%New{current_field: :username, username: username}), do: username
+  def current_field(%__MODULE__{current_field: :account, account: account}), do: account
+  def current_field(%__MODULE__{current_field: :username, username: username}), do: username
 
-  def current_field(%New{current_field: :password, password: password}) do
+  def current_field(%__MODULE__{current_field: :password, password: password}) do
     password.phrase
   end
 
@@ -48,11 +46,11 @@ defmodule Genex.Commands.Show.New do
     %{new_model | show: true}
   end
 
-  def delete_character(%New{current_field: :account, account: account} = new_model) do
+  def delete_character(%__MODULE__{current_field: :account, account: account} = new_model) do
     %{new_model | account: _delete(account)}
   end
 
-  def delete_character(%New{current_field: :username, username: username} = new_model) do
+  def delete_character(%__MODULE__{current_field: :username, username: username} = new_model) do
     %{new_model | username: _delete(username)}
   end
 
@@ -68,36 +66,38 @@ defmodule Genex.Commands.Show.New do
 
   def update(new_model, value, opts \\ [])
 
-  def update(%New{current_field: :account} = new_model, value, _opts) do
+  def update(%__MODULE__{current_field: :account} = new_model, value, _opts) do
     %{new_model | account: new_model.account <> value}
   end
 
-  def update(%New{current_field: :username} = new_model, value, _opts) do
+  def update(%__MODULE__{current_field: :username} = new_model, value, _opts) do
     %{new_model | username: new_model.username <> value}
   end
 
-  def update(%New{current_field: :password} = new_model, _value, opts) do
+  def update(%__MODULE__{current_field: :password} = new_model, _value, opts) do
     pass_length = Keyword.get(opts, :password_length, 8)
     value = Diceware.generate(count: pass_length)
     %{new_model | password: value}
   end
 
   def next(model, opts \\ [])
-  def next(%New{current_field: :account} = new_model, _), do: %{new_model | current_field: :username}
 
-  def next(%New{current_field: :username} = new_model, opts) do
+  def next(%__MODULE__{current_field: :account} = new_model, _),
+    do: %{new_model | current_field: :username}
+
+  def next(%__MODULE__{current_field: :username} = new_model, opts) do
     pass_length = Keyword.get(opts, :password_length, 8)
     phrase = Diceware.generate(count: pass_length)
     %{new_model | current_field: :password, password: phrase}
   end
 
-  def next(%New{current_field: :password} = new_model, _) do
+  def next(%__MODULE__{current_field: :password} = new_model, _) do
     # save the password
     psswd = Genex.Passwords.Password.new(new_model.account, new_model.username)
 
     case Genex.Passwords.save(psswd, new_model.password) do
       :ok -> default()
-      {:error, reason} -> new_model
+      {:error, _reason} -> new_model
     end
   end
 

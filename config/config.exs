@@ -9,7 +9,7 @@ config :genex,
   store: Genex.Store.Mnesia
 
 config :logger, :console,
-  level: :warn,
+  level: :info,
   format: "$time $metadata[$level] $levelpad$message\n",
   metadata: [:module]
 
@@ -18,8 +18,8 @@ config :clipboard,
     copy: {"xclip", ["-sel", "clip"]}
   ]
 
-#config :gpgmex,
-# include_dir: ["/usr/include/x86_64-linux-gnu", "/usr/include"],
-# libs_dir: ["/usr/lib/x86_64-linux-gnu/libgpgme.so"]
+config :gpgmex,
+  include_dir: ["/usr/include/x86_64-linux-gnu", "/usr/include"],
+  libs_dir: ["/usr/lib/x86_64-linux-gnu/libgpgme.so"]
 
 import_config "#{Mix.env()}.exs"

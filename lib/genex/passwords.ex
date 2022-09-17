@@ -11,6 +11,13 @@ defmodule Genex.Passwords do
   @store Application.compile_env!(:genex, :store)
 
   @doc """
+  """
+  @spec generate(integer()) :: Diceware.Passphrase.t()
+  def generate(count) do
+    Diceware.generate(count: count)
+  end
+
+  @doc """
   Deletes a password from the store
   """
   @spec delete(Password.t()) :: {:ok, number()} | {:error, binary()}

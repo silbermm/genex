@@ -47,7 +47,7 @@ defmodule Genex.MixProject do
       {:toml, "~> 0.6.2"},
       {:jason, "~> 1.2"},
       {:gpgmex, "~> 0.0.1"},
-      #{:gpgmex, path: "../gpgmex"},
+      # {:gpgmex, path: "../gpgmex"},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
     ]
