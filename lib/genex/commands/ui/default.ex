@@ -158,7 +158,7 @@ defmodule Genex.Commands.UI.Default do
       {:event, %{key: 13}} when model.new_model.current_field == :password ->
         # enter key
         # save the password
-        {updated, psswd} = Create.save(model.new_model)
+        {updated, psswd} = Create.save(model.new_model, model.config)
         %{model | new_model: updated, data: model.data ++ [psswd]}
 
       {:event, %{key: 13}} when model.new_model.show == true ->

@@ -101,12 +101,12 @@ defmodule Genex.Commands.UI.Create do
     end
   end
 
-  def save(new_model) do
+  def save(new_model, app_config) do
     psswd = Genex.Passwords.Password.new(new_model.account, new_model.username)
 
-    case Genex.Passwords.save(psswd, new_model.password) do
+    case Genex.Passwords.save(psswd, new_model.password, app_config) do
       {:ok, saved} -> {default(), saved}
-      {:error, _} -> save(new_model)
+      {:error, _} -> save(new_model, app_config)
     end
   end
 
