@@ -19,7 +19,7 @@ defmodule Genex.Commands.UI.HelperPanel do
 
         label do
           text(
-            content: panel.config.gpg_email,
+            content: Map.get(panel.config.gpg, "email"),
             color: :blue,
             attributes: [:bold]
           )

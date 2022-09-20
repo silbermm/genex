@@ -4,7 +4,7 @@ defmodule Genex.MixProject do
   def project do
     [
       app: :genex,
-      version: "0.0.3-alpha",
+      version: "0.0.4-alpha",
       releases: releases(),
       elixir: "~> 1.13",
       dialyzer: [
@@ -44,7 +44,7 @@ defmodule Genex.MixProject do
       # {:prompt, "~> 0.8"},
       {:clipboard, "~> 0.2.1"},
       {:ratatouille, "~> 0.5"},
-      {:toml, "~> 0.6.2"},
+      {:vapor, "~> 0.10.0"},
       {:jason, "~> 1.2"},
       {:gpgmex, "~> 0.0.1"},
       # {:gpgmex, path: "../gpgmex"},

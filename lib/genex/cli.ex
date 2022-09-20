@@ -22,7 +22,7 @@ defmodule Genex.CLI do
   alias Genex.Commands.DefaultCommand
 
   @halter_module Application.compile_env!(:genex, :halter)
-
+ 
   command :config, ConfigCommand do
     arg(:help, :boolean)
     arg(:set, :string)

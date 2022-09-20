@@ -169,7 +169,9 @@ defmodule Genex.Commands.UI.Default do
 
       {:event, %{ch: ?r}} when model.new_model.current_field == :password ->
         # when r is pressed on the password field, generate a password
-        updated = Create.update(model.new_model, nil, password_length: model.config.password_length)
+        updated =
+          Create.update(model.new_model, nil, password_length: model.config.password_length)
+
         %{model | new_model: updated}
 
       {:event, %{ch: ?e}} when model.new_model.current_field == :password ->
@@ -192,7 +194,7 @@ defmodule Genex.Commands.UI.Default do
         %{model | data: data}
 
       other ->
-        Logger.debug("unhandled keystroke: #{inspect other}")
+        Logger.debug("unhandled keystroke: #{inspect(other)}")
         model
     end
   end

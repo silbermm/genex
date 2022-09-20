@@ -3,39 +3,37 @@ defmodule Genex.AppConfig do
   Read from and write to the users configuration file
   """
 
-  alias __MODULE__
+
+  alias Vapor.Provider.File
 
   @config_filename "config.toml"
 
-  @type t :: %__MODULE__{
-          gpg_email: String.t() | nil,
-          password_length: number()
-        }
+  @config_bindings [{:gpg, "gpg"}, {:password_length, "password_length", default: 8}]
 
-  defstruct [:gpg_email, :password_length]
+  @type t :: %__MODULE__{
+    gpg: map(),
+    password_length: number()
+  }
+
+  defstruct [:gpg, :password_length]
 
   defp homedir(), do: Application.fetch_env!(:genex, :homedir)
-
   defp config_file_path(), do: Path.join(homedir(), @config_filename)
 
   @doc "Read from the config file"
-  @spec read() :: {:ok, t()} | {:error, any()}
+  @spec read() :: {:ok, map()} | {:error, any()}
   def read() do
-    config_file_path()
-    |> Toml.decode_file()
-    |> case do
-      {:ok, toml} ->
-        decode(toml)
+    providers = [
+      %File{path: "/home/silbermm/.genex/config.toml", bindings: @config_bindings}
+    ]
 
-      e ->
-        e
-    end
+    Vapor.load(providers)
   end
 
   @doc """
   Write the config to disk
   """
-  @spec write(t()) :: :ok | {:error, term()}
+  @spec write(map()) :: :ok | {:error, term()}
   def write(config) do
     # build a toml representation of the config
     toml = ~s"""
@@ -43,7 +41,7 @@ defmodule Genex.AppConfig do
       email = "#{config.gpg_email}"
     """
 
-    File.write(config_file_path(), toml)
+    Elixir.File.write(config_file_path(), toml)
   end
 
   @doc """
@@ -63,20 +61,5 @@ defmodule Genex.AppConfig do
 
   def update(config, key, value) do
     Map.put(config, key, value)
-  end
-
-  defp decode(toml) do
-    {:ok,
-     %AppConfig{
-       gpg_email: get_in(toml, ["gpg", "email"]),
-       password_length: get_password_length(toml)
-     }}
-  end
-
-  defp get_password_length(toml) do
-    case get_in(toml, ["defaults", "password_length"]) do
-      nil -> 8
-      num -> num
-    end
   end
 end

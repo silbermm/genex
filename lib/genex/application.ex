@@ -6,6 +6,7 @@ defmodule Genex.Application do
 
   use Application
 
+
   @store Application.compile_env!(:genex, :store)
 
   def start(_type, _args) do

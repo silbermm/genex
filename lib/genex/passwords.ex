@@ -35,7 +35,7 @@ defmodule Genex.Passwords do
   def save(%Password{} = password, %Diceware.Passphrase{} = passphrase) do
     # get config
     case Genex.AppConfig.read() do
-      {:ok, %AppConfig{gpg_email: gpg_email}} when gpg_email != "" ->
+      {:ok, %{gpg: %{"email" => gpg_email}}} when gpg_email != "" ->
         Logger.debug("Encrypting password for #{gpg_email}")
 
         # encode the passphrase
