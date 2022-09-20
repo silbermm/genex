@@ -76,7 +76,6 @@ defmodule Genex.Store.Mnesia do
   @impl true
   def delete_password(password) do
     Logger.debug("Deleting password")
-    Logger.info("delete password #{inspect(password)}")
 
     fun = fn ->
       :mnesia.delete({Passwords, password.id})

@@ -191,7 +191,7 @@ defmodule Genex.Commands.UI.Default do
 
       {:delete_password, {:ok, password_id}} ->
         data = Enum.reject(model.data, fn d -> d.id == password_id end)
-        %{model | data: data}
+        %{model | data: data, current_row: -1}
 
       other ->
         Logger.debug("unhandled keystroke: #{inspect(other)}")
