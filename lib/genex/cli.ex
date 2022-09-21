@@ -16,16 +16,15 @@ defmodule Genex.CLI do
   """
   use Prompt.Router, otp_app: :genex
 
-  require Logger
-
   alias Genex.Commands.ConfigCommand
   alias Genex.Commands.DefaultCommand
 
   @halter_module Application.compile_env!(:genex, :halter)
- 
+
   command :config, ConfigCommand do
     arg(:help, :boolean)
     arg(:set, :string)
+    arg(:get, :string)
   end
 
   command "", DefaultCommand do
