@@ -37,4 +37,3 @@ genex certs
 ## Sharing passwords
 
 TODO
-

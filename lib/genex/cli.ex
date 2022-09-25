@@ -9,8 +9,6 @@ defmodule Genex.CLI do
 
     OPTIONS
     -------
-      --length, -l   how many words to use in the passphrase
-                     defaults to value in the config file or 6
       --version, -v  prints the version of genex
       --help, -h     prints help
   """

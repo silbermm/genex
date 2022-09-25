@@ -49,7 +49,8 @@ defmodule Genex.MixProject do
       {:gpgmex, "~> 0.0.1"},
       # {:gpgmex, path: "../gpgmex"},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:logger_file_backend, "~> 0.0.13"}
     ]
   end
 end
