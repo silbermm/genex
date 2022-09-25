@@ -64,7 +64,7 @@ defmodule Genex.Passwords do
   @spec save(Password.t(), Diceware.Passphrase.t()) :: :ok | {:error, binary()}
   def save(%Password{} = password, %Diceware.Passphrase{} = passphrase) do
     # get config
-    case Genex.AppConfig.read() do
+    case AppConfig.read() do
       {:ok, %{gpg: %{"email" => gpg_email}} = config} when gpg_email != "" ->
         save(password, passphrase, config)
 

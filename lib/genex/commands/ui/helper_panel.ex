@@ -31,7 +31,7 @@ defmodule Genex.Commands.UI.HelperPanel do
 
         label do
           text(
-            content: "#{panel.config.password_length}",
+            content: "#{Map.get(panel.config.password, "length", 8)}",
             color: :blue,
             attributes: [:bold]
           )

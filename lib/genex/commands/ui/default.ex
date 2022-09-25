@@ -164,13 +164,19 @@ defmodule Genex.Commands.UI.Default do
       {:event, %{key: 13}} when model.new_model.show == true ->
         # enter key
         # save the field
-        updated = Create.next(model.new_model, password_length: model.config.password_length)
+        updated =
+          Create.next(model.new_model,
+            password_length: Map.get(model.config.password, "length", 8)
+          )
+
         %{model | new_model: updated}
 
       {:event, %{ch: ?r}} when model.new_model.current_field == :password ->
         # when r is pressed on the password field, generate a password
         updated =
-          Create.update(model.new_model, nil, password_length: model.config.password_length)
+          Create.update(model.new_model, nil,
+            password_length: Map.get(model.config.password, "length", 8)
+          )
 
         %{model | new_model: updated}
 
