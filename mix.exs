@@ -47,6 +47,7 @@ defmodule Genex.MixProject do
       {:vapor, "~> 0.10.0"},
       {:jason, "~> 1.2"},
       {:gpgmex, "~> 0.0.1"},
+      {:req,  "~> 0.3.1"},
       # {:gpgmex, path: "../gpgmex"},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},

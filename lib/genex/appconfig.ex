@@ -9,7 +9,8 @@ defmodule Genex.AppConfig do
 
   @config_bindings [
     {:gpg, "gpg", required: true},
-    {:password, "password", default: 8}
+    {:password, "password", default: 8},
+    {:remote, "remote"}
   ]
 
   defp homedir(), do: Application.fetch_env!(:genex, :homedir)

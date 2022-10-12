@@ -8,6 +8,6 @@ config :logger,
 
 config :logger, :debug_log,
   path: "debug.log",
-  level: :ddebug,
-  format: "$time $metadata[$level] $levelpad$message\n",
+  level: :debug,
+  format: "$time $metadata[$level] $message\n",
   metadata: [:module]
