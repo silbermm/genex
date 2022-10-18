@@ -10,7 +10,8 @@ defmodule Genex.Store.Mnesia do
   @tables [
     {TableIds, [:table_name, :last_id], []},
     {Passwords, [:id, :account, :username, :encrytped_password, :created_at, :updated_at],
-     [:account, :username]}
+     [:account, :username]},
+    {ApiToken, [:token, :created_at, :updated_at], []}
   ]
 
   @counters [Passwords]
@@ -74,11 +75,44 @@ defmodule Genex.Store.Mnesia do
   end
 
   @impl true
+  def api_token() do
+    fun = fn -> :mnesia.match_object({ApiToken, :_, :_, :_}) end
+
+    case :mnesia.transaction(fun) do
+      {:atomic, []} ->
+        {:error, :noexist}
+
+      {:atomic, [{_, token, _, _}]} ->
+        {:ok, token}
+
+      {:aborted, err} ->
+        {:error, err}
+    end
+  end
+
+  @impl true
   def delete_password(password) do
     Logger.debug("Deleting password")
 
     fun = fn ->
       :mnesia.delete({Passwords, password.id})
+    end
+
+    case :mnesia.transaction(fun) do
+      {:atomic, _res} ->
+        :ok
+
+      {:aborted, err} ->
+        {:error, err}
+    end
+  end
+
+  @impl true
+  def save_api_token(token) do
+    Logger.debug("Saving API Token")
+
+    fun = fn ->
+      :mnesia.write({ApiToken, token, DateTime.utc_now(), DateTime.utc_now()})
     end
 
     case :mnesia.transaction(fun) do

@@ -25,4 +25,5 @@ defmodule Genex.AppConfig do
 
     Vapor.load(providers)
   end
+
 end

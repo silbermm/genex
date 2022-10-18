@@ -101,4 +101,33 @@ defmodule Genex.Passwords do
         e
     end
   end
+
+  @doc """
+  Uses the configured api token and host to pull lastest passwords
+  and merge them into passwords already on the system. 
+
+  Newest password wins
+  """
+  @spec remote_pull_merge(map()) ::
+          {:ok, [Password.t()]} | {:error, :noexist} | {:error, binary()}
+  def remote_pull_merge(config) do
+    with {:ok, token} <- @store.api_token(),
+         url <- get_in(config, [:remote, "url"]),
+         {:ok, _passwords} <- remote_pull(url, token) do
+      # TODO: merge passwords
+      all()
+    end
+  end
+
+  defp remote_pull(nil, _), do: {:error, :invalid_url}
+
+  defp remote_pull(url, token) do
+    case Req.get("#{url}/api/passwords", auth: {:bearer, token}) do
+      {:ok, res} ->
+        {:ok, res.body["passwords"]}
+
+      err ->
+        err
+    end
+  end
 end

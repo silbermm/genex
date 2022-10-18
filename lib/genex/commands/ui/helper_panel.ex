@@ -76,6 +76,7 @@ defmodule Genex.Commands.UI.HelperPanel do
       {"copy", "c"},
       {"new", "n/+"},
       {"delete", "d/-"},
+      {"remote sync", "s"},
       {"quit", "q"}
     ]
 

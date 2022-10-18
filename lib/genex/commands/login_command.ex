@@ -13,6 +13,8 @@ defmodule Genex.Commands.LoginCommand do
   use Prompt.Command
   alias Genex.AppConfig
 
+  @store Application.compile_env!(:genex, :store)
+
   @impl true
   def process(%{help: true}), do: help()
 
@@ -34,9 +36,15 @@ defmodule Genex.Commands.LoginCommand do
     remote
     |> get_challenge(email)
     |> decrypt_challenge()
-    |> IO.inspect 
     |> submit_challenge_response(remote, email)
-    |> IO.inspect 
+    |> case do
+      token when not is_nil(token) ->
+        _ = @store.save_api_token(token)
+        display("Successfully logged in", color: :green)
+
+      _ ->
+        display("Unable to login", color: :red)
+    end
   end
 
   defp get_challenge(remote, email) do
@@ -65,7 +73,7 @@ defmodule Genex.Commands.LoginCommand do
   end
 
   defp submit_challenge_response(nil, _remote, _email) do
-    IO.inspect "INVALID DECRYPTED RESPONSE"
+    IO.inspect("INVALID DECRYPTED RESPONSE")
     nil
   end
 
@@ -73,10 +81,12 @@ defmodule Genex.Commands.LoginCommand do
     case Req.post("#{remote}/api/login/#{email}", json: %{challenge_response: response}) do
       {:ok, %Req.Response{status: 200} = res} ->
         res.body["token"]
-      {:ok, other} -> 
-        IO.inspect other
+
+      {:ok, other} ->
+        IO.inspect(other)
         display("Unable to login")
         nil
+
       {:error, reason} ->
         display("Unable to login #{inspect(reason)}")
         nil

@@ -11,4 +11,7 @@ defmodule Genex.StoreAPI do
   @callback all_passwords() :: {:ok, [Genex.Passwords.Password.t()]} | {:error, binary()}
   @callback find_password_by(:account | :username, binary()) ::
               {:ok, [Genex.Passwords.Password.t()]} | {:error, binary()}
+
+  @callback save_api_token(String.t()) :: :ok | {:error, binary()}
+  @callback api_token() :: {:ok, String.t} | {:error, :noexist} | {:error, :binary}
 end
