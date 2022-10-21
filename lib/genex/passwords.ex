@@ -130,4 +130,13 @@ defmodule Genex.Passwords do
         err
     end
   end
+
+  @spec remote_push(map()) :: :ok | {:error, :noexist}
+  def remote_push(config) do
+    with {:ok, token} <- @store.api_token(),
+         url <- get_in(config, [:remote, "url"]),
+         email <- get_in(config, [:gpg, "email"]) do
+      Genex.Passwords.PasswordPushWorker.start_link(%{url: url, token: token, email: email})
+    end
+  end
 end

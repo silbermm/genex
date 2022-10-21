@@ -213,7 +213,16 @@ defmodule Genex.Commands.UI.Default do
         %{model | data: data, current_row: -1}
 
       {:sync_passwords_pull, {:ok, latest_passwords}} ->
+        # after pulling passwords, push passwords
+        _ = Genex.Passwords.remote_push(model.config)
         %{model | syncing: false, data: latest_passwords}
+
+      {:sync_passwords_push, :ok} ->
+        model
+
+      {:sync_passwords_pull, _} ->
+        # TODO: probably should show an error here at some point
+        %{model | syncing: false}
 
       other ->
         Logger.debug("unhandled keystroke: #{inspect(other)}")
