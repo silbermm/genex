@@ -19,10 +19,20 @@ defmodule Genex.Passwords do
 
   @doc """
   Deletes a password from the store
+
+  Functionally this removes the encrypted password column and
+  adds the deleted_on field.
+
+  Doing this allows us to know if we need to sync the password
+  or not.
   """
   @spec delete(Password.t()) :: {:ok, number()} | {:error, binary()}
   def delete(password) do
-    case @store.delete_password(password) do
+    password
+    |> Password.add_deleted_on()
+    |> Password.remove_encrypted_passphrase()
+    |> @store.update_password()
+    |> case do
       :ok -> {:ok, password.id}
       _ -> {:error, :unknown}
     end
@@ -113,9 +123,16 @@ defmodule Genex.Passwords do
   def remote_pull_merge(config) do
     with {:ok, token} <- @store.api_token(),
          url <- get_in(config, [:remote, "url"]),
-         {:ok, _passwords} <- remote_pull(url, token) do
-      # TODO: merge passwords
+         {:ok, passwords} when passwords != "" <- remote_pull(url, token),
+         {:ok, decrypted} <- GPG.decrypt(passwords),
+         {:ok, pword_list} <- Jason.decode(decrypted),
+         as_password_list <- Enum.map(pword_list, &Password.new/1) do
+      Logger.info(inspect(as_password_list))
+      _ = merge(as_password_list)
       all()
+    else
+      {:ok, ""} -> all()
+      err -> err
     end
   end
 
@@ -124,12 +141,88 @@ defmodule Genex.Passwords do
   defp remote_pull(url, token) do
     case Req.get("#{url}/api/passwords", auth: {:bearer, token}) do
       {:ok, res} ->
-        {:ok, res.body["passwords"]}
+        data = res.body["passwords"]
+        {:ok, data}
 
       err ->
         err
     end
   end
+
+  defp merge(decrypted_passwords) do
+    for remote_password <- decrypted_passwords do
+      if !is_nil(remote_password) do
+        with {:ok, pwords_for_account} <- find_by_account(remote_password.account),
+             local_password when not is_nil(local_password) <-
+               Enum.find(pwords_for_account, &(&1.username == remote_password.username)),
+             :gt <- DateTime.compare(remote_password.timestamp, local_password.timestamp) do
+          case delete_or_save(remote_password, local_password) do
+            :delete ->
+              delete(local_password)
+
+            :save ->
+              Logger.debug("Saving password for #{remote_password.account}")
+              remote_password = Password.merge(local_password, remote_password)
+              @store.update_password(remote_password)
+          end
+        else
+          nil ->
+            Logger.debug("Saving password for #{remote_password.account}")
+            @store.save_password(remote_password)
+
+          other ->
+            Logger.debug("NOT saving password for #{inspect(other)}")
+            :ok
+        end
+      end
+    end
+  end
+
+  # if both passwords are not deleted, save the password
+  defp delete_or_save(
+         %Password{deleted_on: nil} = _remote_password,
+         %Password{deleted_on: nil} = _current_password
+       ),
+       do: :save
+
+  # if the remote has a deleted on and the local doesn't
+  # check the local's created_on is greater than the remote
+  # deleted_on and if it is, :save, if not :delete
+  defp delete_or_save(
+         %Password{deleted_on: %DateTime{} = remote_deleted_on} = _remote_password,
+         %Password{deleted_on: nil} = local_password
+       ) do
+    case DateTime.compare(remote_deleted_on, local_password.timestamp) do
+      :gt -> :delete
+      _ -> :save
+    end
+  end
+
+  # if the local has a deleted on and the remote doesn't
+  # check if the remote's created_on is greater than the local's
+  # deleted_on and if it is, :save, if not :delete
+  defp delete_or_save(
+         %Password{deleted_on: nil} = remote_password,
+         %Password{deleted_on: %DateTime{} = local_deleted_on} = _local_password
+       ) do
+    case DateTime.compare(remote_password.timestamp, local_deleted_on) do
+      :gt -> :save
+      _ -> :delete
+    end
+  end
+
+  # if they both have a deleted on, do nothing
+  defp delete_or_save(
+         %Password{deleted_on: %DateTime{}} = _remote_password,
+         %Password{deleted_on: %DateTime{}} = _local_password
+       ) do
+    :noop
+  end
+
+  # with %DateTime{} = remote_deleted_on <- remote_password.deleted_on,
+
+  # case DateTime.compare(remote_password.deleted_on, 
+  # end
 
   @spec remote_push(map()) :: :ok | {:error, :noexist}
   def remote_push(config) do

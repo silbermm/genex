@@ -9,7 +9,8 @@ defmodule Genex.Store.Mnesia do
 
   @tables [
     {TableIds, [:table_name, :last_id], []},
-    {Passwords, [:id, :account, :username, :encrytped_password, :created_at, :updated_at],
+    {Passwords,
+     [:id, :account, :username, :encrypted_password, :created_at, :deleted_at, :comment],
      [:account, :username]},
     {ApiToken, [:token, :created_at, :updated_at], []}
   ]
@@ -58,7 +59,7 @@ defmodule Genex.Store.Mnesia do
     fun = fn ->
       :mnesia.select(Passwords, [
         {
-          {Passwords, :"$1", :"$2", :"$3", :"$4", :"$5", :"$6"},
+          {Passwords, :"$1", :"$2", :"$3", :"$4", :"$5", :"$6", :"$7"},
           [{:>, :"$1", 0}],
           [:"$$"]
         }
@@ -67,7 +68,10 @@ defmodule Genex.Store.Mnesia do
 
     case :mnesia.transaction(fun) do
       {:atomic, res_list} ->
-        {:ok, Enum.map(res_list, &Genex.Passwords.Password.new/1)}
+        {:ok,
+         res_list
+         |> Enum.map(&Genex.Passwords.Password.new/1)
+         |> Enum.reject(&(&1.deleted_on != nil))}
 
       {:aborted, err} ->
         {:error, err}
@@ -91,11 +95,14 @@ defmodule Genex.Store.Mnesia do
   end
 
   @impl true
-  def delete_password(password) do
-    Logger.debug("Deleting password")
+  def update_password(password) do
+    Logger.debug("Updating password")
 
     fun = fn ->
-      :mnesia.delete({Passwords, password.id})
+      :mnesia.write(
+        {Passwords, password.id, password.account, password.username,
+         password.encrypted_passphrase, password.timestamp, password.deleted_on, password.comment}
+      )
     end
 
     case :mnesia.transaction(fun) do
@@ -134,7 +141,7 @@ defmodule Genex.Store.Mnesia do
     fun = fn ->
       :mnesia.write(
         {Passwords, index, password.account, password.username, password.encrypted_passphrase,
-         password.timestamp, password.timestamp}
+         password.timestamp, password.deleted_on, password.comment}
       )
     end
 
@@ -159,10 +166,10 @@ defmodule Genex.Store.Mnesia do
   end
 
   defp build_password_search_function(:account, search_string),
-    do: fn -> :mnesia.match_object({Passwords, :_, search_string, :_, :_, :_, :_}) end
+    do: fn -> :mnesia.match_object({Passwords, :_, search_string, :_, :_, :_, :_, :_}) end
 
   defp build_password_search_function(:username, search_string),
-    do: fn -> :mnesia.match_object({Passwords, :_, :_, search_string, :_, :_, :_}) end
+    do: fn -> :mnesia.match_object({Passwords, :_, :_, search_string, :_, :_, :_, :_}) end
 
   defp check_errors(%{errors: errors}) when length(errors) > 0, do: {:error, errors}
   defp check_errors(_), do: :ok
