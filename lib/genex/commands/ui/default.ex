@@ -33,7 +33,8 @@ defmodule Genex.Commands.UI.Default do
        copied: "",
        new_model: Create.default(),
        helper_panel: nil,
-       config: nil
+       config: nil,
+       syncing: false
      }, Command.batch([get_config, get_passwords])}
   end
 
@@ -105,6 +106,18 @@ defmodule Genex.Commands.UI.Default do
       # copy a password
       {:event, %{ch: ?c}} when model.new_model.show == false and has_passwords(model) ->
         copy_password(model)
+
+      # synchronize
+      {:event, %{ch: ?s}} when model.new_model.show == false ->
+        sync_passwords =
+          Command.new(
+            fn ->
+              Genex.Passwords.remote_pull_merge(model.config)
+            end,
+            :sync_passwords_pull
+          )
+
+        {%{model | syncing: true}, sync_passwords}
 
       # create a password
       {:event, %{ch: ?n}} when model.new_model.show == false ->
@@ -198,6 +211,18 @@ defmodule Genex.Commands.UI.Default do
       {:delete_password, {:ok, password_id}} ->
         data = Enum.reject(model.data, fn d -> d.id == password_id end)
         %{model | data: data, current_row: -1}
+
+      {:sync_passwords_pull, {:ok, latest_passwords}} ->
+        # after pulling passwords, push passwords
+        _ = Genex.Passwords.remote_push(model.config)
+        %{model | syncing: false, data: latest_passwords}
+
+      {:sync_passwords_push, :ok} ->
+        model
+
+      {:sync_passwords_pull, _} ->
+        # TODO: probably should show an error here at some point
+        %{model | syncing: false}
 
       other ->
         Logger.debug("unhandled keystroke: #{inspect(other)}")

@@ -22,7 +22,7 @@ defmodule Genex.Commands.ConfigCommand do
   def process(%{help: true}), do: help()
 
   def process(_args) do
-    case Genex.AppConfig.read() do
+    case AppConfig.read() do
       {:ok, config} ->
         display(" 🟢 Config is valid", color: :green)
 
@@ -30,8 +30,9 @@ defmodule Genex.Commands.ConfigCommand do
 
         gpg = ["GPG Email", Map.get(config.gpg, "email")]
         password = ["Password Length", to_string(Map.get(config.password, "length"))]
+        remote = ["Remote URL", to_string(Map.get(config.remote, "url"))]
 
-        table([headers, gpg, password], header: true)
+        table([headers, gpg, password, remote], header: true)
 
       {:error, reason} ->
         IO.inspect(reason)

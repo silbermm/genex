@@ -6,6 +6,7 @@ defmodule Genex.CLI do
     SUB-COMMANDS
     ------------
       config check if the app is configured correctly
+      login  login to a remote server to share passwords
 
     OPTIONS
     -------
@@ -15,6 +16,7 @@ defmodule Genex.CLI do
   use Prompt.Router, otp_app: :genex
 
   alias Genex.Commands.ConfigCommand
+  alias Genex.Commands.LoginCommand
   alias Genex.Commands.DefaultCommand
 
   @halter_module Application.compile_env!(:genex, :halter)
@@ -23,6 +25,10 @@ defmodule Genex.CLI do
     arg(:help, :boolean)
     arg(:set, :string)
     arg(:get, :string)
+  end
+
+  command :login, LoginCommand do
+    arg(:help, :boolean)
   end
 
   command "", DefaultCommand do

@@ -15,5 +15,5 @@ defmodule Genex.Commands.DefaultCommand do
 
   @impl true
   def process(%{help: true}), do: help()
-  def process(_args), do: Ratatouille.run(Genex.Commands.UI.Default)
+  def process(_args), do: Ratatouille.run(Genex.Commands.UI.Default, interval: 250)
 end
