@@ -66,6 +66,7 @@ defmodule Genex.Passwords.Password do
     }
   end
 
+  # Build a password from a call to remote
   def new(%{
         "account" => account,
         "comment" => comment,
@@ -83,7 +84,7 @@ defmodule Genex.Passwords.Password do
           encrypted_passphrase: passphrase,
           passphrase: "********",
           timestamp: datetime,
-          deleted_on: deleted_on
+          deleted_on: maybe_build_datetime(deleted_on)
         }
 
       {:error, _reason} ->
@@ -92,28 +93,14 @@ defmodule Genex.Passwords.Password do
     end
   end
 
-  def new(%{
-        "account" => account,
-        "comment" => comment,
-        "encrypted_passphrase" => passphrase,
-        "timestamp" => timestamp,
-        "username" => username
-      }) do
-    case DateTime.from_iso8601(timestamp) do
-      {:ok, datetime, _} ->
-        %Password{
-          account: account,
-          username: username,
-          comment: comment,
-          encrypted_passphrase: passphrase,
-          passphrase: "********",
-          timestamp: datetime,
-          deleted_on: nil
-        }
+  defp maybe_build_datetime(nil), do: nil
 
-      {:error, _reason} ->
-        # if the timestamp is off, we can't reliably save the password
-        nil
+  defp maybe_build_datetime(%DateTime{} = timestamp), do: timestamp
+
+  defp maybe_build_datetime(timestamp) do
+    case DateTime.from_iso8601(timestamp) do
+      {:ok, datetime, _} -> datetime
+      _ -> nil
     end
   end
 
@@ -131,14 +118,24 @@ defmodule Genex.Passwords.Password do
   def add_unencrypted_passphrase(%Password{} = password, passphrase),
     do: %{password | passphrase: passphrase}
 
+  @doc "Add a deleted_on timestamp of right now"
+  @spec add_deleted_on(Password.t()) :: Password.t()
   def add_deleted_on(%Password{} = password) do
     %{password | deleted_on: DateTime.now!("Etc/UTC")}
   end
 
+  @doc "Remove the encrypted password from the password struct"
+  @spec remove_encrypted_passphrase(Password.t()) :: Password.t()
   def remove_encrypted_passphrase(%Password{} = password) do
     %{password | encrypted_passphrase: ""}
   end
 
+  @doc """
+  Merge the remote_password with the local password
+
+  Currently puts the id of the local password on the remote password
+  """
+  @spec merge(Password.t(), Password.t()) :: Password.t()
   def merge(%Password{} = main_password, %Password{} = data_password) do
     %{data_password | id: main_password.id}
   end

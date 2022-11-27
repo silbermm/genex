@@ -82,8 +82,6 @@ defmodule Genex.Commands.UI.Default do
 
   @impl true
   def update(model, msg) do
-    Logger.debug(inspect(msg))
-
     case msg do
       {:event, %{ch: ?k}} when model.new_model.show == false ->
         model
