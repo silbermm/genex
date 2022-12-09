@@ -6,14 +6,13 @@ defmodule Genex.Application do
 
   use Application
 
-
   @store Application.compile_env!(:genex, :store)
 
   def start(_type, _args) do
     with :ok <- ensure_dir_exists(),
          :ok <- @store.init(),
          :ok <- @store.init_tables() do
-      children = []
+      children = [Genex.Repo]
 
       Supervisor.start_link(children, strategy: :one_for_one)
     else
