@@ -205,7 +205,7 @@ defmodule Genex.Commands.UI.Default do
       {:fetch_config, {:ok, config}} ->
         %{model | config: config, helper_panel: HelperPanel.default(config)}
 
-      {:fetch_passwords, {:ok, data}} ->
+      {:fetch_passwords, data} ->
         %{model | data: data}
 
       {:delete_password, {:ok, password_id}} ->
@@ -258,7 +258,7 @@ defmodule Genex.Commands.UI.Default do
               table_cell(content: "#{pass.account}")
               table_cell(content: "#{pass.username}")
               table_cell(content: "#{pass.passphrase}")
-              table_cell(content: "#{format_timestamp(pass.timestamp)}")
+              table_cell(content: "#{format_timestamp(pass.inserted_at)}")
             end
           end
         end
@@ -303,6 +303,10 @@ defmodule Genex.Commands.UI.Default do
 
   defp format_timestamp(%DateTime{day: d, month: m, year: y, hour: hh, minute: mm}) do
     "#{prefix_with_zero(m)}/#{prefix_with_zero(d)}/#{y} #{prefix_with_zero(hh)}:#{prefix_with_zero(mm)}"
+  end
+
+  defp format_timestamp(datetime) do
+    Calendar.strftime(datetime, "%Y-%m-%d %H:%M:%S")
   end
 
   defp prefix_with_zero(<<number::binary-size(1), _::binary>>), do: "0#{number}"

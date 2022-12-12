@@ -16,12 +16,18 @@ defmodule Genex.Passwords.PasswordData do
     timestamps()
   end
 
-  @required [:account, :username, :encrytped_password]
+  @required [:account, :username, :encrypted_password]
 
-  def changeset(schema, params) do
-    schema
+  def changeset(data, params) do
+    data
     |> cast(params, @required)
     |> validate_required(@required)
     |> unique_constraint([:account, :username])
+  end
+
+  def delete_changeset(data) do
+    data
+    |> cast(%{deleted_at: DateTime.utc_now(), encrypted_password: nil}, [:deleted_at | @required])
+    |> validate_required([:deleted_at])
   end
 end
