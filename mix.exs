@@ -8,7 +8,7 @@ defmodule Genex.MixProject do
       releases: releases(),
       elixir: "~> 1.13",
       dialyzer: [
-        plt_add_apps: [:mnesia]
+        plt_add_apps: []
       ],
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -32,7 +32,6 @@ defmodule Genex.MixProject do
   def application do
     [
       extra_applications: [:logger, :prompt, :ratatouille],
-      included_applications: [:mnesia],
       mod: {Genex.Application, env: Mix.env()}
     ]
   end
@@ -40,8 +39,8 @@ defmodule Genex.MixProject do
   defp deps do
     [
       {:diceware, "~> 0.2.8"},
-      {:prompt, path: "../prompt"},
-      # {:prompt, "~> 0.8"},
+      # {:prompt, path: "../prompt"},
+      {:prompt, "~> 0.8"},
       {:clipboard, "~> 0.2.1"},
       {:ratatouille, "~> 0.5"},
       {:vapor, "~> 0.10.0"},
