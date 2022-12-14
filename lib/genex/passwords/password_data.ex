@@ -5,6 +5,7 @@ defmodule Genex.Passwords.PasswordData do
 
   @type t :: %__MODULE__{}
 
+  @derive {Jason.Encoder, only: [:account, :username, :encrypted_password, :deleted_at]}
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "passwords" do
     field :account, :string
@@ -22,7 +23,6 @@ defmodule Genex.Passwords.PasswordData do
     data
     |> cast(params, @required)
     |> validate_required(@required)
-    |> unique_constraint([:account, :username])
   end
 
   def delete_changeset(data) do

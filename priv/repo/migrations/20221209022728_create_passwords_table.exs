@@ -11,6 +11,6 @@ defmodule Genex.Repo.Migrations.CreatePasswordsTable do
       timestamps()
     end
 
-    create index(:passwords, [:account, :username], unique: true) 
+    create index(:passwords, [:account, :username]) 
   end
 end

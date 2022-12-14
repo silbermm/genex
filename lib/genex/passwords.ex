@@ -6,13 +6,11 @@ defmodule Genex.Passwords do
   import Ecto.Query
 
   alias Genex.AppConfig
-  alias Genex.Passwords.Password
   alias Genex.Passwords.PasswordData
   alias Genex.Repo
+  alias Genex.Settings
 
   require Logger
-
-  @store Application.compile_env!(:genex, :store)
 
   @doc """
   Generate a unique password
@@ -136,9 +134,9 @@ defmodule Genex.Passwords do
   Newest password wins
   """
   @spec remote_pull_merge(map()) ::
-          {:ok, [Password.t()]} | {:error, :noexist} | {:error, binary()}
+          {:ok, [PasswordData.t()]} | {:error, :noexist} | {:error, binary()}
   def remote_pull_merge(config) do
-    with {:ok, token} <- @store.api_token(),
+    with {:ok, token} <- get_api_key(),
          url <- get_in(config, [:remote, "url"]),
          {:ok, passwords} when passwords != "" <- remote_pull(url, token),
          {:ok, decrypted} <- GPG.decrypt(passwords),
@@ -146,18 +144,25 @@ defmodule Genex.Passwords do
       # as_password_list <- Enum.map(pword_list, &convert_to_password/1) do
       Logger.info(inspect(pword_list))
       _ = merge(pword_list)
-      all()
+      {:ok, all()}
     else
-      {:ok, ""} -> all()
-      err -> err
+      {:ok, ""} ->
+        Logger.debug("remote passwords db empty")
+        {:ok, all()}
+
+      err ->
+        Logger.debug("error #{inspect(err)}")
+        err
     end
   end
 
-  # defp convert_to_password(map) do
-  #   %PasswordData{}
-  #   |> PasswordData.changeset(map)
-  #   |> Ecto.Changeset.apply_changes()
-  # end
+  def get_api_key() do
+    case Settings.get() do
+      nil -> {:error, :settings_not_found}
+      %Settings.Setting{api_key: api_key} when api_key != "" -> {:ok, api_key}
+      _ -> {:error, :api_key_not_found}
+    end
+  end
 
   defp remote_pull(nil, _), do: {:error, :invalid_url}
 
@@ -253,14 +258,9 @@ defmodule Genex.Passwords do
     :noop
   end
 
-  # with %DateTime{} = remote_deleted_on <- remote_password.deleted_on,
-
-  # case DateTime.compare(remote_password.deleted_on, 
-  # end
-
   @spec remote_push(map()) :: :ok | {:error, :noexist}
   def remote_push(config) do
-    with {:ok, token} <- @store.api_token(),
+    with {:ok, token} <- get_api_key(),
          url <- get_in(config, [:remote, "url"]),
          email <- get_in(config, [:gpg, "email"]) do
       Genex.Passwords.PasswordPushWorker.start_link(%{url: url, token: token, email: email})

@@ -6,22 +6,9 @@ defmodule Genex.Application do
 
   use Application
 
-  @store Application.compile_env!(:genex, :store)
-
   def start(_type, _args) do
-    with :ok <- ensure_dir_exists(),
-         :ok <- @store.init(),
-         :ok <- @store.init_tables() do
-      children = [Genex.Repo]
+    children = [Genex.Repo]
 
-      Supervisor.start_link(children, strategy: :one_for_one)
-    else
-      {:error, error} -> {:error, error}
-    end
-  end
-
-  defp ensure_dir_exists() do
-    # TODO: make sure the genex directory exists
-    :ok
+    Supervisor.start_link(children, strategy: :one_for_one)
   end
 end

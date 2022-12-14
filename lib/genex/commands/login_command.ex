@@ -12,8 +12,7 @@ defmodule Genex.Commands.LoginCommand do
 
   use Prompt.Command
   alias Genex.AppConfig
-
-  @store Application.compile_env!(:genex, :store)
+  alias Genex.Settings
 
   @impl true
   def process(%{help: true}), do: help()
@@ -39,7 +38,7 @@ defmodule Genex.Commands.LoginCommand do
     |> submit_challenge_response(remote, email)
     |> case do
       token when not is_nil(token) ->
-        _ = @store.save_api_token(token)
+        _ = Settings.upsert_api_key(token)
         display("Successfully logged in", color: :green)
 
       _ ->

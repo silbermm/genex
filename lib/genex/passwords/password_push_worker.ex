@@ -3,9 +3,10 @@ defmodule Genex.Passwords.PasswordPushWorker do
   Background job that pushes passwords to the remote server
   """
   use GenServer, restart: :transient
-  require Logger
 
-  @store Application.compile_env!(:genex, :store)
+  alias Genex.Repo
+
+  require Logger
 
   def start_link(config) do
     GenServer.start_link(__MODULE__, config, name: __MODULE__)
@@ -20,15 +21,8 @@ defmodule Genex.Passwords.PasswordPushWorker do
   @impl true
   def handle_continue(:get_passwords, state) do
     Logger.debug("get passwords")
-
-    case @store.all_passwords() do
-      {:ok, passwords} ->
-        {:noreply, Map.put(state, :data, passwords), {:continue, :encrypt}}
-
-      _ ->
-        Logger.error("unable to get passwords")
-        {:stop, :shutdown, state}
-    end
+    all_passwords = Repo.all(Genex.Passwords.PasswordData)
+    {:noreply, Map.put(state, :data, all_passwords), {:continue, :encrypt}}
   end
 
   def handle_continue(:encrypt, state) do

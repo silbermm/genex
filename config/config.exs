@@ -7,13 +7,8 @@ config :genex, Genex.Repo,
 config :genex,
   ecto_repos: [Genex.Repo]
 
-config :mnesia,
-  dir:
-    "HOME" |> System.get_env() |> Path.join(".genex") |> Path.join("db") |> String.to_charlist()
-
 config :genex,
-  homedir: "HOME" |> System.get_env() |> Path.join(".genex"),
-  store: Genex.Store.Mnesia
+  homedir: "HOME" |> System.get_env() |> Path.join(".genex")
 
 config :logger,
   backends: [{LoggerFileBackend, :error_log}]
