@@ -1,4 +1,4 @@
-defmodule Genex.Commands.UI.Default do
+defmodule Genex.CLI.Commands.UI.Default do
   @moduledoc """
   The full screen GUI for managing passwords
   """
@@ -9,17 +9,18 @@ defmodule Genex.Commands.UI.Default do
   import Ratatouille.Constants
 
   alias Ratatouille.Runtime.Command
-  alias Genex.Commands.UI.Create
-  alias Genex.Commands.UI.HelperPanel
+  alias Genex.CLI.Commands.UI.Create
+  alias Genex.CLI.Commands.UI.HelperPanel
 
   require Logger
 
-  @colors [color(:red), color(:blue), color(:green), color(:yellow)]
+  #@colors [color(:red), color(:blue), color(:green), color(:yellow)]
 
   @impl true
   def init(_context) do
     # read the config async
-    get_config = Command.new(fn -> Genex.AppConfig.read() end, :fetch_config)
+    # @TODO: figure out how to pull the profile name from the cli args (:ets?)
+    get_config = Command.new(fn -> Genex.Settings.get() end, :fetch_config)
 
     # get the passwords async
     get_passwords = Command.new(fn -> Genex.Passwords.all() end, :fetch_passwords)
@@ -179,7 +180,7 @@ defmodule Genex.Commands.UI.Default do
         # save the field
         updated =
           Create.next(model.new_model,
-            password_length: Map.get(model.config.password, "length", 8)
+            password_length: model.config.password_length
           )
 
         %{model | new_model: updated}
@@ -188,7 +189,7 @@ defmodule Genex.Commands.UI.Default do
         # when r is pressed on the password field, generate a password
         updated =
           Create.update(model.new_model, nil,
-            password_length: Map.get(model.config.password, "length", 8)
+            password_length: model.config.password_length
           )
 
         %{model | new_model: updated}
@@ -202,7 +203,7 @@ defmodule Genex.Commands.UI.Default do
         updated = Create.update(model.new_model, <<ch::utf8>>)
         %{model | new_model: updated}
 
-      {:fetch_config, {:ok, config}} ->
+      {:fetch_config, config} ->
         %{model | config: config, helper_panel: HelperPanel.default(config)}
 
       {:fetch_passwords, data} ->
@@ -319,7 +320,7 @@ defmodule Genex.Commands.UI.Default do
     overlay do
       panel title: "ESC to close / C to copy", height: :fill do
         label do
-          Genex.Commands.UI.ColorizedPassphrase.render(decrypted)
+          Genex.CLI.Commands.UI.ColorizedPassphrase.render(decrypted)
         end
       end
     end
@@ -349,19 +350,19 @@ defmodule Genex.Commands.UI.Default do
     end
   end
 
-  defp colorized_password(pass) do
-    number_of_color_lists = div(pass.count, Enum.count(@colors))
-    extra_colors = rem(pass.count, Enum.count(@colors))
+  # defp colorized_password(pass) do
+  #   number_of_color_lists = div(pass.count, Enum.count(@colors))
+  #   extra_colors = rem(pass.count, Enum.count(@colors))
 
-    colors =
-      Enum.reduce(0..number_of_color_lists, [], fn _x, acc ->
-        acc ++ @colors
-      end)
+  #   colors =
+  #     Enum.reduce(0..number_of_color_lists, [], fn _x, acc ->
+  #       acc ++ @colors
+  #     end)
 
-    color_list = colors ++ Enum.take(@colors, extra_colors)
+  #   color_list = colors ++ Enum.take(@colors, extra_colors)
 
-    Enum.with_index(pass.words, fn element, index ->
-      text(content: element, color: Enum.at(color_list, index))
-    end)
-  end
+  #   Enum.with_index(pass.words, fn element, index ->
+  #     text(content: element, color: Enum.at(color_list, index))
+  #   end)
+  # end
 end

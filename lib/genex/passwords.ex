@@ -5,7 +5,6 @@ defmodule Genex.Passwords do
 
   import Ecto.Query
 
-  alias Genex.AppConfig
   alias Genex.Passwords.PasswordData
   alias Genex.Repo
   alias Genex.Settings
@@ -27,9 +26,7 @@ defmodule Genex.Passwords do
   Encrypt a password and save it to the DB
   """
   @spec save(String.t(), String.t(), Diceware.Passphrase.t(), map()) :: save_result()
-  def save(account, username, %Diceware.Passphrase{} = passphrase, %{
-        gpg: %{"email" => gpg_email}
-      })
+  def save(account, username, %Diceware.Passphrase{} = passphrase, %{gpg_email: gpg_email})
       when gpg_email != "" do
     Logger.debug("Encrypting password for #{gpg_email}")
 
@@ -59,16 +56,15 @@ defmodule Genex.Passwords do
   """
   @spec save(String.t(), String.t(), Diceware.Passphrase.t()) :: save_result()
   def save(account, username, %Diceware.Passphrase{} = passphrase) do
-    # get config
-    case AppConfig.read() do
-      {:ok, %{gpg: %{"email" => gpg_email}} = config} when gpg_email != "" ->
-        save(account, username, passphrase, config)
+    # @TODO get the profile from :ets?
+    settings = Settings.get()
 
-      {:ok, _} ->
+    case settings do
+      %{gpg_email: gpg_email} when gpg_email != "" ->
+        save(account, username, passphrase, settings)
+
+      _ ->
         {:error, :no_gpg_email}
-
-      err ->
-        err
     end
   end
 
@@ -133,16 +129,14 @@ defmodule Genex.Passwords do
 
   Newest password wins
   """
-  @spec remote_pull_merge(map()) ::
+  @spec remote_pull_merge(Settings.Setting.t()) ::
           {:ok, [PasswordData.t()]} | {:error, :noexist} | {:error, binary()}
-  def remote_pull_merge(config) do
-    with {:ok, token} <- get_api_key(),
-         url <- get_in(config, [:remote, "url"]),
+  def remote_pull_merge(settings) do
+    with {:ok, token} <- get_api_key(settings),
+         url <- settings.remote,
          {:ok, passwords} when passwords != "" <- remote_pull(url, token),
          {:ok, decrypted} <- GPG.decrypt(passwords),
          {:ok, pword_list} <- Jason.decode(decrypted) do
-      # as_password_list <- Enum.map(pword_list, &convert_to_password/1) do
-      Logger.info(inspect(pword_list))
       _ = merge(pword_list)
       {:ok, all()}
     else
@@ -156,8 +150,8 @@ defmodule Genex.Passwords do
     end
   end
 
-  def get_api_key() do
-    case Settings.get() do
+  def get_api_key(settings \\ nil) do
+    case settings do
       nil -> {:error, :settings_not_found}
       %Settings.Setting{api_key: api_key} when api_key != "" -> {:ok, api_key}
       _ -> {:error, :api_key_not_found}
@@ -258,11 +252,11 @@ defmodule Genex.Passwords do
     :noop
   end
 
-  @spec remote_push(map()) :: :ok | {:error, :noexist}
-  def remote_push(config) do
-    with {:ok, token} <- get_api_key(),
-         url <- get_in(config, [:remote, "url"]),
-         email <- get_in(config, [:gpg, "email"]) do
+  @spec remote_push(Settings.Setting.t()) :: :ok | {:error, :noexist}
+  def remote_push(settings) do
+    with {:ok, token} <- get_api_key(settings),
+         url <- settings.remote,
+         email <- settings.gpg_email do
       Genex.Passwords.PasswordPushWorker.start_link(%{url: url, token: token, email: email})
     end
   end

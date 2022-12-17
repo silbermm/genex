@@ -1,4 +1,4 @@
-defmodule Genex.Commands.LoginCommand do
+defmodule Genex.CLI.Commands.LoginCommand do
   @moduledoc """
 
   Attempts to login to the configured remote using

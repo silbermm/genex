@@ -1,4 +1,4 @@
-defmodule Genex.Commands.UI.HelperPanel do
+defmodule Genex.CLI.Commands.UI.HelperPanel do
   @moduledoc """
   The top panel showing the context and contextual help
   """
@@ -19,7 +19,7 @@ defmodule Genex.Commands.UI.HelperPanel do
 
         label do
           text(
-            content: Map.get(panel.config.gpg, "email"),
+            content: panel.config.gpg_email,
             color: :blue,
             attributes: [:bold]
           )
@@ -31,7 +31,7 @@ defmodule Genex.Commands.UI.HelperPanel do
 
         label do
           text(
-            content: "#{Map.get(panel.config.password, "length", 8)}",
+            content: "#{panel.config.password_length}",
             color: :blue,
             attributes: [:bold]
           )

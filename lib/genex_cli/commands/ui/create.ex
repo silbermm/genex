@@ -1,4 +1,4 @@
-defmodule Genex.Commands.UI.Create do
+defmodule Genex.CLI.Commands.UI.Create do
   @moduledoc """
   Rendering for creating a new password in the TUI
   """

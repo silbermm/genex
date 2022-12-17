@@ -10,10 +10,15 @@ defmodule Genex.MixProject do
       dialyzer: [
         plt_add_apps: []
       ],
+      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
   end
+
+  # Specifies which paths to compile per environment.
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
 
   def releases do
     [
