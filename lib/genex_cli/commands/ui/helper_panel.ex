@@ -8,7 +8,7 @@ defmodule Genex.CLI.Commands.UI.HelperPanel do
   alias __MODULE__
 
   @type t :: %{
-          config: Genex.AppConfig.t(),
+          config: Genex.Settings.Setting.t(),
           help: map()
         }
 
