@@ -24,6 +24,13 @@ defmodule Genex.CLI.Commands.DefaultCommand do
     # validate that the config is good
     config = Settings.get(profile)
 
+    # we need to set the profile somewhere so UI
+    # knows which profile we want to access
+    # because I don't know of a way to pass data
+    # to the UI.
+
+    :ets.insert(:profile_lookup, {"profile", profile})
+
     if Settings.is_valid?(config) do
       Ratatouille.run(Genex.CLI.Commands.UI.Default, interval: 250)
     else

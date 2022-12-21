@@ -80,31 +80,29 @@ defmodule Genex.CLI.Commands.UI.Create do
     %{new_model | password: value}
   end
 
-  def next(model, opts \\ [])
-
   def next(%__MODULE__{current_field: :account} = new_model, _),
     do: %{new_model | current_field: :username}
 
-  def next(%__MODULE__{current_field: :username} = new_model, opts) do
-    pass_length = Keyword.get(opts, :password_length, 8)
+  def next(%__MODULE__{current_field: :username} = new_model, config) do
+    pass_length = config.password_length
     phrase = Diceware.generate(count: pass_length)
     %{new_model | current_field: :password, password: phrase}
   end
 
-  def next(%__MODULE__{current_field: :password} = new_model, _) do
-    # save the password
-    #psswd = Genex.Passwords.Password.new(new_model.account, new_model.username)
-
-    case Genex.Passwords.save(new_model.account, new_model.username, new_model.password) do
-      :ok -> default()
+  def next(%__MODULE__{current_field: :password} = new_model, config) do
+    case Genex.Passwords.save(new_model.account, new_model.username, new_model.password, config) do
+      {:ok, saved} -> {default(), saved}
       {:error, _reason} -> new_model
     end
   end
 
   def save(new_model, app_config) do
-    #psswd = Genex.Passwords.Password.new(new_model.account, new_model.username)
-
-    case Genex.Passwords.save(new_model.account, new_model.username, new_model.password, app_config) do
+    case Genex.Passwords.save(
+           new_model.account,
+           new_model.username,
+           new_model.password,
+           app_config
+         ) do
       {:ok, saved} -> {default(), saved}
       {:error, _} -> save(new_model, app_config)
     end

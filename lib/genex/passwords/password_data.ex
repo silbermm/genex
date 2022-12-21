@@ -13,11 +13,12 @@ defmodule Genex.Passwords.PasswordData do
     field :encrypted_password, :string
     field :passphrase, :string, virtual: true
     field :deleted_at, :utc_datetime
+    field :profile, :string, default: "default"
 
     timestamps()
   end
 
-  @required [:account, :username, :encrypted_password]
+  @required [:account, :username, :encrypted_password, :profile]
 
   def changeset(data, params) do
     data

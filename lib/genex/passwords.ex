@@ -26,7 +26,10 @@ defmodule Genex.Passwords do
   Encrypt a password and save it to the DB
   """
   @spec save(String.t(), String.t(), Diceware.Passphrase.t(), map()) :: save_result()
-  def save(account, username, %Diceware.Passphrase{} = passphrase, %{gpg_email: gpg_email})
+  def save(account, username, %Diceware.Passphrase{} = passphrase, %{
+        gpg_email: gpg_email,
+        profile: profile
+      })
       when gpg_email != "" do
     Logger.debug("Encrypting password for #{gpg_email}")
 
@@ -42,7 +45,8 @@ defmodule Genex.Passwords do
         |> PasswordData.changeset(%{
           username: username,
           account: account,
-          encrypted_password: encrypted
+          encrypted_password: encrypted,
+          profile: profile
         })
         |> Repo.insert()
 
@@ -52,28 +56,11 @@ defmodule Genex.Passwords do
   end
 
   @doc """
-  Encrypt a password and save it to the DB
-  """
-  @spec save(String.t(), String.t(), Diceware.Passphrase.t()) :: save_result()
-  def save(account, username, %Diceware.Passphrase{} = passphrase) do
-    # @TODO get the profile from :ets?
-    settings = Settings.get()
-
-    case settings do
-      %{gpg_email: gpg_email} when gpg_email != "" ->
-        save(account, username, passphrase, settings)
-
-      _ ->
-        {:error, :no_gpg_email}
-    end
-  end
-
-  @doc """
   Get all passwords that do not have a deleted_on date
   """
   @spec all :: {:ok, [PasswordData.t()]} | {:error, binary()}
-  def all() do
-    query = from(p in PasswordData, where: is_nil(p.deleted_at))
+  def all(profile \\ "default") do
+    query = from(p in PasswordData, where: is_nil(p.deleted_at), where: p.profile == ^profile)
     Repo.all(query)
   end
 
@@ -117,9 +104,9 @@ defmodule Genex.Passwords do
   @doc """
   Find a password by the account name
   """
-  @spec find_by_account(String.t()) :: {:ok, [PasswordData.t()]} | {:error, binary()}
-  def find_by_account(account) do
-    query = from p in PasswordData, where: p.account == ^account
+  @spec find_by_account(String.t(), String.t()) :: {:ok, [PasswordData.t()]} | {:error, binary()}
+  def find_by_account(account, profile \\ "default") do
+    query = from p in PasswordData, where: p.account == ^account, where: p.profile == ^profile
     Repo.all(query)
   end
 
@@ -137,12 +124,12 @@ defmodule Genex.Passwords do
          {:ok, passwords} when passwords != "" <- remote_pull(url, token),
          {:ok, decrypted} <- GPG.decrypt(passwords),
          {:ok, pword_list} <- Jason.decode(decrypted) do
-      _ = merge(pword_list)
-      {:ok, all()}
+      _ = merge(pword_list, settings.profile)
+      {:ok, all(settings.profile)}
     else
       {:ok, ""} ->
         Logger.debug("remote passwords db empty")
-        {:ok, all()}
+        {:ok, all(settings.profile)}
 
       err ->
         Logger.debug("error #{inspect(err)}")
@@ -152,9 +139,14 @@ defmodule Genex.Passwords do
 
   def get_api_key(settings \\ nil) do
     case settings do
-      nil -> {:error, :settings_not_found}
-      %Settings.Setting{api_key: api_key} when api_key != "" -> {:ok, api_key}
-      _ -> {:error, :api_key_not_found}
+      nil ->
+        {:error, :settings_not_found}
+
+      %Settings.Setting{api_key: api_key} when api_key != "" ->
+        {:ok, api_key}
+
+      _ ->
+        {:error, :api_key_not_found}
     end
   end
 
@@ -171,10 +163,11 @@ defmodule Genex.Passwords do
     end
   end
 
-  defp merge(decrypted_passwords) do
+  defp merge(decrypted_passwords, profile) do
     for remote_password <- decrypted_passwords do
       if !is_nil(remote_password) do
-        with {:ok, pwords_for_account} <- find_by_account(Map.get(remote_password, "account")),
+        with {:ok, pwords_for_account} <-
+               find_by_account(Map.get(remote_password, "account"), profile),
              local_password when not is_nil(local_password) <-
                Enum.find(
                  pwords_for_account,

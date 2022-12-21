@@ -14,16 +14,18 @@ defmodule Genex.CLI.Commands.UI.Default do
 
   require Logger
 
-  #@colors [color(:red), color(:blue), color(:green), color(:yellow)]
+  # @colors [color(:red), color(:blue), color(:green), color(:yellow)]
 
   @impl true
   def init(_context) do
     # read the config async
     # @TODO: figure out how to pull the profile name from the cli args (:ets?)
-    get_config = Command.new(fn -> Genex.Settings.get() end, :fetch_config)
+    [{"profile", profile}] = :ets.lookup(:profile_lookup, "profile")
+
+    get_config = Command.new(fn -> Genex.Settings.get(profile) end, :fetch_config)
 
     # get the passwords async
-    get_passwords = Command.new(fn -> Genex.Passwords.all() end, :fetch_passwords)
+    get_passwords = Command.new(fn -> Genex.Passwords.all(profile) end, :fetch_passwords)
 
     {%{
        data: [],
@@ -178,19 +180,13 @@ defmodule Genex.CLI.Commands.UI.Default do
       {:event, %{key: 13}} when model.new_model.show == true ->
         # enter key
         # save the field
-        updated =
-          Create.next(model.new_model,
-            password_length: model.config.password_length
-          )
-
+        updated = Create.next(model.new_model, model.config)
         %{model | new_model: updated}
 
       {:event, %{ch: ?r}} when model.new_model.current_field == :password ->
         # when r is pressed on the password field, generate a password
         updated =
-          Create.update(model.new_model, nil,
-            password_length: model.config.password_length
-          )
+          Create.update(model.new_model, nil, password_length: model.config.password_length)
 
         %{model | new_model: updated}
 

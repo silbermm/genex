@@ -7,38 +7,37 @@ defmodule Genex.CLI.Commands.LoginCommand do
   OPTIONS
   -------
 
-    --help                    show this help
+    --profile a profile to use - defaults to the default
+    --help    show this help
   """
 
   use Prompt.Command
-  alias Genex.AppConfig
   alias Genex.Settings
+  alias Genex.Settings.Setting
 
   @impl true
   def process(%{help: true}), do: help()
 
-  def process(_args) do
-    case AppConfig.read() do
-      {:ok, config} ->
-        email = Map.get(config.gpg, "email")
-        remote = Map.get(config.remote, "url")
-        login(remote, email)
-
-      {:error, _reason} ->
+  def process(%{profile: profile}) do
+    case Settings.get(profile) do
+      nil ->
         nil
+
+      %Setting{gpg_email: email, remote: remote} ->
+        login(remote, email, profile)
     end
   end
 
-  defp login(nil, _email), do: display("Invalid remote configuration", color: :red)
+  defp login(nil, _email, _), do: display("Invalid remote configuration", color: :red)
 
-  defp login(remote, email) do
+  defp login(remote, email, profile) do
     remote
     |> get_challenge(email)
     |> decrypt_challenge()
     |> submit_challenge_response(remote, email)
     |> case do
       token when not is_nil(token) ->
-        _ = Settings.upsert_api_key(token)
+        _ = Settings.upsert_api_key(token, profile: profile)
         display("Successfully logged in", color: :green)
 
       _ ->
