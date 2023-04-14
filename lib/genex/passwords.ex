@@ -189,8 +189,8 @@ defmodule Genex.Passwords do
               |> Repo.update()
           end
         else
-          nil ->
-            Logger.debug("Saving password for #{remote_password.account}")
+          [] ->
+            Logger.debug("Saving password for #{Map.get(remote_password, "account")}")
 
             %PasswordData{}
             |> PasswordData.changeset(remote_password)

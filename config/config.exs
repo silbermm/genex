@@ -16,7 +16,7 @@ config :logger,
 config :logger, :error_log,
   path: "/var/log/genex/error.log",
   level: :error,
-  format: "$time $metadata[$level] $levelpad$message\n",
+  format: "$time $metadata[$level] $message\n",
   metadata: [:module]
 
 config :clipboard,
