@@ -241,7 +241,6 @@ defmodule Genex.CLI.Commands.UI.Default do
           table_row(background: color(:white), color: color(:black)) do
             table_cell(content: "ACCOUNT")
             table_cell(content: "USERNAME")
-            table_cell(content: "PASSWORD")
             table_cell(content: "CREATED")
           end
 
@@ -256,7 +255,6 @@ defmodule Genex.CLI.Commands.UI.Default do
             table_row options do
               table_cell(content: "#{pass.account}")
               table_cell(content: "#{pass.username}")
-              table_cell(content: "#{pass.passphrase}")
               table_cell(content: "#{format_timestamp(pass.inserted_at)}")
             end
           end

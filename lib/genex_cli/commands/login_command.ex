@@ -47,7 +47,7 @@ defmodule Genex.CLI.Commands.LoginCommand do
 
   defp get_challenge(remote, email) do
     # send a request to POST #{remote}/api/login/#{email} and get back a challenge
-    case Req.get("#{remote}/api/login/#{email}") do
+    case Req.put("#{remote}/api/login/#{email}") do
       {:ok, res} ->
         res.body["challenge"]
 
