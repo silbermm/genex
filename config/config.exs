@@ -10,14 +10,15 @@ config :genex,
 config :genex,
   homedir: "HOME" |> System.get_env() |> Path.join(".genex")
 
-config :logger,
-  backends: [{LoggerFileBackend, :error_log}]
-
-config :logger, :error_log,
-  path: "/var/log/genex/error.log",
-  level: :error,
-  format: "$time $metadata[$level] $message\n",
-  metadata: [:module]
+config :logger, :default_handler,
+  config: [
+    file: ~c"#{System.get_env("HOME")}/.genex/genex.log",
+    filesync_repeat_interval: 5000,
+    file_check: 5000,
+    max_no_bytes: 10_000_000,
+    max_no_files: 5,
+    compress_on_rotate: true
+  ]
 
 config :clipboard,
   unix: [
