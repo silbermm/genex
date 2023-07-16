@@ -4,9 +4,9 @@ defmodule Genex.MixProject do
   def project do
     [
       app: :genex,
-      version: "0.0.5-alpha",
+      version: "0.0.5-beta",
       releases: releases(),
-      elixir: "~> 1.15",
+      elixir: "~> 1.14",
       dialyzer: [
         plt_add_apps: []
       ],
@@ -24,7 +24,12 @@ defmodule Genex.MixProject do
     [
       genex: [
         strip_beams: [keep: ["Docs"]],
-        steps: [:assemble, &copy_bin_files/1, :tar]
+        steps: [:assemble, &Burrito.wrap/1],
+        burrito: [
+          targets: [
+            linux: [os: :linux, cpu: :x86_64]
+          ],
+        ]
       ]
     ]
   end
@@ -48,15 +53,15 @@ defmodule Genex.MixProject do
       # {:prompt, path: "../prompt"},
       {:clipboard, "~> 0.2.1"},
       {:ratatouille, "~> 0.5"},
-      {:vapor, "~> 0.10.0"},
       {:jason, "~> 1.2"},
       {:gpgmex, "~> 0.0.11"},
       #{:gpgmex, path: "../gpgmex"},
-      {:req, "~> 0.3.1"},
+      {:req, "~> 0.3.1", override: true},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:ecto_sql, "~> 3.10.1"},
-      {:ecto_sqlite3, ">= 0.0.0"}
+      {:ecto_sqlite3, ">= 0.0.0"},
+      {:burrito, github: "burrito-elixir/burrito"}
     ]
   end
 end

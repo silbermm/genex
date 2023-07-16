@@ -18,6 +18,9 @@ config :logger, :default_handler,
     max_no_bytes: 10_000_000,
     max_no_files: 5,
     compress_on_rotate: true
+  ],
+  compile_time_purge_matching: [
+    [level_lower_than: :info]
   ]
 
 config :clipboard,

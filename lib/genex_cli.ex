@@ -39,7 +39,7 @@ defmodule Genex.CLI do
   end
 
   @impl true
-  def handle_exit_value(_) do
-    @halter_module.halt()
+  def handle_exit_value(exit_value) do
+    @halter_module.halt(exit_value)
   end
 end

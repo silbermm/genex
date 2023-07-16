@@ -26,3 +26,4 @@ erl_crash.dump
 genex-*.tar
 
 Mnesia.*
+/burrito_out/

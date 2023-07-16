@@ -41,8 +41,6 @@ defmodule Genex.CLI.Commands.ConfigCommand do
     profile = profile_arg(args)
     settings = Settings.get(profile)
 
-    dbg(settings)
-
     if Settings.is_valid?(settings) do
       display(" 🟢 Config is valid", color: :green)
       headers = ["Property", "Value"]
