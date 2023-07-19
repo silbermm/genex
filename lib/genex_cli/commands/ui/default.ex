@@ -10,18 +10,16 @@ defmodule Genex.CLI.Commands.UI.Default do
 
   alias Ratatouille.Runtime.Command
   alias Genex.CLI.Commands.UI.Create
+  alias Genex.CLI.Commands.UI.Edit
   alias Genex.CLI.Commands.UI.HelperPanel
 
   require Logger
 
-  # @colors [color(:red), color(:blue), color(:green), color(:yellow)]
-
   @impl true
   def init(_context) do
-    # read the config async
-    # @TODO: figure out how to pull the profile name from the cli args (:ets?)
     [{"profile", profile}] = :ets.lookup(:profile_lookup, "profile")
 
+    # read the config async
     get_config = Command.new(fn -> Genex.Settings.get(profile) end, :fetch_config)
 
     # get the passwords async
@@ -35,9 +33,11 @@ defmodule Genex.CLI.Commands.UI.Default do
        show_password_error_for_current_row: "",
        copied: "",
        new_model: Create.default(),
+       edit_model: Edit.default(),
        helper_panel: nil,
        config: nil,
-       syncing: false
+       syncing: false,
+       profile: profile
      }, Command.batch([get_config, get_passwords])}
   end
 
@@ -86,6 +86,9 @@ defmodule Genex.CLI.Commands.UI.Default do
   @impl true
   def update(model, msg) do
     case msg do
+      {:event, _} when model.edit_model.show == true ->
+        Edit.update(model, msg)
+
       {:event, %{ch: ?k}} when model.new_model.show == false ->
         model
         |> move_up_a_row
@@ -154,6 +157,18 @@ defmodule Genex.CLI.Commands.UI.Default do
         # space bar
         decrypt_current_row_password(model)
 
+      # toggle current row's edit password when we are not showing the new password modal
+      {:event, %{ch: ?e}} when model.new_model.show == false and has_passwords(model) ->
+        password = Enum.at(model.data, model.current_row)
+
+        case Genex.Passwords.decrypt(password) do
+          {:ok, pass} ->
+            %{model | edit_model: Edit.show(model.edit_model, pass)}
+
+          {:error, _} ->
+            model
+        end
+
       # hide the current row's password and other overlays
       {:event, %{key: 27}} ->
         # escape key
@@ -163,7 +178,8 @@ defmodule Genex.CLI.Commands.UI.Default do
             show_password_error_for_current_row: "",
             delete_password_for_current_row: false,
             copied: "",
-            new_model: Create.default()
+            new_model: Create.default(),
+            edit_model: Edit.default()
         }
 
       {:event, %{key: 127}} when model.new_model.show == true ->
@@ -265,6 +281,10 @@ defmodule Genex.CLI.Commands.UI.Default do
         Create.render(model.new_model)
       end
 
+      if model.edit_model.show do
+        Edit.render(model.edit_model)
+      end
+
       if model.delete_password_for_current_row do
         current_password = Enum.at(model.data, model.current_row)
 
@@ -338,7 +358,7 @@ defmodule Genex.CLI.Commands.UI.Default do
 
   defp bottom_bar() do
     bar do
-      label(
+      label(wrap: true,
         content: "[j/k or ↑/↓ to move] [space to show] [c to copy] [q to quit] [? for more help]"
       )
     end

@@ -6,7 +6,7 @@ defmodule Genex.MixProject do
       app: :genex,
       version: "0.0.5-beta",
       releases: releases(),
-      elixir: "~> 1.14",
+      elixir: "~> 1.15.2",
       dialyzer: [
         plt_add_apps: []
       ],
@@ -28,15 +28,10 @@ defmodule Genex.MixProject do
         burrito: [
           targets: [
             linux: [os: :linux, cpu: :x86_64]
-          ],
+          ]
         ]
       ]
     ]
-  end
-
-  defp copy_bin_files(release) do
-    File.cp_r("rel/bin/", Path.join(release.path, "bin"))
-    release
   end
 
   def application do
@@ -49,13 +44,13 @@ defmodule Genex.MixProject do
   defp deps do
     [
       {:diceware, "~> 0.2.8"},
-      {:prompt, "~> 0.8"},
+      {:prompt, "~> 0.9"},
       # {:prompt, path: "../prompt"},
       {:clipboard, "~> 0.2.1"},
       {:ratatouille, "~> 0.5"},
       {:jason, "~> 1.2"},
       {:gpgmex, "~> 0.0.11"},
-      #{:gpgmex, path: "../gpgmex"},
+      # {:gpgmex, path: "../gpgmex"},
       {:req, "~> 0.3.1", override: true},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},

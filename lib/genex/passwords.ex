@@ -56,6 +56,36 @@ defmodule Genex.Passwords do
   end
 
   @doc """
+
+  """
+  @spec update(PasswordData.t(), Dicware.Passphrase.t(), map()) :: save_result()
+  def update(password_data, %Diceware.Passphrase{} = passphrase, %{
+        gpg_email: gpg_email,
+        profile: profile
+      }) do
+    Logger.debug("Encrypting password for #{gpg_email}")
+
+    # encode the passphrase
+    encoded = Jason.encode!(passphrase)
+
+    # encrypt passphrase
+    case GPG.encrypt(gpg_email, encoded) do
+      {:ok, encrypted} ->
+        # add the encrypted passphrase to the password
+        # build the changeset and try to save it
+        password_data
+        |> PasswordData.changeset(%{
+          encrypted_password: encrypted,
+          profile: profile
+        })
+        |> Repo.update()
+
+      err ->
+        err
+    end
+  end
+
+  @doc """
   Get all passwords that do not have a deleted_on date
   """
   @spec all :: {:ok, [PasswordData.t()]} | {:error, binary()}

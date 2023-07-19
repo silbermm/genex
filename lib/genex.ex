@@ -24,14 +24,13 @@ defmodule Genex do
   def handle_cast({:halt, exit_code}, state) do
     {:stop, exit_code, state}
   end
-  
+
   @impl true
   def terminate(exit_code, state) when is_integer(exit_code) do
     System.halt(exit_code)
     {:noreply, state}
   end
 
- 
   @impl true
   def terminate(_exit_code, state) do
     System.halt(0)
