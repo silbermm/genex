@@ -4,11 +4,11 @@ defmodule Genex.MixProject do
   def project do
     [
       app: :genex,
-      version: "0.0.5-beta",
+      version: "0.0.6-alpha",
       releases: releases(),
       elixir: "~> 1.15.2",
       dialyzer: [
-        plt_add_apps: []
+        plt_add_apps: [:mnesia]
       ],
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -37,6 +37,7 @@ defmodule Genex.MixProject do
   def application do
     [
       extra_applications: [:logger, :prompt, :ratatouille],
+      included_applications: [:mnesia],
       mod: {Genex.Application, env: Mix.env()}
     ]
   end

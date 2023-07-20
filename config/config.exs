@@ -1,5 +1,9 @@
 import Config
 
+config :mnesia,
+  dir:
+    "HOME" |> System.get_env() |> Path.join(".genex") |> Path.join("db") |> String.to_charlist()
+
 config :genex, Genex.Repo,
   database:
     "HOME" |> System.get_env() |> Path.join(".genex") |> Path.join("db") |> Path.join("genex.db")

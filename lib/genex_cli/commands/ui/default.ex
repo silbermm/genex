@@ -358,7 +358,8 @@ defmodule Genex.CLI.Commands.UI.Default do
 
   defp bottom_bar() do
     bar do
-      label(wrap: true,
+      label(
+        wrap: true,
         content: "[j/k or ↑/↓ to move] [space to show] [c to copy] [q to quit] [? for more help]"
       )
     end
