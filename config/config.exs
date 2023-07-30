@@ -4,13 +4,6 @@ config :mnesia,
   dir:
     "HOME" |> System.get_env() |> Path.join(".genex") |> Path.join("db") |> String.to_charlist()
 
-config :genex, Genex.Repo,
-  database:
-    "HOME" |> System.get_env() |> Path.join(".genex") |> Path.join("db") |> Path.join("genex.db")
-
-config :genex,
-  ecto_repos: [Genex.Repo]
-
 config :genex,
   homedir: "HOME" |> System.get_env() |> Path.join(".genex")
 

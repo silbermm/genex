@@ -1,4 +1,4 @@
-defmodule Genex.CLI do
+defmodule GenexCLI do
   @moduledoc """
 
   genex - generate unique, memorizable passphrases
@@ -15,9 +15,9 @@ defmodule Genex.CLI do
   """
   use Prompt.Router, otp_app: :genex
 
-  alias Genex.CLI.Commands.ConfigCommand
-  alias Genex.CLI.Commands.LoginCommand
-  alias Genex.CLI.Commands.DefaultCommand
+  alias GenexCLI.ConfigCommand
+  # alias Genex.CLI.Commands.LoginCommand
+  alias GenexCLI.DefaultCommand
 
   @halter_module Application.compile_env!(:genex, :halter)
 
@@ -27,10 +27,10 @@ defmodule Genex.CLI do
     arg(:help, :boolean)
   end
 
-  command :login, LoginCommand do
-    arg(:help, :boolean)
-    arg(:profile, :string, default: "default")
-  end
+  # command :login, LoginCommand do
+  #   arg(:help, :boolean)
+  #   arg(:profile, :string, default: "default")
+  # end
 
   command "", DefaultCommand do
     arg(:help, :boolean)

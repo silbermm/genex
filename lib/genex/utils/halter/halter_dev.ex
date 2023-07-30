@@ -1,6 +1,11 @@
 defmodule Genex.Utils.Halter.HalterDev do
   @behaviour Genex.Utils.Halter.HalterAPI
 
+  require Logger
+
   @impl true
-  def halt(_), do: :ok
+  def halt(exit_code) do
+    Logger.debug("halting with exit code: #{exit_code}")
+    :ok
+  end
 end

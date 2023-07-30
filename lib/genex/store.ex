@@ -1,18 +1,28 @@
 defmodule Genex.Store do
   @moduledoc """
-  An implementation of the `Genex.StoreAPI` for `:mnesia`.
+  The datastore
   """
 
   alias Genex.Store.MnesiaResults
-  alias Genex.Passwords.Entity
+  alias Genex.Store.TableAPI
   require Logger
 
   @tables [
-    {TableIds, [:table_name, :last_id], []},
-    {Passwords, [:id, :key, :hash, :profile, :data], [:key, :hash, :profile]}
+    {:table_ids, [:table_name, :last_id], []},
+    {:secrets, [:id, :key, :hash, :profile, :data], [:key, :hash, :profile]},
+    {:settings, [:id, :profile, :data], [:profile]}
   ]
 
-  @counters [Passwords]
+  @counters [:secrets, :settings]
+
+  #############
+  # Table API #
+  #############
+  def for(table), do: TableAPI.impl(table)
+
+  ####################
+  # Table Management #
+  ####################
 
   @doc """
   Initializes the Mnesia DB
@@ -41,6 +51,9 @@ defmodule Genex.Store do
     end
   end
 
+  @doc """
+  Creates the tables and counters
+  """
   def init_tables() do
     :mnesia.set_master_nodes([node()])
 
@@ -50,78 +63,11 @@ defmodule Genex.Store do
     |> check_errors()
   end
 
-  @doc """
-  Retrieve all the passwords in Mnesia
-  """
-  @spec all_passwords() :: [Entity.t()]
-  def all_passwords() do
-    fun = fn ->
-      :mnesia.select(Passwords, [
-        {
-          {Passwords, :"$1", :"$2", :"$3", :"$4", :"$5"},
-          [{:>, :"$1", 0}],
-          [:"$$"]
-        }
-      ])
-    end
-
-    case :mnesia.transaction(fun) do
-      {:atomic, res_list} ->
-        {:ok, Enum.map(res_list, &Entity.new/1)}
-
-      {:aborted, err} ->
-        {:error, err}
-    end
-  end
-
-  @doc """
-  Save a secret in Mnesia
-  """
-  @spec save(Entity.t()) :: {:ok, Entity.t()} | {:error, :binary}
-  def save(entity) do
-    # create a new id
-    index = :mnesia.dirty_update_counter(TableIds, Passwords, 1)
-
-    fun = fn ->
-      :mnesia.write({Passwords, index, entity.key, entity.hash, entity.profile, entity})
-    end
-
-    case :mnesia.transaction(fun) do
-      {:atomic, res} ->
-        {:ok, %{entity | id: index}}
-
-      {:aborted, err} ->
-        {:error, err}
-    end
-  end
-
-  @doc """
-  Find passwords based on a specific column in the DB
-  """
-  def find_passwords_by(key, search) do
-    key
-    |> build_password_search_function(search)
-    |> :mnesia.transaction()
-    |> case do
-      {:atomic, res_list} -> {:ok, Enum.map(res_list, &Entity.new/1)}
-      {:aborted, err} -> {:error, err}
-    end
-  end
-
-  defp build_password_search_function(:id, search_string),
-    do: fn -> :mnesia.match_object({Passwords, search_string, :_, :_, :_, :_}) end
-
-  defp build_password_search_function(:key, search_string),
-    do: fn -> :mnesia.match_object({Passwords, :_, search_string, :_, :_, :_}) end
-
-  defp build_password_search_function(:profile, search_string),
-    do: fn -> :mnesia.match_object({Passwords, :_, :_, :_, search_string, :_}) end
-
   defp check_errors(%{errors: errors}) when length(errors) > 0, do: {:error, errors}
 
   defp check_errors(_) do
     for {table, _, _} <- @tables do
-      table |> :mnesia.force_load_table() |> IO.inspect(label: "FORCE LOAD")
+      :mnesia.force_load_table(table)
     end
 
     :ok
@@ -179,10 +125,10 @@ defmodule Genex.Store do
   defp create_counter(table) do
     Logger.debug("Creating counter for #{table}")
 
-    :mnesia.wait_for_tables([Passwords, TableIds], 10_000)
+    :mnesia.wait_for_tables([:secrets, :table_ids], 10_000)
 
     find_fun = fn ->
-      :mnesia.read({TableIds, table})
+      :mnesia.read({:table_ids, table})
     end
 
     case :mnesia.transaction(find_fun) do
@@ -194,7 +140,7 @@ defmodule Genex.Store do
         Logger.debug("Counter does not already exist")
 
         fun = fn ->
-          :mnesia.write({TableIds, table, 100})
+          :mnesia.write({:table_ids, table, 100})
         end
 
         case :mnesia.transaction(fun) do

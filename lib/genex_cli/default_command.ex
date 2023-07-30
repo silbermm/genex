@@ -1,4 +1,4 @@
-defmodule Genex.CLI.Commands.DefaultCommand do
+defmodule GenexCLI.DefaultCommand do
   @moduledoc """
 
   By default gets all the saved passwords from 
@@ -12,30 +12,23 @@ defmodule Genex.CLI.Commands.DefaultCommand do
     --help          show this help
   """
   use Prompt.Command
-
   alias Genex.Settings
-
   require Logger
 
   @impl true
   def process(%{help: true}), do: help()
 
   def process(%{profile: profile}) do
-    # validate that the config is good
+    # validate that the configuration is good
     config = Settings.get(profile)
 
-    # we need to set the profile somewhere so UI
-    # knows which profile we want to access
-    # because I don't know of a way to pass data
-    # to the UI.
-
-    :ets.insert(:profile_lookup, {"profile", profile})
-
     if Settings.is_valid?(config) do
-      Ratatouille.run(Genex.CLI.Commands.UI.Default, interval: 250)
+      display("Config is good")
+      0
     else
       display("Configuration is required before using the application.", color: :red)
-      display("Please run genex config --guided first", color: :green)
+      display("Please run \"genex config --guided\" first", color: :green)
+      1
     end
   end
 end
