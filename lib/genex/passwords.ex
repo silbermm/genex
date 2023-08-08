@@ -4,6 +4,7 @@ defmodule Genex.Passwords do
   """
 
   alias Genex.Store.Secret
+  alias Genex.Store.Settings
   alias Genex.Store
   alias Diceware.Passphrase
 
@@ -21,17 +22,13 @@ defmodule Genex.Passwords do
   Encrypt a password and save it to the DB
 
   Options include:
-    * gpg_email (required)
-    * profile   (defaults to "default")
     * action    (defaults to :insert)
   """
-  @spec save(String.t(), Passphrase.t(), Keyword.t()) :: save_result()
-  def save(key, %Passphrase{} = passphrase, opts \\ []) do
-    gpg_email = Keyword.fetch!(opts, :gpg_email)
+  @spec save(String.t(), Passphrase.t(), Settings.t(), Keyword.t()) :: save_result()
+  def save(key, %Passphrase{} = passphrase, %Settings{} = settings, opts \\ []) do
     action = Keyword.get(opts, :action, :insert)
-    profile = Keyword.get(opts, :profile, "default")
 
-    Logger.debug("Encrypting password for #{gpg_email}")
+    Logger.debug("Encrypting password for #{settings.gpg_email}")
 
     # hash the passphrase
     hash = :erlang.phash2(passphrase)
@@ -40,13 +37,13 @@ defmodule Genex.Passwords do
     encoded = Diceware.encode(passphrase)
 
     # encrypt passphrase
-    case GPG.encrypt(gpg_email, encoded) do
+    case GPG.encrypt(settings.gpg_email, encoded) do
       {:ok, encrypted} ->
         secret =
           key
           |> Secret.new(hash, encrypted)
           |> Secret.set_action(action)
-          |> Secret.set_profile(profile)
+          |> Secret.set_profile(settings.profile)
 
         # save the encrypted passphrase
         Store.for(:secrets).create(secret)
@@ -66,17 +63,12 @@ defmodule Genex.Passwords do
   def all(opts \\ []) do
     profile = Keyword.get(opts, :profile, "default")
 
-    case Store.for(:secrets).find_by(:profile, profile) do
-      {:ok, passwords} ->
-        passwords
-        |> group_by_key()
-        |> only_latest()
-        |> drop_deleted()
-
-      err ->
-        Logger.error(inspect(err))
-        []
-    end
+    :secrets
+    |> Store.for()
+    |> then(& &1.find_by(:profile, profile))
+    |> group_by_key()
+    |> only_latest()
+    |> drop_deleted()
   end
 
   @doc """

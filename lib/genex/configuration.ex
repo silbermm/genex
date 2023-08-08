@@ -14,6 +14,9 @@ defmodule Genex.Configuration do
     |> drop_deleted()
   end
 
+  @doc """
+  Determines if the configuration is valid
+  """
   @spec is_valid?(Settings.t()) :: boolean
   def is_valid?(settings), do: Settings.is_valid?(settings)
 
@@ -30,8 +33,6 @@ defmodule Genex.Configuration do
 
     Store.for(:settings).create(settings)
   end
-
-  defp group_by_profile(settings), do: Enum.group_by(settings, & &1.profile)
 
   defp only_latest(settings) do
     settings

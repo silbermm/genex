@@ -4,7 +4,7 @@ defmodule Genex.MixProject do
   def project do
     [
       app: :genex,
-      version: "0.0.7-alpha",
+      version: "0.0.8-alpha",
       releases: releases(),
       elixir: "~> 1.15.2",
       dialyzer: [
@@ -48,9 +48,9 @@ defmodule Genex.MixProject do
       {:clipboard, "~> 0.2.1"},
       {:diceware, "~> 0.2.9"},
       {:gpgmex, "~> 0.1.1"},
-      #{:gpgmex, path: "../gpgmex"},
-       {:prompt, "~> 0.9.1"},
-      #{:prompt, path: "../prompt"},
+      # {:gpgmex, path: "../gpgmex"},
+      #{:prompt, "~> 0.9.2"},
+      {:prompt, path: "../prompt"},
       {:ratatouille, "~> 0.5"},
       {:req, "~> 0.3.1", override: true},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},

@@ -16,7 +16,7 @@ defmodule Genex do
 
   @impl true
   def handle_continue(:start_cli, state) do
-    Genex.CLI.main(state)
+    GenexCLI.main(state)
     {:noreply, state}
   end
 

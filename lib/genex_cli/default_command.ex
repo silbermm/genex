@@ -12,7 +12,7 @@ defmodule GenexCLI.DefaultCommand do
     --help          show this help
   """
   use Prompt.Command
-  alias Genex.Settings
+  alias Genex.Configuration
   require Logger
 
   @impl true
@@ -20,9 +20,9 @@ defmodule GenexCLI.DefaultCommand do
 
   def process(%{profile: profile}) do
     # validate that the configuration is good
-    config = Settings.get(profile)
+    config = Configuration.get(profile)
 
-    if Settings.is_valid?(config) do
+    if Configuration.is_valid?(config) do
       display("Config is good")
       0
     else

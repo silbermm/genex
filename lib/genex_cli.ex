@@ -5,9 +5,10 @@ defmodule GenexCLI do
 
     SUB-COMMANDS
     ------------
-      config check if the app is configured correctly
-      login  login to a remote server to share passwords
-
+      config    configuration for Genex
+      generate  generate passphrases and save them
+      ls        list available passphrase keys for a profile
+ 
     OPTIONS
     -------
       --version, -v  prints the version of genex
@@ -17,20 +18,29 @@ defmodule GenexCLI do
 
   alias GenexCLI.ConfigCommand
   # alias Genex.CLI.Commands.LoginCommand
+  alias GenexCLI.GenerateCommand
   alias GenexCLI.DefaultCommand
+  alias GenexCLI.ListCommand
 
   @halter_module Application.compile_env!(:genex, :halter)
 
   command :config, ConfigCommand do
-    arg(:guided, :boolean)
+    arg(:guided, :boolean, short: :g)
     arg(:profile, :string, default: "default")
     arg(:help, :boolean)
   end
 
-  # command :login, LoginCommand do
-  #   arg(:help, :boolean)
-  #   arg(:profile, :string, default: "default")
-  # end
+  command :generate, GenerateCommand do
+    arg(:help, :boolean)
+    arg(:profile, :string, default: "default", short: :p)
+    arg(:key, :string, short: :k)
+    arg(:yes, :boolean, short: :y)
+  end
+
+  command :ls, ListCommand do
+    arg(:help, :boolean)
+    arg(:profile, :string, default: "default", short: :p)
+  end
 
   command "", DefaultCommand do
     arg(:help, :boolean)

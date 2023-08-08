@@ -74,28 +74,32 @@ defmodule GenexCLI.ConfigCommand do
       color: :cyan
     )
 
-    keys  = 
+    keys =
       GPG.list_keys()
       |> Enum.filter(& &1.has_secret)
-      |> Enum.map(& {display_key(&1), List.first(&1.email)})
+      |> Enum.map(&{display_key(&1), List.first(&1.email)})
 
     if Enum.empty?(keys) do
-      with :yes <- confirm("Unable to find any valid GPG keys, would you like to generate one now?", color: :yellow),
+      with :yes <-
+             confirm("Unable to find any valid GPG keys, would you like to generate one now?",
+               color: :yellow
+             ),
            email = text("Enter an email for this key", color: :green, trim: true),
            {:ok, _fprint} = GPG.generate_key(email) do
-
         display("\n ➡ setting gpg uid as #{email}", color: :white)
         Settings.set_gpg(current_settings, email)
       else
         _ -> current_settings
       end
-    else 
+    else
       text = "Which key do you want to use"
-      text = if current_settings.gpg_email == "" or is_nil(current_settings.gpg_email) do
-        text <> "?"
-      else
-        text <> " (currently #{current_settings.gpg_email})?"
-      end
+
+      text =
+        if current_settings.gpg_email == "" or is_nil(current_settings.gpg_email) do
+          text <> "?"
+        else
+          text <> " (currently #{current_settings.gpg_email})?"
+        end
 
       user_entered = select(text, keys, color: :green, trim: true)
       display("\n ➡ setting gpg uid as #{user_entered}", color: :white)
@@ -132,7 +136,8 @@ defmodule GenexCLI.ConfigCommand do
       :error ->
         display("Enter a number for the password length", color: :red)
         get_default_password_length(current_settings)
-      {num, _} -> 
+
+      {num, _} ->
         display("\n ➡ setting password length to #{num}\n", color: :white)
         Settings.set_password_length(current_settings, num)
     end
