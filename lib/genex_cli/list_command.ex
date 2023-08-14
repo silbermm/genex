@@ -1,6 +1,6 @@
 defmodule GenexCLI.ListCommand do
   @moduledoc """
-  List available password keys
+  List available passphrase keys
 
   OPTIONS
   -------
@@ -17,7 +17,7 @@ defmodule GenexCLI.ListCommand do
   @impl true
   def process(%{help: true}), do: help()
 
-  def process(%{profile: profile} = args) do
+  def process(%{profile: profile}) do
     config = Configuration.get(profile)
 
     if Configuration.is_valid?(config) do

@@ -66,7 +66,6 @@ defmodule GenexCLI.GetCommand do
             :copy ->
               {:ok, decrypted} = Passwords.decrypt(passphrase)
               _ = Clipboard.copy(decrypted.phrase)
-              display("copied")
               0
 
             :quit ->

@@ -9,26 +9,30 @@ defmodule GenexCLI do
       generate  generate passphrases and save them
       ls        list available passphrase keys for a profile
       get       get a passphrase given a key
+      update    update a passphrase
 
     OPTIONS
     -------
       --version, -v  prints the version of genex
       --help, -h     prints help
+
+    EXAMPLE USAGE
+    -------------
   """
   use Prompt.Router, otp_app: :genex
 
   alias GenexCLI.ConfigCommand
-  # alias Genex.CLI.Commands.LoginCommand
-  alias GenexCLI.GenerateCommand
   alias GenexCLI.DefaultCommand
+  alias GenexCLI.GenerateCommand
   alias GenexCLI.GetCommand
   alias GenexCLI.ListCommand
+  alias GenexCLI.UpdateCommand
 
   @halter_module Application.compile_env!(:genex, :halter)
 
   command :config, ConfigCommand do
     arg(:guided, :boolean, short: :g)
-    arg(:profile, :string, default: "default")
+    arg(:profile, :string, short: :p, default: "default")
     arg(:help, :boolean)
   end
 
@@ -49,6 +53,11 @@ defmodule GenexCLI do
     arg(:profile, :string, default: "default", short: :p)
     arg(:copy, :boolean, short: :c)
     arg(:display, :boolean, short: :d)
+  end
+
+  command :update, UpdateCommand do
+    arg(:help, :boolean)
+    arg(:profile, :string, default: "default", short: :p)
   end
 
   command "", DefaultCommand do
