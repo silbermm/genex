@@ -49,7 +49,7 @@ defmodule Genex.MixProject do
       {:diceware, "~> 0.2.9"},
       {:gpgmex, "~> 0.1.1"},
       # {:gpgmex, path: "../gpgmex"},
-      #{:prompt, "~> 0.9.2"},
+      # {:prompt, "~> 0.9.2"},
       {:prompt, path: "../prompt"},
       {:ratatouille, "~> 0.5"},
       {:req, "~> 0.3.1", override: true},

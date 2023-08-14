@@ -8,7 +8,8 @@ defmodule GenexCLI do
       config    configuration for Genex
       generate  generate passphrases and save them
       ls        list available passphrase keys for a profile
- 
+      get       get a passphrase given a key
+
     OPTIONS
     -------
       --version, -v  prints the version of genex
@@ -20,6 +21,7 @@ defmodule GenexCLI do
   # alias Genex.CLI.Commands.LoginCommand
   alias GenexCLI.GenerateCommand
   alias GenexCLI.DefaultCommand
+  alias GenexCLI.GetCommand
   alias GenexCLI.ListCommand
 
   @halter_module Application.compile_env!(:genex, :halter)
@@ -40,6 +42,13 @@ defmodule GenexCLI do
   command :ls, ListCommand do
     arg(:help, :boolean)
     arg(:profile, :string, default: "default", short: :p)
+  end
+
+  command :get, GetCommand do
+    arg(:help, :boolean)
+    arg(:profile, :string, default: "default", short: :p)
+    arg(:copy, :boolean, short: :c)
+    arg(:display, :boolean, short: :d)
   end
 
   command "", DefaultCommand do

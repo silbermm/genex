@@ -24,15 +24,16 @@ defmodule GenexCLI.ListCommand do
       passwords = Passwords.all(profile: profile)
 
       case passwords do
-        [] -> 
+        [] ->
           display("No passphrases saved for profile \"#{profile}\"")
+
         _ ->
           passwords
           |> Enum.map(& &1.key)
           |> Enum.chunk_every(4)
           |> table(border: :none, color: :blue)
       end
-      
+
       0
     else
       display("Configuration is required before using the application.", color: :red)
