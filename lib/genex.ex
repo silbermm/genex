@@ -16,7 +16,7 @@ defmodule Genex do
 
   @impl true
   def handle_continue(:start_cli, state) do
-    Genex.CLI.main(state)
+    GenexCLI.main(state)
     {:noreply, state}
   end
 
@@ -26,14 +26,9 @@ defmodule Genex do
   end
 
   @impl true
-  def terminate(exit_code, state) when is_integer(exit_code) do
-    System.halt(exit_code)
-    {:noreply, state}
-  end
+  @spec terminate(any(), any()) :: no_return()
+  def terminate(exit_code, _state) when is_integer(exit_code), do: System.halt(exit_code)
 
   @impl true
-  def terminate(_exit_code, state) do
-    System.halt(0)
-    {:noreply, state}
-  end
+  def terminate(_exit_code, _state), do: System.halt(0)
 end

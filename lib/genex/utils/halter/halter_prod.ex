@@ -3,6 +3,7 @@ defmodule Genex.Utils.Halter.HalterProd do
 
   @impl true
   def halt(exit_value) do
+    :mnesia.stop()
     Genex.halt(exit_value)
   end
 end

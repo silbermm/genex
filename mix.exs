@@ -4,11 +4,11 @@ defmodule Genex.MixProject do
   def project do
     [
       app: :genex,
-      version: "0.0.5-beta",
+      version: "0.0.9-alpha",
       releases: releases(),
       elixir: "~> 1.15.2",
       dialyzer: [
-        plt_add_apps: []
+        plt_add_apps: [:mnesia]
       ],
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -36,27 +36,25 @@ defmodule Genex.MixProject do
 
   def application do
     [
-      extra_applications: [:logger, :prompt, :ratatouille],
+      extra_applications: [:logger, :prompt, :ratatouille, :gpgmex],
+      included_applications: [:mnesia],
       mod: {Genex.Application, env: Mix.env()}
     ]
   end
 
   defp deps do
     [
-      {:diceware, "~> 0.2.8"},
-      {:prompt, "~> 0.9"},
-      # {:prompt, path: "../prompt"},
+      {:burrito, github: "burrito-elixir/burrito"},
       {:clipboard, "~> 0.2.1"},
-      {:ratatouille, "~> 0.5"},
-      {:jason, "~> 1.2"},
-      {:gpgmex, "~> 0.0.11"},
+      {:diceware, "~> 0.2.9"},
+      {:gpgmex, "~> 0.1.1"},
       # {:gpgmex, path: "../gpgmex"},
+      {:prompt, "~> 0.9.3"},
+      # {:prompt, path: "../prompt"},
+      {:ratatouille, "~> 0.5"},
       {:req, "~> 0.3.1", override: true},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
-      {:ecto_sql, "~> 3.10.1"},
-      {:ecto_sqlite3, ">= 0.0.0"},
-      {:burrito, github: "burrito-elixir/burrito"}
+      {:dialyxir, "~> 1.3", only: [:dev], runtime: false}
     ]
   end
 end
