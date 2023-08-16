@@ -7,6 +7,12 @@ A simple and secure password management system using a local-first mentality
 * Securely save passwords on the users computer using PGP encryption
 * Securely share the passwords with others using PGP/GPG
 
+## Todo
+* [ ] Allow editing of an existing passphrase
+* [ ] Show history of a passphrase
+* [ ] Allow secure sharing of passphrases
+* [ ] 'eject' (export?) passphrases for importing into a different tool
+
 ## How it works
 Generating a key uses the Diceware method of using multiple random dictionary words together to form a passphrase.
 

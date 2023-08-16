@@ -47,8 +47,8 @@ defmodule GenexCLI.UpdateCommand do
         _ ->
           keys = passwords |> Enum.map(& &1.key)
           answer = Prompt.select("Which key do you want to update?", keys)
-          passphrase = Enum.find(passwords, & &1.key == answer)
-          display passphrase.key
+          passphrase = Enum.find(passwords, &(&1.key == answer))
+          display(passphrase.key)
       end
     else
       display("Configuration is required before using the application.", color: :red)
@@ -62,6 +62,7 @@ defmodule GenexCLI.UpdateCommand do
 
     if Configuration.is_valid?(config) do
       password = Passwords.find_by_key(key, profile)
+
       case password do
         [] ->
           display("Unable to find a passphase for the key \"#{key}\" in \"#{profile}\" profile.")
