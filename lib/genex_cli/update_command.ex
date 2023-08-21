@@ -57,7 +57,7 @@ defmodule GenexCLI.UpdateCommand do
     end
   end
 
-  def process(%{profile: profile, key: key} = args) do
+  def process(%{profile: profile, key: key}) do
     config = Configuration.get(profile)
 
     if Configuration.is_valid?(config) do
@@ -65,9 +65,9 @@ defmodule GenexCLI.UpdateCommand do
 
       case password do
         [] ->
-          display("Unable to find a passphase for the key \"#{key}\" in \"#{profile}\" profile.")
+          display("Unable to find a passphrase for the key \"#{key}\" in \"#{profile}\" profile.")
 
-        [passphrase] ->
+        [_passphrase] ->
           display("ok to update")
       end
     else

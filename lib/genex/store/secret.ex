@@ -10,7 +10,7 @@ defmodule Genex.Store.Secret do
           hash: pos_integer(),
           encrypted_password: binary(),
           timestamp: DateTime.t(),
-          action: :insert | :delete | nil,
+          action: :insert | :delete | :update | nil,
           profile: String.t()
         }
 
@@ -37,6 +37,7 @@ defmodule Genex.Store.Secret do
 
   @doc "Sets the action for the Secret"
   def set_action(secret, :insert), do: %{secret | action: :insert}
+  def set_action(secret, :update), do: %{secret | action: :update}
   def set_action(secret, :delete), do: %{secret | action: :delete}
   def set_action(_secret, action), do: raise(Error, message: "Invalid action #{action}")
 
