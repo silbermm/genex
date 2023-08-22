@@ -54,7 +54,8 @@ defmodule Genex.MixProject do
       {:ratatouille, "~> 0.5"},
       {:req, "~> 0.3.1", override: true},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.3", only: [:dev], runtime: false}
+      {:dialyxir, "~> 1.3", only: [:dev], runtime: false},
+      {:mox, "~> 1.0", only: [:test, :ci], runtime: false}
     ]
   end
 end
