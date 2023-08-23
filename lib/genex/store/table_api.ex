@@ -1,7 +1,6 @@
 defmodule Genex.Store.TableAPI do
-  @moduledoc """
+  @moduledoc false
 
-  """
   @callback list() :: list(struct())
   @callback create(struct()) :: {:ok, struct()} | {:error, any()}
   @callback find_by(atom(), String.t() | number()) :: list(struct())

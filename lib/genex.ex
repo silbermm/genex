@@ -1,4 +1,5 @@
 defmodule Genex do
+  @moduledoc false
   use GenServer, restart: :temporary
 
   def start_link(opts) do

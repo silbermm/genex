@@ -1,4 +1,6 @@
 defmodule Genex.Store.Settings do
+  @moduledoc false
+
   @behaviour Genex.Store.TableAPI
 
   alias __MODULE__

@@ -1,4 +1,5 @@
 defmodule Genex.Utils.Halter.HalterProd do
+  @moduledoc false
   @behaviour Genex.Utils.Halter.HalterAPI
 
   @impl true
