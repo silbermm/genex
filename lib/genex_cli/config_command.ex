@@ -84,8 +84,8 @@ defmodule GenexCLI.ConfigCommand do
              confirm("Unable to find any valid GPG keys, would you like to generate one now?",
                color: :yellow
              ),
-           email = text("Enter an email for this key", color: :green, trim: true),
-           {:ok, _fprint} = GPG.generate_key(email) do
+           email <- text("Enter an email for this key", color: :green, trim: true),
+           {:ok, _fprint} <- GPG.generate_key(email) do
         display("\n ➡ setting gpg uid as #{email}", color: :white)
         Settings.set_gpg(current_settings, email)
       else

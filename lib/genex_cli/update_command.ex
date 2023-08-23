@@ -47,8 +47,12 @@ defmodule GenexCLI.UpdateCommand do
         _ ->
           keys = passwords |> Enum.map(& &1.key)
           answer = Prompt.select("Which key do you want to update?", keys)
-          passphrase = Enum.find(passwords, &(&1.key == answer))
-          display(passphrase.key)
+          secret = Enum.find(passwords, &(&1.key == answer))
+
+          # show update interface
+
+          {:ok, pass} = Passwords.decrypt(secret)
+          update(pass, secret.key, config)
       end
     else
       display("Configuration is required before using the application.", color: :red)
@@ -67,13 +71,62 @@ defmodule GenexCLI.UpdateCommand do
         [] ->
           display("Unable to find a passphrase for the key \"#{key}\" in \"#{profile}\" profile.")
 
-        [_passphrase] ->
-          display("ok to update")
+        [secret] ->
+          # show update interface
+          {:ok, pass} = Passwords.decrypt(secret)
+          update(pass, secret.key, config)
       end
     else
       display("Configuration is required before using the application.", color: :red)
       display("Please run \"genex config --guided\" first", color: :green)
       1
     end
+  end
+
+  defp update(pass, key, config) do
+    display("#{Diceware.with_colors(pass)}")
+
+    "Continue (E)diting, (S)ave, or (C)ancel?"
+    |> choice([edit: "e", save: "s", cancel: "c"], default_answer: :edit, color: :green)
+    |> case do
+      :save ->
+        display(IO.ANSI.clear())
+        display("Screen cleared to preserve password privacy", color: :yellow)
+
+        # if they passed in a key, use that, otherwise, prompt them for a key
+        case Passwords.save(key, pass, config) do
+          {:ok, _passphrase} ->
+            _ = Clipboard.copy(pass.phrase)
+            display("Passphrase for #{key} saved and copied", color: :magenta)
+            0
+
+          {:error, _reason} ->
+            display("Unable to save passphrase", color: :red)
+            1
+        end
+
+      :edit ->
+        passphrase = edit(pass)
+        update(passphrase, key, config)
+      :cancel ->
+        display(IO.ANSI.clear())
+        display("Screen cleared to preserve password privacy", color: :yellow)
+        0
+    end
+  end
+
+  defp edit(passphrase) do
+    old_value = select("Which part of the passphrase do you want to change?", passphrase.words)
+    new_value = text(~s[Editing "#{old_value}"], trim: true)
+
+    new_words =
+      passphrase.words
+      |> Enum.map(fn
+        ^old_value -> new_value
+        keep -> keep
+      end)
+      |> Enum.reject(&(&1 == ""))
+
+    Diceware.Passphrase.new(new_words)
   end
 end

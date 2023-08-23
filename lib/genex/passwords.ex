@@ -91,12 +91,12 @@ defmodule Genex.Passwords do
   Functionally this adds a new row to the database with a deleted action for this password.
   This allows us to track the lifecycle of a password.
   """
-  @spec delete(Secret.t(), keyword()) :: save_result() | no_return()
-  def delete(secret, opts \\ []) do
+  @spec delete(Secret.t(), Settings.t(), keyword()) :: save_result() | no_return()
+  def delete(secret, settings, opts \\ []) do
     case decrypt(secret) do
       {:ok, passphrase} ->
         opts = Keyword.put(opts, :action, :delete)
-        save(secret.key, passphrase, opts)
+        save(secret.key, passphrase, settings, opts)
 
       e ->
         e
