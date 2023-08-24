@@ -18,8 +18,11 @@ defmodule Genex.Application do
   end
 
   def start(_, _) do
-    with :ok <- @store.init(),
-         :ok <- @store.init_tables() do
+    home = Application.get_env(:genex, :homedir)
+
+    with :ok <- File.mkdir_p(home),
+      :ok <- @store.init(),
+      :ok <- @store.init_tables() do
       args = Burrito.Util.Args.get_arguments()
       args = Enum.drop(args, 4)
 
