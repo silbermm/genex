@@ -1,12 +1,10 @@
 defmodule Genex.PasswordsTest do
   use Genex.Case
 
-  import Mox
   alias Genex.Passwords
   alias Genex.Store.Settings
 
   @passphrase_key "test/user"
-  @default_gpg_email "test@test.com"
 
   setup :with_settings
 
