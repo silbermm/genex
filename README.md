@@ -23,10 +23,11 @@ The key/tag/label that you choose to store the passphrase under can be anything 
 The key is typically used to identify the account/username that the passphrase is used to access, for instance, I might store my github password under the key `github.com/silbermm`. There is as much flexibility as you want.
 
 ## Installation
+### Build from Source
+TODO
 
-1. Grab the latest release for your system from the [release](https://github.com/silbermm/genex/releases) page. 
-2. Extract the file
-3. Place the binary in your `$PATH`
+### Install pre-built binary
+TODO
 
 ## Setup
 
