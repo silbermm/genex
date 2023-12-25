@@ -2,6 +2,10 @@
 
 A simple and secure password management system using a local-first mentality
 
+## REPO MOVED TO SOURCEHUT
+[https://git.sr.ht/~ahappydeath/genex](https://git.sr.ht/~ahappydeath/genex)
+
+
 ## Goals
 * Provide a simple, intuitive interface to generate secure readable passwords on a users computer
 * Securely save passwords on the users computer using PGP encryption
